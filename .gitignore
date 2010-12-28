@@ -1,3 +1,5 @@
 *DS_Store
 *.swp
 ._*
+public/share
+public/share/*

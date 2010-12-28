@@ -24,8 +24,13 @@ restart_lighttpd() {
 }
 
 fix_permissions() {
-  sudo chgrp -R www-data public/share
+  chgrp -R www-data public/share
   sudo chmod -R g+w public/share
+}
+
+create_directories() {
+  mkdir -p public/share
+  mkdir -p public/plugins
 }
 
 print_changelog() {
@@ -44,6 +49,7 @@ EOM
 
 cd $home/$app
 update_cron
+create_directories
 restart_lighttpd
 fix_permissions
 
