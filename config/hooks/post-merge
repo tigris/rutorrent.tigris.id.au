@@ -45,6 +45,7 @@ EOM
 cd $home/$app
 update_cron
 restart_lighttpd
+fix_permissions
 
 git tag $new_tag
 print_changelog | mail -s "Restarted $app" $mailto
