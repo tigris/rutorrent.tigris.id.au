@@ -1,0 +1,15 @@
+server {
+  listen 80;
+  server_name rutorrent.tigris.id.au;
+  root /srv/rutorrent.tigris.id.au/public;
+
+  location / {
+     auth_basic            "Restricted";
+     auth_basic_user_file  /home/danial/git/util-private/.htpasswd;
+  }
+
+  location /RPC2 {
+    include scgi_params;
+    scgi_pass localhost:5000;
+  }
+}
