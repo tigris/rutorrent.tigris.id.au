@@ -24,8 +24,8 @@ restart_lighttpd() {
 }
 
 fix_permissions() {
-  chgrp -R www-data public/share
-  sudo chmod -R g+w public/share
+  sudo chgrp -R www-data public/share
+  chmod -R g+w public/share
 }
 
 create_directories() {
