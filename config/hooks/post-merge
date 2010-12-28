@@ -7,13 +7,11 @@ mailto="danial"
 new_tag=RELEASE-$(date +%Y%m%dT%H%M%S)
 old_tag=$(git tag -l RELEASE* | sort -r | head -n1)
 old_tag=${old_tag:-"HEAD^"}
-daemons=""
 
-restart_daemons() {
-  config=$(git diff $old_tag | grep "^--- a/config/nginx/$env")
+restart_lighttpd() {
+  config=$(git diff $old_tag | grep "^--- a/config/lighttpd/$env")
   if [ "x$config" != "x" ]; then
-    daemons="$daemons nginx"
-    sudo /etc/init.d/nginx reload
+    sudo /etc/init.d/lighttpd reload
   fi
 }
 
@@ -32,7 +30,7 @@ EOM
 }
 
 cd $home/$app
-restart_daemons
+restart_lighttpd
 
 git tag $new_tag
 print_changelog | mail -s "Restarted $app" $mailto
