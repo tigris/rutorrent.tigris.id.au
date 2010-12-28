@@ -1,10 +1,26 @@
 server.modules += ("mod_scgi")
-scgi.server = (
-  "/RPC2" => (
-    "127.0.0.1" => (
-      "host" => "127.0.0.1",
-      "port" => 5000,
-      "check-local" => "disable"
+server.modules += ("mod_auth")
+
+$HTTP["host"] =~ "^rutorrent.tigris.id.au$" {
+  server.document-root = "/srv/rutorrent.tigris.id.au/public"
+
+  auth.backend = "htpasswd"
+  auth.backend.htpasswd.file = "/home/danial/git/util-private/.htpasswd"
+  auth.require = (
+    "" => (
+      "method" => "digest",
+      "realm"  => "rutorrent",
+      "require" => "valid-user"
     )
   )
-)
+
+  scgi.server = (
+    "/RPC2" => (
+      "127.0.0.1" => (
+        "host" => "127.0.0.1",
+        "port" => 5000,
+        "check-local" => "disable"
+      )
+    )
+  )
+}
