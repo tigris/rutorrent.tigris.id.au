@@ -17,7 +17,7 @@
 
 	$do_diagnostic = true;
 	$log_file = '/tmp/errors.log';		// path to log file (comment or make empty to disable logging)
-	$saveUploadedTorrents = true;
+	$saveUploadedTorrents = false;
 
 	$topDirectory = '/';			// Upper available directory. Absolute path with trail slash.
 	$forbidUserSettings = false;
