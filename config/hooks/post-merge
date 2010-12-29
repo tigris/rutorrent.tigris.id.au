@@ -19,7 +19,7 @@ update_cron() {
 restart_lighttpd() {
   config=$(git diff $old_tag | grep "^--- a/config/lighttpd")
   if [ "x$config" != "x" ]; then
-    sudo /etc/init.d/lighttpd reload
+    sudo /etc/init.d/lighttpd reload > /dev/null
   fi
 }
 
