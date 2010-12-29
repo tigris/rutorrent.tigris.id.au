@@ -1,7 +1,7 @@
 /*
  *      UI content.
  *
- *	$Id: content.js 1462 2010-10-13 14:04:25Z novik65 $
+ *	$Id: content.js 1583 2010-11-23 09:46:47Z novik65 $
  */
 
 function makeContent()
@@ -53,7 +53,7 @@ function makeContent()
 		bottom : function() { return( $(window).height()-60 ); },
 		restrictX : true,
 		maskId : "dividerDrag",
-		onStart : function(e) { return(theWebUI.settings["webui.show_cats"]); },
+		onStart : function(e) { return(theWebUI.settings["webui.show_dets"]); },
 		onRun : function(e) { $(document.body).css( "cursor", "n-resize" ); },
 		onFinish : function(e) 
 		{

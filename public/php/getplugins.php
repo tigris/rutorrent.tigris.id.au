@@ -209,12 +209,14 @@ if($handle = opendir('../plugins'))
 	set_time_limit(0);
 	@chmod('/tmp',0777);
 	if(!function_exists('preg_match_all'))
+	{
 		$jResult.="log(theUILang.PCRENotFound);";
+		$jResult.="theWebUI.systemInfo.rTorrent = { started: false, iVersion : 0, version : '?', libVersion : '?' };\n";
+	}
 	else
 	{
 		$remoteRequests = array();
-		$theSettings = new rTorrentSettings();
-		$theSettings->obtain();
+		$theSettings = rTorrentSettings::get(true);
 		if(!$theSettings->linkExist)
 		{
 			$jResult.="log(theUILang.badLinkTorTorrent);";

@@ -1,7 +1,7 @@
 /*
  *      Main object.
  *
- *	$Id: webui.js 1513 2010-11-13 14:48:47Z novik65 $
+ *	$Id: webui.js 1583 2010-11-23 09:46:47Z novik65 $
  */
 
 var theWebUI = 
@@ -2098,7 +2098,7 @@ var theWebUI =
 	        if(w!==null)
 	        {
 			$("#CatList").width( w );
-			$("#VDivider").width( $(window).width()-w-5 );
+			$("#VDivider").width( $(window).width()-w-10 );
 		}
 		if(h!==null)
 		{
@@ -2151,7 +2151,7 @@ var theWebUI =
 		}
 		else
 		{
-			$("#VDivider").width( ww-w-5 );
+			$("#VDivider").width( ww-10 );
 			w = ww;
 		}
 		w-=11;
