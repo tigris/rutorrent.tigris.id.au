@@ -29,6 +29,7 @@ fix_permissions() {
 }
 
 create_directories() {
+  mkdir -p public/conf/users
   mkdir -p public/share/torrents
   mkdir -p public/share/users
   mkdir -p public/share/settings
