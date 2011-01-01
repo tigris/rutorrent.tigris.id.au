@@ -29,8 +29,9 @@ restart_daemons() {
   if [ "x$config" != "x" ]; then
     cp config/rtorrent/.rtorrent.rc /home/danial
     kill -TERM `ps x | grep rtorrent | grep -v grep | cut -f1 -d' '`
-    sleep 2
+    sleep 5
     rm -f /home/danial/.rtorrent/socket/rpc.socket
+    sleep 1
     screen -dmS rtorrent rtorrent
     daemons="$daemons rtorrent"
   fi
