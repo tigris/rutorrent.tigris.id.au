@@ -15,4 +15,4 @@ schedule =
 chmod,0,0,"execute=chmod,777,/home/danial/.rtorrent/socket/rpc.socket"
 schedule =
 watch_directory,10,10,load_start=/home/danial/.rtorrent/watch/*.torrent
-execute = {sh,-c,/usr/bin/php /var/www/rutorrent/php/initplugins.php danial &}
+execute = {sh,-c,/usr/bin/php /srv/rutorrent.tigris.id.au/php/initplugins.php danial &}
