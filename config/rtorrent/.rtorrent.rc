@@ -11,7 +11,6 @@ peer_exchange = no
 tracker_numwant = -1
 encoding_list = UTF-8
 scgi_local = /home/danial/.rtorrent/socket/rpc.socket
-schedule =
-chmod,0,0,"execute=chmod,777,/home/danial/.rtorrent/socket/rpc.socket"
-watch_directory,10,10,load_start=/home/danial/.rtorrent/watch/*.torrent
+schedule = chmod,0,0,"execute=chmod,777,/home/danial/.rtorrent/socket/rpc.socket"
+schedule = watch_directory,10,10,load_start=/home/danial/.rtorrent/watch/*.torrent
 execute = {sh,-c,/usr/bin/php /srv/rutorrent.tigris.id.au/php/initplugins.php danial &}
