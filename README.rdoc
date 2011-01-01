@@ -1,0 +1,108 @@
+= rutorrent.tigris.id.au
+
+== Description
+
+My rtorrent/rutorrent site and setup.
+
+Note: The below instructions are assuming sudo and group permissions have
+already been setup as explained in my base server config readme for the
+www.tigris.id.au repo.
+
+== System setup notes
+
+=== PHP
+
+We need php for the actual rutorrent web app. We also need to install the dev
+packages so we can compile the json module (required by the HTTPRPC plugin which
+we use instead of the scgi webserver module)
+
+* Install php
+  sudo apt-get install php5-cgi php5-cli php5-dev php-pear
+  sudo pecl install json
+
+If you want the geoip plugin to work, you need the following as well.
+
+* Install geoip packages
+  sudo apt-get install geoip-database libgeoip1 php5-geoip
+
+* Install custom geoip city database
+  wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+  gunzip GeoLiteCity.dat.gz
+  sudo mv GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
+
+=== rTorrent
+
+The ubuntu version of rtorrent is not compiled with a new enough version of
+xmlrpc-c so we need to compile manually if we want rtorrent to be able to
+display info greater than 2GB (e.g. upload/download/torrent size info).
+
+If you are happy to live with the 2GB issue (it just displays negative numbers
+instead) then you can just sudo apt-get install rtorrent and be done with it.
+
+* Install subversion (it's the only way to get the required version of xmlrpc-c)
+    sudo apt-get install subversion
+
+* Install xmlrpc-c (you can apt-get remove --purge subversion after this if you want)
+    svn co http://xmlrpc-c.svn.sourceforge.net/svnroot/xmlrpc-c/advanced xmlrpc-c
+    cd xmlrpc-c
+    ./configure
+    make
+    sudo make install
+
+* Install rtorrent (note: the "unstable" version of rtorrent is not supported by rutorrent)
+    wget http://libtorrent.rakshasa.no/downloads/libtorrent-0.12.6.tar.gz
+    wget http://libtorrent.rakshasa.no/downloads/rtorrent-0.8.6.tar.gz
+    tar zxf libtorrent-0.12.6.tar.gz
+    tar zxf rtorrent-0.8.6.tar.gz
+    cd libtorrent-0.12.6
+    ./configure
+    make
+    sudo make install
+    cd ../rtorrent-0.8.6/
+    ./configure --with-xmlrpc-c=/usr/local/bin/xmlrpc-c-config
+    make
+    sudo make install
+
+=== Website
+
+* Initial website deploy
+    cd /srv
+    git clone git@github.com:tigris/rutorrent.tigris.id.au.git
+
+* Symlink the git hook
+    cd /srv/rutorrent.tigris.id.au/.git/hooks
+    ln -s ../../config/hooks/post-merge
+
+* Setup the lighttpd config
+    cd /etc/lighttpd/conf-enabled
+    sudo cp /srv/rutorrent.tigris.id.au/config/lighttpd/rutorrent.tigris.id.au .
+
+* Permissions (you should do this again AFTER you've logged into ruttorent the
+  first time, since it will create some default user files)
+    sudo chown -R danial /srv/rutorrent.tigris.id.au
+    sudo chgrp -R www-data /srv/rutrrent.tigris.id.au/public/share
+    sudo chmod -R g+w /srv/rutrrent.tigris.id.au/public/share
+
+=== rTorrent setup
+
+* Configs
+    cp /srv/rutorrent.tigris.id.au/config/rtorrent/.rtorrent.rc /home/danial
+    mkdir -p /home/danial/.rtorrent/session
+    mkdir -p /home/danial/.rtorrent/socket
+    mkdir -p /home/danial/.rtorrent/watch
+    mkdir -p /home/danial/torrents
+
+* Starting rTorrent. Add the following line to /etc/rc.local and run it as root
+  if you want to start rtorrent right now.
+    su - danial -c 'screen -dmS rtorrent rtorrent'
+
+== Troubleshooting
+
+If at any point rtorrent won't load (e.g. rutorrent shows errors about
+connecting), try just executing rtorrent from the command line as the user and
+deal with the errors. If rtorrent loads, then the error must be in the web
+server config or something. You will have to close the ssh terminal as I dunno
+how to quit rtorrent.
+
+If the traffic plugin isn't showing any data, then your permissions are wrong,
+re-run the permissions commands in the website setup section.
