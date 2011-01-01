@@ -94,6 +94,7 @@ instead) then you can just sudo apt-get install rtorrent and be done with it.
 
 * Starting rTorrent. Add the following line to /etc/rc.local and run it as root
   if you want to start rtorrent right now.
+    rm -f /home/danial/.rtorrent/socket/rpc.socket
     su - danial -c 'screen -dmS rtorrent rtorrent'
 
 == Troubleshooting
@@ -106,3 +107,6 @@ how to quit rtorrent.
 
 If the traffic plugin isn't showing any data, then your permissions are wrong,
 re-run the permissions commands in the website setup section.
+
+If rtorrent ever died (or you killed it manually) then you may need to remove
+the zombied socket file. in ~/.rtorrent/socket/rpc.socket
