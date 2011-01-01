@@ -95,7 +95,7 @@ instead) then you can just sudo apt-get install rtorrent and be done with it.
 * Starting rTorrent. Add the following line to /etc/rc.local and run it as root
   if you want to start rtorrent right now.
     rm -f /home/danial/.rtorrent/socket/rpc.socket
-    su - danial -c 'screen -dmS rtorrent rtorrent'
+    su - danial -c '/usr/bin/screen -fa -d -m -S rtorrent /usr/local/bin/rtorrent'
 
 == Troubleshooting
 
