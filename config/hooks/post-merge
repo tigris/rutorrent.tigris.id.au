@@ -33,7 +33,7 @@ restart_daemons() {
     fi
     cp config/rtorrent/.rtorrent.rc /home/danial
     sleep 5
-    screen -dmS rtorrent rtorrent
+    screen -dmS rtorrent /usr/local/bin/rtorrent
     daemons="$daemons rtorrent"
   fi
 }
