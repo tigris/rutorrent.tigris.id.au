@@ -27,11 +27,12 @@ restart_daemons() {
 
   config=$(git diff $old_tag | grep "^--- a/config/rtorrent")
   if [ "x$config" != "x" ]; then
+    pid=$(cat /home/danial/.rtorrent/session/rtorrent.lock | awk -F: '{print($2)}' | sed "s/[^0-9]//g")
+    if ps -A | grep -sq ${pid}.*rtorrent ; then
+      kill -INT $pid
+    fi
     cp config/rtorrent/.rtorrent.rc /home/danial
-    kill -TERM `ps x | grep rtorrent | grep -v grep | cut -f1 -d' '`
     sleep 5
-    rm -f /home/danial/.rtorrent/socket/rpc.socket
-    sleep 1
     screen -dmS rtorrent rtorrent
     daemons="$daemons rtorrent"
   fi
