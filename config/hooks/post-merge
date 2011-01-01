@@ -7,6 +7,7 @@ mailto="danial"
 new_tag=RELEASE-$(date +%Y%m%dT%H%M%S)
 old_tag=$(git tag -l RELEASE* | sort -r | head -n1)
 old_tag=${old_tag:-"HEAD^"}
+daemons=""
 
 update_cron() {
   config=$(git diff $old_tag | grep "^--- a/config/cron")
@@ -16,14 +17,26 @@ update_cron() {
   fi
 }
 
-restart_lighttpd() {
+restart_daemons() {
   config=$(git diff $old_tag | grep "^--- a/config/lighttpd")
   if [ "x$config" != "x" ]; then
-    sudo /etc/init.d/lighttpd reload > /dev/null
+    sudo cp config/lighttpd/*.conf /etc/lighttpd/conf-enabled
+    sudo service lighthttpd reload > /dev/null
+    daemons="$daemons lighttpd"
+  fi
+
+  config=$(git diff $old_tag | grep "^--- a/config/rtorrent")
+  if [ "x$config" != "x" ]; then
+    cp config/rtorrent/* /home/danial
+    kill -TERM `ps x | grep SCREEN | grep -v grep | cut -f1 -d' '`
+    rm /home/danial/.rtorrent/socket/rpc.socket
+    screen -dmS rtorrent rtorrent
+    daemons="$daemons rtorrent"
   fi
 }
 
 fix_permissions() {
+  sudo chown -R danial .
   sudo chgrp -R www-data public/share
   sudo chmod -R g+w public/share
 }
@@ -42,6 +55,10 @@ Hi,
 
 $app has been updated with the following changes
 
+The following daemons were reloaded/restarted:
+
+   ${daemons:-"None restarted."}
+
 ====================================================
 
 $(git log --stat --no-color $old_tag..HEAD)
@@ -52,7 +69,7 @@ EOM
 cd $home/$app
 update_cron
 create_directories
-restart_lighttpd
+restart_daemons
 fix_permissions
 
 git tag $new_tag
