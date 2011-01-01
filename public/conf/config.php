@@ -40,6 +40,5 @@
 	// above to something like this:
 	//
 	$scgi_port = 0;
-	$scgi_host = "unix:///home/danial/.rtorrent/socket/rpc.socket";
 
 ?>
