@@ -28,8 +28,9 @@ restart_daemons() {
   config=$(git diff $old_tag | grep "^--- a/config/rtorrent")
   if [ "x$config" != "x" ]; then
     cp config/rtorrent/.rtorrent.rc /home/danial
-    kill -TERM `ps x | grep SCREEN | grep -v grep | cut -f1 -d' '`
-    rm /home/danial/.rtorrent/socket/rpc.socket
+    kill -TERM `ps x | grep rtorrent | grep -v grep | cut -f1 -d' '`
+    sleep 2
+    rm -f /home/danial/.rtorrent/socket/rpc.socket
     screen -dmS rtorrent rtorrent
     daemons="$daemons rtorrent"
   fi
