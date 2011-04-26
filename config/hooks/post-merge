@@ -18,14 +18,14 @@ update_cron() {
 }
 
 restart_daemons() {
-  config=$(git diff $old_tag | grep "^--- a/config/lighttpd")
+  config=$(git diff $old_tag | grep "^+++ b/config/lighttpd")
   if [ "x$config" != "x" ]; then
     sudo cp config/lighttpd/*.conf /etc/lighttpd/conf-enabled
-    sudo service lighthttpd reload > /dev/null
+    sudo service lighttpd reload > /dev/null
     daemons="$daemons lighttpd"
   fi
 
-  config=$(git diff $old_tag | grep "^--- a/config/rtorrent")
+  config=$(git diff $old_tag | grep "^+++ b/config/rtorrent")
   if [ "x$config" != "x" ]; then
     pid=$(cat /home/danial/.rtorrent/session/rtorrent.lock | awk -F: '{print($2)}' | sed "s/[^0-9]//g")
     if ps -A | grep -sq ${pid}.*rtorrent ; then
