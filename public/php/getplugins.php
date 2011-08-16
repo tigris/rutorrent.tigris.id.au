@@ -46,6 +46,7 @@ function getPluginInfo( $name, $permissions )
 		'php.version.readable'=>'5.0.0',
 		'web.external.warning'=>array(),
 		'web.external.error'=>array(),
+		'plugin.help'=>'',
 		);
 	$fname = "../plugins/".$name."/plugin.info";
 	if(is_readable($fname))
@@ -60,6 +61,7 @@ function getPluginInfo( $name, $permissions )
 				$field = trim($fields[0]); 
 				switch($field)
 				{
+					case "plugin.help":
 					case "plugin.author":
 					case "plugin.description":
 					case "rtorrent.remote":
@@ -244,9 +246,9 @@ if($handle = opendir('../plugins'))
 				}
 	        	        $up = getUploadsPath();
 	        	        $st = getSettingsPath();
-				@chmod($up,0777);
-				@chmod($st,0777);
-				@chmod('./test.sh',0755);
+				@chmod($up,$profileMask);
+				@chmod($st,$profileMask);
+				@chmod('./test.sh',$profileMask & 0755);
 	        		if(!@file_exists($up.'/.') || !is_readable($up) || !is_writable($up))
 					$jResult.="log(theUILang.badUploadsPath+' (".$up.")');";
 	        		if(!@file_exists($st.'/.') || !is_readable($st) || !is_writable($st))
@@ -280,6 +282,7 @@ if($handle = opendir('../plugins'))
 			$phpVersion = substr($phpVersion,0,$pos);
 		$phpIVersion = explode('.',$phpVersion);
 		$phpIVersion = (intval($phpIVersion[0])<<16) + (intval($phpIVersion[1])<<8) + intval($phpIVersion[2]);
+		$phpRequired = false;
 		while(false !== ($file = readdir($handle)))
 		{
 			if($file != "." && $file != ".." && is_dir('../plugins/'.$file))
@@ -295,6 +298,11 @@ if($handle = opendir('../plugins'))
 						continue;
 					}
 					$extError = false;
+					if(count($info['web.external.error']) || 
+						count($info['web.external.warning']) ||
+						count($info['rtorrent.external.error']) || 
+						count($info['rtorrent.external.warning']))
+						eval( getPluginConf( $file ) );
 					foreach( $info['web.external.error'] as $external )
 					{
 						if(findEXE($external)==false)
@@ -302,6 +310,9 @@ if($handle = opendir('../plugins'))
 							$jResult.="log('".$file.": '+theUILang.webExternalNotFoundError+' ('+'".$external."'+').');";
 							$extError = true;
 						}
+						else
+						if($external=='php')
+							$phpRequired = true;
 					}
 					if($extError)
 						continue;
@@ -313,11 +324,15 @@ if($handle = opendir('../plugins'))
 							continue;
 						}
                 				foreach( $info['rtorrent.external.error'] as $external )
+                				{
 							findRemoteEXE($external,"log('".$file.": '+theUILang.rTorrentExternalNotFoundError+' ('+'".$external."'+').'); thePlugins.get('".$file."').disable();",$remoteRequests);
+							if($external=='php')
+								$phpRequired = true;
+						}
 						foreach( $info['rtorrent.script.error'] as $external )
 						{
 						       	$fname = $rootPath.'/plugins/'.$file.'/'.$external;
-							@chmod($fname,0755);
+							@chmod($fname,$profileMask & 0755);
 							if(!isUserHavePermission($theSettings->uid,$theSettings->gid,$fname,0x0005))
 							{
 								$jResult.="log('".$file.": '+theUILang.rTorrentBadScriptPath+' ('+'".$fname."'+').');";
@@ -329,7 +344,7 @@ if($handle = opendir('../plugins'))
 						foreach( $info['rtorrent.php.error'] as $external )
 						{
 					       		$fname = $rootPath.'/plugins/'.$file.'/'.$external;
-							@chmod($fname,0644);
+							@chmod($fname,$profileMask & 0644);
 							if(!isUserHavePermission($theSettings->uid,$theSettings->gid,$fname,0x0004))
 							{
 								$jResult.="log('".$file.": '+theUILang.rTorrentBadPHPScriptPath+' ('+'".$fname."'+').');";
@@ -369,6 +384,12 @@ if($handle = opendir('../plugins'))
 				}
 			}
 		} 
+		if($phpRequired)
+		{
+			$val = strtoupper(ini_get("register_argc_argv"));
+			if( $val!=='' && $val!='ON' && $val!='1' && $val!='TRUE' )
+				$jResult.="log(theUILang.phpParameterUnavailable);";
+		}
 		usort($init,"pluginsSort");
 		foreach($init as $plugin)
 		{
@@ -383,7 +404,7 @@ if($handle = opendir('../plugins'))
 			}
 
 			$jResult.="(function () { var plugin = new rPlugin( '".$plugin["name"]."',".$pInfo["plugin.version"].
-				",'".$pInfo["plugin.author"]."','".$pInfo["plugin.description"]."',".$pInfo["perms"]." );\n";
+				",'".$pInfo["plugin.author"]."','".$pInfo["plugin.description"]."',".$pInfo["perms"].",'".$pInfo["plugin.help"]."' );\n";
 			if($plugin["php"])
 				require_once( $plugin["php"] );
 			else

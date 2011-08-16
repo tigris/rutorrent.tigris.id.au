@@ -114,6 +114,7 @@ rTorrentStub.prototype.listResponse = function(data)
 			} catch(e) { torrent.comment = ''; }
 			torrent.free_diskspace = values[31];
 			torrent.private = values[32];
+			torrent.multi_file = iv(values[33]);
 			torrent.seeds = torrent.seeds_actual + " (" + torrent.seeds_all + ")";
 			torrent.peers = torrent.peers_actual + " (" + torrent.peers_all + ")";
 			$.each( theRequestManager.trt.handlers, function(i,handler)
@@ -276,6 +277,51 @@ plugin.origsetdl = rTorrentStub.prototype.setdlrate;
 rTorrentStub.prototype.setdlrate = function()
 {
 	this.getCommon("setdl");
+}
+
+plugin.origsnub = rTorrentStub.prototype.snub;
+rTorrentStub.prototype.snub = function()
+{
+	this.getCommon("snub");
+}
+
+plugin.origunsnub = rTorrentStub.prototype.unsnub;
+rTorrentStub.prototype.unsnub = function()
+{
+	this.getCommon("unsnub");
+}
+
+plugin.origban = rTorrentStub.prototype.ban;
+rTorrentStub.prototype.ban = function()
+{
+	this.getCommon("ban");
+}
+
+plugin.origkick = rTorrentStub.prototype.kick;
+rTorrentStub.prototype.kick = function()
+{
+	this.getCommon("kick");
+}
+
+plugin.origaddpeer = rTorrentStub.prototype.addpeer;
+rTorrentStub.prototype.addpeer = function()
+{
+	this.getCommon("add_peer");
+}
+
+plugin.origgetchunks = rTorrentStub.prototype.getchunks;
+rTorrentStub.prototype.getchunks = function() 
+{
+	this.hashes[0] = theWebUI.dID;
+        this.getCommon("getchunks");
+}
+
+plugin.origgetchunksResponse = rTorrentStub.prototype.getchunksResponse;
+rTorrentStub.prototype.getchunksResponse = function(data)
+{
+	if(this.dataType == "json")
+		return(data);
+	return(plugin.origgetchunksResponse.call(this,data));
 }
 
 plugin.origgetpropsResponse = rTorrentStub.prototype.getpropsResponse;
@@ -451,6 +497,8 @@ rTorrentStub.prototype.gettrackersResponse = function(values)
 			trk.seeds = data[4];
 			trk.peers = data[5];
 			trk.downloaded = data[6];
+			trk.interval = data[7];
+			trk.last = data[8];
 
 			$.each( theRequestManager.trk.handlers, function(i,handler)
 			{

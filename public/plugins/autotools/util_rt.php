@@ -145,7 +145,7 @@ function rtMkDir( $dir, $mode = 0777 )
 	if( !is_dir( $dir ) )
 	{
 		// recursive mkdir() only after PHP_5.0
-		mkdir( $dir, 0777, true );
+		makeDirectory( $dir, $mode );
 		//system( 'mkdir -p "'.$dst_dir.'"' );
 		if( !is_dir( $dir ) )
 			return false;
@@ -249,11 +249,9 @@ function rtMoveFiles( $files, $src, $dst, $dbg = false )
 //------------------------------------------------------------------------------
 // Recursively scan files at $path directory
 //------------------------------------------------------------------------------
-function rtScanFiles( $path, $mask, $ignore_case = false, $subdir = '' )
+function rtScanFiles( $path, $mask, $subdir = '' )
 {
 	$path = rtAddTailSlash( $path );
-	if( $ignore_case )
-		$mask = strtolower( $mask );
 	if( $subdir != '' )
 		$subdir = rtAddTailSlash( $subdir );
 	$ret = array();
@@ -268,10 +266,10 @@ function rtScanFiles( $path, $mask, $ignore_case = false, $subdir = '' )
 			if( is_dir( $path_to_item ) )
 			{
 				$ret = array_merge( $ret,
-					rtScanFiles( $path, $mask, $ignore_case, $subdir.$item ) );
+					rtScanFiles( $path, $mask, $subdir.$item ) );
 			}
 			elseif( rtIsFile( $path_to_item ) &&
-				fnmatch( $mask, $ignore_case ? strtolower( $item ) : $item ) )
+				preg_match( $mask, $item ) )
 			{
 				$ret[] = $subdir.$item;
 			}

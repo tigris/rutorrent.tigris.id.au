@@ -49,8 +49,23 @@ plugin.allDone = function()
 				plugin.fillRSSGroups.call(theWebUI);
 				plugin.correctCheckboxes();
 			}
-		}
 
+			plugin.trafDraw = theWebUI.trafGraph.draw;
+			theWebUI.trafGraph.draw = function()
+			{
+				plugin.trafDraw.call(this);
+				plugin.correctCheckboxes();
+			}
+		}
+		if(thePlugins.isInstalled('rssurlrewrite'))	
+		{
+			plugin.loadRules = theWebUI.loadRules;
+			theWebUI.loadRules = function( rle )
+			{
+				plugin.loadRules.call(theWebUI,rle);
+				plugin.correctCheckboxes();
+			}
+		}
 	});
 
 	$('.dlg-header').each( function()

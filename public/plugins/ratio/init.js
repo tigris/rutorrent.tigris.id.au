@@ -25,7 +25,7 @@ if(plugin.enabled)
 				{
    					if((table.getIdByCol(i)=="ratiogroup") && arr[i])
    					{
-	   					var rat = arr[i].match(/rat_(\d{1,2})/);
+	   					var rat = arr[i].match(/rat_(\d+)/);
 						arr[i] = ( rat && (rat.length>1) && theWebUI.isCorrectRatio(rat[1]) ? theWebUI.ratios[rat[1]].name : "" );
 						break;
 					}
@@ -91,6 +91,7 @@ if(plugin.enabled)
 					$('#rat_time'+i).val( theWebUI.ratios[i].time );
 					$('#rat_name'+i).val( theWebUI.ratios[i].name );
 				}
+				$('#ratDefault').val(theWebUI.defaultRatio);
 			}
 			plugin.addAndShowSettings.call(theWebUI,arg);
 		}
@@ -107,7 +108,7 @@ if(plugin.enabled)
 					($('#rat_name'+i).val() != theWebUI.ratios[i].name))
 					return(true);
 			}
-			return(false);
+			return($('#ratDefault').val()!=theWebUI.defaultRatio);
 		}
 
 		plugin.setSettings = theWebUI.setSettings;
@@ -120,7 +121,7 @@ if(plugin.enabled)
 
 		rTorrentStub.prototype.setratioprm = function()
 		{
-			this.content = "dummy=1";
+			this.content = "default="+iv($('#ratDefault').val());
 			for(var i=0; i<theWebUI.maxRatio; i++)
 			{
 				var name = $.trim($('#rat_name'+i).val());
@@ -157,15 +158,21 @@ if(plugin.enabled)
 			{
 				var el = theContextMenu.get(theUILang.Priority);
 				var curNo = null;
-				if(this.getTable("trt").selCount==1)
-					curNo = theWebUI.getRatioData(id);
-				var down = [];
-				down.push([theUILang.mnuRatioUnlimited,(curNo==-1) ? null : "theWebUI.setRatio('-1')"]);
-				down.push([CMENU_SEP]);
-				for(var i=0; i<theWebUI.maxRatio; i++)
-					if(theWebUI.isCorrectRatio(i))
-						down.push([theWebUI.ratios[i].name,(i!=curNo) ? "theWebUI.setRatio('"+i+"')" : null]);
-				theContextMenu.add(el,[CMENU_CHILD, theUILang.mnuRatio, down]);
+				var table = this.getTable("trt");
+				if((table.selCount==1) && (table.getFirstSelected().length!=40))
+					theContextMenu.add(el,[theUILang.mnuRatio, null]);
+				else
+				{
+					if(table.selCount==1)
+						curNo = theWebUI.getRatioData(id);
+					var down = [];
+					down.push([theUILang.mnuRatioUnlimited,(curNo==-1) ? null : "theWebUI.setRatio('-1')"]);
+					down.push([CMENU_SEP]);
+					for(var i=0; i<theWebUI.maxRatio; i++)
+						if(theWebUI.isCorrectRatio(i))
+							down.push([theWebUI.ratios[i].name,(i!=curNo) ? "theWebUI.setRatio('"+i+"')" : null]);
+					theContextMenu.add(el,[CMENU_CHILD, theUILang.mnuRatio, down]);
+				}
 			}
 		}
 
@@ -174,7 +181,7 @@ if(plugin.enabled)
 			var sr = this.getTable("trt").rowSel;
 			var req = '';
 			for(var k in sr)
-		       		if(sr[k])
+		       		if(sr[k] && (k.length==40))
 					req += ("&hash=" + k + "&v="+ratio);
 			if(req.length>0)
 				this.request("?action=setratio"+req+"&list=1",[this.addTorrents, this]);
@@ -231,6 +238,7 @@ plugin.onLangLoaded = function()
 				"<div id='st_ratio_h'>"+
 				"<table>"+
 					"<tr>"+
+						"<td><b>No</b></td>"+
 						"<td align=center><b>"+theUILang.ratioName+"</b></td>"+
 						"<td align=center><b>"+theUILang.minRatio+",%</b></td>"+
 						"<td align=center><b>"+theUILang.maxRatio+",%</b></td>"+
@@ -241,6 +249,7 @@ plugin.onLangLoaded = function()
 		for(var i=0; i<theWebUI.maxRatio; i++)
 			s +=
 				"<tr>"+
+					"<td class='alr'><b>"+(i+1)+".</b></td>"+
 					"<td><input type='text' id='rat_name"+i+"' class='TextboxShort'/></td>"+
 					"<td><input type='text' id='rat_min"+i+"' class='Textbox num1'/></td>"+
 					"<td><input type='text' id='rat_max"+i+"' class='Textbox num1'/></td>"+
@@ -249,6 +258,10 @@ plugin.onLangLoaded = function()
 					"<td><select id='rat_action"+i+"'><option value='0'>"+theUILang.ratioStop+"</option><option value='1'>"+theUILang.ratioStopAndRemove+"</option><option value='2'>"+theUILang.ratioErase+"</option><option value='3'>"+theUILang.ratioEraseData+"</option></select></td>"+
 				"</tr>";
 		s+="</table></div></fieldset>";
+		s+="<div class='aright'><label>"+theUILang.ratioDefault+":</label><select id='ratDefault'><option value='0'>"+theUILang.mnuRatioUnlimited+"</option>";
+		for(var i=1; i<=theWebUI.maxRatio; i++)
+			s+="<option value='"+i+"'>"+i+"</option>";
+		s+="</select></div>";
 		this.attachPageToOptions($("<div>").attr("id","st_ratio").html(s).get(0),theUILang.ratios);
 	}
 }

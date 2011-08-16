@@ -6,7 +6,7 @@
  *			 (http://webfx.eae.net/dhtml/sortabletable/sortabletable.html)
  *	Copyright 2007, 2008 Carsten Niebuhr
  *			 (http://trac.utorrent.com/trac)
- *	Copyright 2009, 2010 Novik
+ *	Copyright 2009, 2011 Novik
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *	$Id: stable.js 1513 2010-11-13 14:48:47Z novik65 $
+ *	$Id: stable.js 1716 2011-07-26 14:02:27Z novik65 $
 */
 
 var TYPE_STRING = 0;
@@ -84,6 +84,7 @@ var dxSTable = function()
 	this.prgEndColor = new RGBackground(".meter-value-end-color");
 	this.mni = 0;
 	this.mxi = 0;
+	this.maxViewRows = 100;
 }
 
 dxSTable.prototype.setPaletteByURL = function(url) 
@@ -95,13 +96,19 @@ dxSTable.prototype.setPaletteByURL = function(url)
 		this.Sort();
 }
 
+dxSTable.prototype.bindKeys = function()
+{
+	$(document).unbind( browser.isOpera ? "keypress" : "keydown", this.keyEvents );
+	$(document).bind( browser.isOpera ? "keypress" : "keydown", this, this.keyEvents );
+}
+
 dxSTable.prototype.create = function(ele, styles, aName)
 {
+	if(!ele || this.created)
+		return;
 	var tr, td, cl, cg, div;
 	this.prefix = aName;
 	this.dCont = ele;
-	if(!this.dCont)
-		return;
 
 	this.dHead = $("<div>").addClass("stable-head").get(0);
 	this.dBody = $("<div>").addClass("stable-body").get(0);
@@ -130,7 +137,6 @@ dxSTable.prototype.create = function(ele, styles, aName)
 			break;
 		}
 	}
-
 	for(var i = 0, l = styles.length; i < l; i++) 
 	{
 		if(!$type(this.colOrder[i]))
@@ -146,7 +152,7 @@ dxSTable.prototype.create = function(ele, styles, aName)
 		this.colsdata[i].width = iv(this.colsdata[i].width);
 		this.ids[i] = styles[i].id;
 
-		td = $("<td>").mousemove( function(e) 
+		td = $("<td>").bind( "mousemove touchstart", function(e) 
 		{
 			if(self.isResizing) 
 				return;
@@ -154,9 +160,10 @@ dxSTable.prototype.create = function(ele, styles, aName)
 			this.lastMouseX = e.clientX;
 			var w = this.offsetWidth;
 			var i = parseInt(this.getAttribute("index"));
-			if(x <= 8) 
+			var delta = $.support.touchable ? 16 : 8;
+			if(x <= delta) 
 			{
-				if(i != 0) 
+				if(i!= 0) 
 				{
 					self.hotCell = i - 1;
 					this.style.cursor = "e-resize";
@@ -169,7 +176,7 @@ dxSTable.prototype.create = function(ele, styles, aName)
 			}
 			else 
 			{
-				if(x >= w - 1) 
+				if(x >= w - delta) 
 				{
 					self.hotCell = i;
 					this.style.cursor = "e-resize";
@@ -185,9 +192,15 @@ dxSTable.prototype.create = function(ele, styles, aName)
 			width(styles[this.colOrder[i]].width).
 			attr("index", i));
 		this.colMove.init(td.get(0), preventSort, null, moveColumn);
-		td.mouseclick( function(e) { self.onRightClick(e) } );
-		td.mousedown( function(e) { $(document).bind( browser.isOpera ? "keypress" : "keydown", self, self.keyEvents ) } );
-		td.mouseup( function(e) { self.Sort(e, this); } );		
+		td.mouseclick( 	function(e) 
+		{ 
+			self.onRightClick(e) 
+		}).mouseup( function(e) 
+		{ 
+			self.Sort(e); 
+		});
+		if(!$.support.touchable)
+			td.mousedown( function(e) { self.bindKeys(); });
 		this.tHeadCols[i] = td.get(0);
 		if(!this.colsdata[i].enabled)
   	                td.hide();
@@ -231,12 +244,12 @@ dxSTable.prototype.create = function(ele, styles, aName)
 
 dxSTable.prototype.toggleColumn = function(i)
 {
-	$(this.tBodyCols[i]).toggle();
-	$(this.tHeadCols[i]).toggle();;
 	this.colsdata[i].enabled = !this.colsdata[i].enabled;
+	$(this.tBodyCols[i]).css( "display", this.colsdata[i].enabled ? "" : "none" );
+	$(this.tHeadCols[i]).css( "display", this.colsdata[i].enabled ? "" : "none" );
 	if(!browser.isIE7x)
 	        for (var D = 0, B = this.tBody.tb.childNodes.length; D < B; D ++ )
-			$(this.tBody.tb.childNodes[D].childNodes[i]).toggle();
+			$(this.tBody.tb.childNodes[D].childNodes[i]).css( "display", this.colsdata[i].enabled ? "" : "none" );
 	if(this.colsdata[i].enabled)
 	{
 		$(this.tBodyCols[i]).width( this.colsdata[i].width );
@@ -285,7 +298,7 @@ dxSTable.prototype.removeColumn = function(no)
 
 dxSTable.prototype.onRightClick = function(e)
 {
-        if(e.button==2)
+        if((e.which==3) && !this.isMoving)
         {
 		theContextMenu.clear();
 		for(var i = 0; i<this.colsdata.length; i++)
@@ -298,6 +311,7 @@ dxSTable.prototype.onRightClick = function(e)
 				theContextMenu.add(a);
 			}
 		}
+		theContextMenu.setNoHide();
 		theContextMenu.show(e.clientX,e.clientY);
 		return(false);
 	}
@@ -332,7 +346,6 @@ dxSTable.prototype.calcSize = function()
 		this.rowCover.style.width = this.dHead.style.width;
 		if((this.cols > 0) && (!this.isResizing)) 
 		{
-			var j =- 1;
 			for(var i = 0, l = this.cols; i < l; i++) 
 			{
 				var _9a = iv(this.tBodyCols[i].style.width);
@@ -377,8 +390,8 @@ dxSTable.prototype.resizeColumn = function()
 				this.tBody.rows[0].cells[i].width=w;
 				needCallHandler = true;
 			}
-			for( var j=0; j<this.tBody.rows.length; j++ )
-				this.tBody.rows[j].cells[i].style.textAlign = c.style.textAlign;
+//			for( var j=0; j<this.tBody.rows.length; j++ )
+//				this.tBody.rows[j].cells[i].style.textAlign = c.style.textAlign;
 		}
 
 	}
@@ -526,7 +539,7 @@ dxSTable.ColumnMove.prototype =
 	{	
 		if(this.parent.cancelMove)
 			return;
-		if(e && e.button==2)
+		if(e && e.which==3)
 			return(true);
 		this.parent.isMoving = true;
 		var o = this.obj;
@@ -542,7 +555,7 @@ dxSTable.ColumnMove.prototype =
 		o.style.visibility = "visible";
 		var self = this;
 		$(document).bind("mousemove",self,self.drag);
-		$(document).bind("mouseup",self,self.end);
+		$(document).bind("mouseup touchend",self,self.end);
 		this.rx = $(this.parent.dHead).offset().left;
 		this.obj.style.cursor = "move";
 		return(false);
@@ -640,7 +653,7 @@ dxSTable.prototype.Sort = function(e)
 	}
 	else 
 	{
-		if(e.button==2)
+		if(e.which==3)
 			return(true);
 		col = (e.target) ? e.target : e.srcElement;
 	}
@@ -813,8 +826,8 @@ dxSTable.prototype.assignEvents = function()
 	this.scrollDiff = 0;
 	this.scOdd = null;
 	this.isScrolling = false;
-	
-	this.dBody.onscroll = 
+
+	$(this.dBody).bind( "scroll",
 		function(e) 
 		{
 			self.dHead.scrollLeft = self.dBody.scrollLeft;
@@ -838,9 +851,7 @@ dxSTable.prototype.assignEvents = function()
 				        , 500);
 				self.scrollPos();
 			}
-		};
-	if(browser.isKonqueror)
-		this.dBody.addEventListener("scroll", this.dBody.onscroll, false);
+		});
 	this.tHead.onmousedown = function(e) 
 		{
 			if(self.isResizing)
@@ -851,7 +862,7 @@ dxSTable.prototype.assignEvents = function()
 				self.cancelSort = true;
 				self.cancelMove = true;
                                 $(document).bind("mousemove",self,self.colDrag);
-                                $(document).bind("mouseup",self,self.colDragEnd);
+                                $(document).bind("mouseup touchend",self,self.colDragEnd);
 				self.rowCover.style.display = "block";
 				return(false);
          		}
@@ -866,7 +877,8 @@ dxSTable.prototype.assignEvents = function()
 				self.cancelMove = false;
 			}
 		};
-	$(this.dCont).mousedown( function(e) { $(document).bind( browser.isOpera ? "keypress" : "keydown", self, self.keyEvents ) } );
+	if(!$.support.touchable)
+		$(this.dCont).mousedown( function(e) { self.bindKeys(); } );
 }
 
 dxSTable.prototype.colDrag = function(e) 
@@ -921,7 +933,7 @@ dxSTable.prototype.colDragEnd = function(e)
 	self.colReszObj.style.height = 0;
 	self.colReszObj.style.visibility = "hidden";
 	self.resizeColumn();
-	if(self.tHead.isOutside) 
+	if(self.tHead.isOutside || $.support.touchable) 
 	{
 		self.cancelSort = false;
 		self.cancelMove = false;
@@ -933,7 +945,6 @@ dxSTable.prototype.colDragEnd = function(e)
 dxSTable.prototype.scrollPos = function()
 {
 	this.scp.style.display = "block";
-   	var maxRows = this.getMaxRows();
 	var mni = Math.floor(this.dBody.scrollTop / TR_HEIGHT);
 	var mxi = mni + Math.floor(this.dBody.clientHeight / TR_HEIGHT);
 	var mid = Math.floor(((mni + mxi) / 2));
@@ -970,7 +981,7 @@ function handleScroll()
 
 dxSTable.prototype.getMaxRows = function()
 {
-	return((this.maxRows || this.viewRows<100) ? 1000000 : Math.ceil(this.dBody.clientHeight / TR_HEIGHT));	
+	return((this.maxRows || this.viewRows<this.maxViewRows) ? 1000000 : Math.ceil(Math.min(this.dBody.clientHeight,this.dCont.clientHeight) / TR_HEIGHT));	
 }
 
 dxSTable.prototype.refreshRows = function( height, fromScroll ) 
@@ -979,6 +990,7 @@ dxSTable.prototype.refreshRows = function( height, fromScroll )
 	{
 		return;
    	}
+
    	var maxRows = height ? height/TR_HEIGHT : this.getMaxRows();
 	var mni = Math.floor(this.dBody.scrollTop / TR_HEIGHT);
 	if(mni + maxRows > this.viewRows) 
@@ -990,20 +1002,19 @@ dxSTable.prototype.refreshRows = function( height, fromScroll )
 		mni = 0;
    	}
 	var mxi = mni + maxRows;
-
 	if((mni==this.mni && mxi==this.mxi) && fromScroll)
 		return;
 
 	this.cancelSort = true;
 	this.mni = mni;
 	this.mxi = mxi;
-
 	var h = (this.viewRows - maxRows) * TR_HEIGHT;
 	var ht = (h<0) ? 0 : mni*TR_HEIGHT;
 	var hb = (h<0) ? 0 : h - ht;
 	this.tpad.style.height = ht + "px";
 	this.bpad.style.height = hb + "px";
 	var tb = this.tBody.tb, vr =- 1, i = 0, c = 0, obj = null;
+
 	for(i = 0; i < this.rows; i++) 
 	{
 		var id = this.rowIDs[i];
@@ -1101,9 +1112,10 @@ dxSTable.prototype.keyEvents = function(e)
 
 dxSTable.prototype.selectRow = function(e, row) 
 {
-        $(document).bind( browser.isOpera ? "keypress" : "keydown", this, this.keyEvents );
+	if(!$.support.touchable)
+		this.bindKeys();
 	var id = row.id;
-	if(!((e.button == 2) && (this.rowSel[id] == true))) 
+	if(!((e.which==3) && (this.rowSel[id] == true))) 
 	{
 		if(e.shiftKey) 
 		{
@@ -1244,58 +1256,62 @@ dxSTable.prototype.addRow = function(cols, sId, icon, attr)
 
 dxSTable.prototype.createRow = function(cols, sId, icon, attr) 
 {
-	var tr, td, div, data, i, l, j;
 	if(!$type(attr)) 
 		attr = [];
-	tb = this.tBody.tb;
-	tr = $("<tr>").get(0);
+	var tr = $("<tr>").attr( { index: this.rows, title: cols[0] });
 	if(sId != null) 
-		tr.id = sId;
+		tr.attr("id",sId);
 	var self = this;
 	if(this.colorEvenRows) 
-		tr.className = (this.rows & 1) ? "odd" : "even";
+		tr.addClass( (this.rows & 1) ? "odd" : "even" );
 
-	$(tr).mouseclick( function(e) { return(self.selectRow(e, this)); });
+	tr.mouseclick( function(e) { return(self.selectRow(e, this)); });
 
 	if($type(this.ondblclick) == "function") 
-	{
-		if(browser.isKonqueror)
-			tr.addEventListener("dblclick", function(e) {self.ondblclick(this);}, false);
-		else
-			$(tr).dblclick( function(e) { return(self.ondblclick(this)); });
-	}
-	tr.setAttribute("index", this.rows);
+		tr.dblclick( function(e) { return(self.ondblclick(this)); });
+
 	for(var k in attr) 
-		tr.setAttribute(k, attr[k]);
-	data = this.rowdata[sId].fmtdata;
-	for(i = 0, j = 0; i < this.cols; i++) 
+		tr.attr(k, attr[k]);
+	var data = this.rowdata[sId].fmtdata;
+	var s = "";
+	var div;
+	var ret;
+	for(var i = 0; i < this.cols; i++) 
 	{
 		var ind = this.colOrder[i];
-		td = $("<td>").addClass("stable-" + this.dCont.id + "-col-" + ind).attr("rawvalue", $type(cols[ind]) ? cols[ind] : "").get(0);
-		div = $("<div>").get(0);
-
+		s+="<td class='stable-"+this.dCont.id+"-col-"+ind+"'";
+		var span1 = "";
+		var span2 = "";
 		if(this.colsdata[i].type==TYPE_PROGRESS)
 		{
-		        $(div).addClass("meter-value").
-		        	css({ float: "left", "background-color" : (new RGBackground()).setGradient(this.prgStartColor,this.prgEndColor,parseFloat(data[ind])).getColor() }).
-		        	width(iv(data[ind])+"%").html("&nbsp;");
-			if(!iv(data[ind]))
-				$(div).css({visibility: "hidden"});
-			else
-				$(div).css({visibility: "visible"});
-			$(td).append( $("<span></span>").addClass("meter-text").css({overflow: "visible"}).text(data[ind]) );
+			s+=" rawvalue='"+($type(cols[ind]) ? cols[ind] : "")+"'";
+		        span1 = "<span class='meter-text' style='overflow: visible'>"+escapeHTML(data[ind])+"</span>";
+			div = "<div class='meter-value' style='float: left; background-color: "+
+		 		(new RGBackground()).setGradient(this.prgStartColor,this.prgEndColor,parseFloat(data[ind])).getColor()+
+				"; width: "+iv(data[ind])+"%"+
+				"; visibility: "+(iv(data[ind]) ? "visible" : "hidden")+
+				"'>&nbsp;</div>";
 		}
 		else
-			div.innerHTML = (String(data[ind]) == "") ? "&nbsp;" : escapeHTML(data[ind]);
+			div = "<div>"+((String(data[ind]) == "") ? "&nbsp;" : escapeHTML(data[ind]))+"</div>";
 		if((ind == 0) && (icon != null)) 
-			td.appendChild( $("<span></span>").addClass("stable-icon " + icon).get(0) );
-		td.appendChild(div);
-		tr.appendChild(td);
+			span2 = "<span class='stable-icon "+icon+"'></span>";
 		if(!this.colsdata[i].enabled && !browser.isIE7x)
-			td.style.display = "none";
+			s+=" style='display: none'";
+		s+=">";
+		s+=span1;
+		s+=span2;
+		s+=div;
+		s+="</td>";
 	}
-	tr.title = cols[0];
-	return(tr);
+	ret = tr.append(s).get(0);
+	if(!browser.isIE7x)
+	{
+		var _e = this.tBody.getElementsByTagName("colgroup")[0].getElementsByTagName("col");
+		for(var i = 0, l = _e.length; i < l; i++) 
+			ret.cells[i].style.textAlign = this.tHeadCols[i].style.textAlign;
+	}
+	return(ret);
 }
 
 dxSTable.prototype.removeRow = function(sId) 
@@ -1353,7 +1369,7 @@ dxSTable.prototype.clearRows = function()
 dxSTable.prototype.setAlignment = function()
 {
 	var i, aRows, aAlign, j, align;
-	var aAlign = new Array();
+	var aAlign = [];
 	for(i = 0; i < this.cols; i++)
 	{
 		switch(this.colsdata[i].align)
@@ -1436,7 +1452,7 @@ dxSTable.prototype.refreshSelection = function()
 {
         if(this.created)
         {
-		var rows = this.tBody.tb.rows, l = rows.length, j = 0;
+		var rows = this.tBody.tb.rows, l = rows.length;
 		for(var i = 0; i < l; i++) 
 		{
 			if(this.rowSel[rows[i].id] == true) 
@@ -1446,9 +1462,8 @@ dxSTable.prototype.refreshSelection = function()
 				if(!this.colorEvenRows) 
 					rows[i].className = "even";
 				else 
-					rows[i].className = (j & 1) ? "odd" : "even";
+					rows[i].className = (i & 1) ? "odd" : "even";
 			}
-			j++;
       		}
 	}
 }
@@ -1598,10 +1613,9 @@ dxSTable.prototype.setValue = function(row, col, val)
         		var c = this.getColOrder(col);
 			var td = r.cells[c];
 
-			$(td).attr("rawvalue",rawvalue);
-
 			if(this.colsdata[c].type==TYPE_PROGRESS)
 			{
+				$(td).attr("rawvalue",rawvalue);
 				td.lastChild.style.width = iv(val)+"%";
 				td.lastChild.style.backgroundColor = (new RGBackground()).setGradient(this.prgStartColor,this.prgEndColor,parseFloat(val)).getColor();
 				if(!iv(val))

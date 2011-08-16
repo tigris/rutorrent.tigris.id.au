@@ -1,7 +1,7 @@
 /*
  *      Misc objects.
  *
- *	$Id: common.js 1593 2010-12-11 10:39:53Z Novik65 $
+ *	$Id: common.js 1716 2011-07-26 14:02:27Z novik65 $
  */
 
 function $$(id)
@@ -147,16 +147,33 @@ $.event.fix = function(e)
 $.fn.extend({
 	mouseclick: function( handler )
 	{
-		var aSpecialCase = (browser.isOpera && !("oncontextmenu"in document.createElement("foo")));
+		var contextMenuPresent = ("oncontextmenu" in document.createElement("foo")) || browser.isFirefox || $.support.touchable;
 	        return( this.each( function()
 	        {
 	        	if($type(handler)=="function")
 	        	{
-				if(aSpecialCase)
+				if(contextMenuPresent)
+				{
+					$(this).bind( "contextmenu", function(e)
+					{
+						e.which = 3;
+						e.button = 2;
+						e.metaKey = false;	// for safari
+						e.shiftKey = false;	// for safari
+                                                return(handler.apply(this,arguments));
+					});
+                                        $(this).mousedown(function(e)
+					{
+						if(e.which != 3)
+							return(handler.apply(this,arguments));
+					});
+				}
+				else
+				if(browser.isOpera)
 				{
 			        	$(this).mousedown(function(e)
 					{
-						if(e.button==2)
+						if(e.which==3)
 						{
 							if(e.target)
 							{
@@ -183,25 +200,22 @@ $.fn.extend({
 						{
 							c.remove();
 							$(this).data("btn",null);
-							if((e.button==2) &&! (/^input|textarea|a$/i).test(e.target.tagName))
+							if((e.which==3) &&! (/^input|textarea|a$/i).test(e.target.tagName))
 								return(false);
 						}
 					});
 				}
 				else
-				{
-					if(browser.isMidori)
-						$(this).bind( "contextmenu",handler );
 					$(this).mousedown( handler );
-				}
 			}
 			else
 			{
-				if(browser.isMidori)
+				if(contextMenuPresent)
 					$(this).unbind( "contextmenu" );
-				$(this).unbind( "mousedown" );
-				if(aSpecialCase)
+				else
+				if(browser.isOpera)
 					$(this).unbind( "mouseup" );
+				$(this).unbind( "mousedown" );
 			}
 		}));            	
 	}
@@ -250,7 +264,8 @@ function linked(obj, _33, lst)
 
 function escapeHTML(str)
 {
-	return( $("<div>").text(str).html() );
+//	return( $("<div>").text(str).html() );
+	return( String(str).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;') );
 }
 
 function askYesNo( title, content, funcYesName )
@@ -431,10 +446,45 @@ var theConverter =
 			var h = today.getHours();
 			var m = today.getMinutes();
 			var s = today.getSeconds();
+			var am = "";
+
+			if(iv(theWebUI.settings["webui.timeformat"]))
+			{
+				if(h>12)
+				{
+					h = h-12;
+					am = " PM";
+				}
+				else
+					am = " AM";
+			}
 			h = (h < 10) ? ("0" + h) : h;
 			m = (m < 10) ? ("0" + m) : m;
 			s = (s < 10) ? ("0" + s) : s;
-			return(timeOnly ? h+":"+m+":"+s : day+"."+month+"."+today.getFullYear()+" "+h+":"+m+":"+s);
+			var tm = h+":"+m+":"+s+am;
+			var dt = '';
+			if(!timeOnly)
+			{
+				switch(iv(theWebUI.settings["webui.dateformat"]))
+				{
+					case 1:
+					{
+						dt = today.getFullYear()+"-"+month+"-"+day+" ";
+						break;
+					}
+					case 2:
+					{
+						dt = month+"/"+day+"/"+today.getFullYear()+" ";
+						break;
+					}
+					default:
+					{
+						dt = day+"."+month+"."+today.getFullYear()+" ";
+						break;
+					}
+				}
+			}
+			return(dt+tm);
 		}
 		return('');
 	}
@@ -526,10 +576,10 @@ var theFormatter =
 		switch(iv(no))
 		{
 			case 0:
-				ret = "no";
+				ret = theUILang.no;
 				break;
 			case 1:
-				ret = "yes";
+				ret = theUILang.yes;
 				break;
 		}
 		return(ret);
@@ -603,6 +653,12 @@ var theFormatter =
 	      				break;
       				case 'enabled' : 
       					arr[i] = theFormatter.yesNo(arr[i]);
+      					break;
+      				case 'interval' : 
+	      				arr[i] = theConverter.time(arr[i]);
+      					break;
+      				case 'last' : 
+	      				arr[i] = iv(arr[i]) ? theConverter.time( $.now()/1000 - iv(arr[i]) - theWebUI.deltaTime/1000,true) : '';	
       					break;
 	      		}
 		}
@@ -794,7 +850,7 @@ var theTabs =
                				theWebUI.setActiveView(id);
             				l.addClass("selected").css("z-index",1);
 	            			if(n=="lcont")
-		            			$("#clear_log").show();
+		            			$("#clear_log").css("display","inline");
             			}
          			else 
          			{
@@ -820,7 +876,8 @@ function log(text,noTime,divClass)
 	{
 		obj.append( $("<div>").addClass(divClass).text(tm + " " + text).show() );
 		obj[0].scrollTop = obj[0].scrollHeight;
-		theTabs.show("lcont");
+		if(iv(theWebUI.settings["webui.log_autoswitch"]))
+			theTabs.show("lcont");
 	}
 }
 
@@ -855,7 +912,7 @@ rDirectory.prototype.addFile = function(aData,no)
 		{
 			this.dirs[file.path] = {};
 			var up = splitName(file.path).path;
-			this.dirs[file.path]["_d_"+up] = { data: { name: "..", size: null, done: null, percent: null, priority: -2 }, icon: "Icon_Dir", link: up };
+			this.dirs[file.path]["_d_"+up] = { data: { name: "..", size: null, done: null, percent: null, priority: -2, prioritize: -2 }, icon: "Icon_Dir", link: up };
 		}
 		if(!fileAdded)
 		{
@@ -872,7 +929,7 @@ rDirectory.prototype.addFile = function(aData,no)
 		{
 			var sId = "_d_"+name;
 			if(!this.dirs[file.path][sId])
-				this.dirs[file.path][sId] = { data: { name: file.name, size: 0, done: 0, percent: 0.0, priority: -1 }, icon: "Icon_Dir", link: name };
+				this.dirs[file.path][sId] = { data: { name: file.name, size: 0, done: 0, percent: 0.0, priority: -1, prioritize: -1 }, icon: "Icon_Dir", link: name };
 		}
 		name = file.path;
 	} 
@@ -893,7 +950,7 @@ rDirectory.prototype.addFile = function(aData,no)
 rDirectory.prototype.updateDirs = function(name)
 {
 	var dir = this.dirs[name];
-	var allStat = { size: 0, done: 0, priority: -2 };
+	var allStat = { size: 0, done: 0, priority: -2, prioritize: -2 };
 	var stat;
 	for(var i in dir) 
 	{
@@ -906,6 +963,7 @@ rDirectory.prototype.updateDirs = function(name)
 				dir[i].data.done = stat.done;
 				dir[i].data.percent = ((dir[i].data.size > 0) ? theConverter.round((dir[i].data.done/dir[i].data.size)*100,1): "100.0");
 				dir[i].data.priority = stat.priority;
+				dir[i].data.prioritize = stat.prioritize;
 			}
 			else
 				stat = dir[i].data;
@@ -916,15 +974,20 @@ rDirectory.prototype.updateDirs = function(name)
 			else
 				if(allStat.priority!=stat.priority) 
 					allStat.priority = -1;
+			if(allStat.prioritize==-2)
+				allStat.prioritize = stat.prioritize;
+			else
+				if(allStat.prioritize!=stat.prioritize) 
+					allStat.prioritize = -1;
 		}
 	}
 	return(allStat);
 }
 
-rDirectory.prototype.getEntryPriority = function(k)
+rDirectory.prototype.getEntry = function(k)
 {
 	var entry = this.dirs[this.current][k];
-	return((entry.data.name=="..") ? null : entry.data.priority);
+	return((entry.data.name=="..") ? null : entry.data);
 }
 
 rDirectory.prototype.isDirectory = function(k)
@@ -933,7 +996,7 @@ rDirectory.prototype.isDirectory = function(k)
 	return(entry.link!=null);
 }
 
-rDirectory.prototype.getFilesIds = function(arr,current,k,prt)
+rDirectory.prototype.getFilesIds = function(arr,current,k,prt,property)
 {
 	var entry = this.dirs[current][k];
 	if(entry.data.name!="..")
@@ -941,10 +1004,10 @@ rDirectory.prototype.getFilesIds = function(arr,current,k,prt)
 		if(entry.link!=null)
 		{
 	        	for(var i in this.dirs[entry.link])
-				this.getFilesIds(arr,entry.link,i,prt);
+				this.getFilesIds(arr,entry.link,i,prt,property);
 		}
 		else
-			if(entry.data.priority!=prt)
+			if(!property || (entry.data[property]!=prt))
 				arr.push(k.substr(3));
 	}
 }
@@ -959,6 +1022,9 @@ rDirectory.prototype.setDirectory = function(name)
 {
 	this.current = name;
 }
+
+// -FL10%FF%86-
+// -SM1310-
 
 var theBTClientVersion = 
 {
@@ -986,7 +1052,8 @@ var theBTClientVersion =
 	{
 	        "AG" : "Ares", "A~" : "Ares", "ES" : "Electric Sheep",
         	"HL" : "Halite", "LT" : "libtorrent (Rasterbar)", "lt" : "libTorrent (Rakshasa)",
-	        "MP" : "MooPolice", "TT" : "TuoTu", "qB" : "qBittorrent"
+	        "MP" : "MooPolice", "TT" : "TuoTu", "qB" : "qBittorrent",
+       		'MG' : "MediaGet"	// ? -MG1Cr0-
 	},
 	azLikeClients2x2:
 	{
@@ -1267,18 +1334,23 @@ function getCSSRule( selectorText )
 		return(crossrule);
 	}
 
-	selectorText = selectorText.toLowerCase()
+	var selectorText1 = selectorText.toLowerCase();
+	var selectorText2 = selectorText1.replace('.','\\.');
 	var ret = null;
 	for( var j=document.styleSheets.length-1; j>=0; j-- )
 	{
 		var rules = getRulesArray(j);
 		for( var i=0; rules && i<rules.length; i++ )
 		{
-			if(rules[i].selectorText && rules[i].selectorText.toLowerCase()==selectorText)
+			if(rules[i].selectorText)
 			{
-				ret = rules[i];
-				break;
-			}			
+				var lo = rules[i].selectorText.toLowerCase();
+				if((lo==selectorText1) || (lo==selectorText2))
+				{
+					ret = rules[i];
+					break;
+				}			
+			}
 		}
 	}
 	return(ret);

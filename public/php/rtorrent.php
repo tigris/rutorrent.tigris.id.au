@@ -28,6 +28,9 @@ class rTorrent
 			}
 			$cmd = new rXMLRPCCommand( $isStart ? 'load_raw_start' : 'load_raw' );
 			$cmd->addParameter(base64_encode($torrent->__toString()),"base64");
+			if(!is_object($fname) && (rTorrentSettings::get()->iVersion>=0x805))
+				$cmd->addParameter(getCmd("d.set_custom")."=x-filename,".rawurlencode(getFileName($fname)));
+				
 			if(!$saveTorrent && is_string($fname))
 				@unlink($fname);
 			if($directory && (strlen($directory)>0))
@@ -105,6 +108,8 @@ class rTorrent
 				{
 					if(isset($torrent->{'libtorrent_resume'}))
 						unset($torrent->{'libtorrent_resume'});
+					if(isset($torrent->{'rtorrent'}))
+						unset($torrent->{'rtorrent'});
 					return($torrent);
 				}
 			}

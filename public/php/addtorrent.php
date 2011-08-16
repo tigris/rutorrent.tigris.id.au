@@ -2,6 +2,7 @@
 
 require_once( 'Snoopy.class.inc');
 require_once( 'rtorrent.php' );
+set_time_limit(0);
 
 $uploaded_file = '';
 $success = false;
@@ -43,7 +44,6 @@ else
 			$cli->read_timeout = HTTP_TIME_OUT;
 			$client->_fp_timeout = HTTP_TIME_OUT;
 			$cli->use_gzip = HTTP_USE_GZIP;
-			set_time_limit(0);
 			if(@$cli->fetchComplex(Snoopy::linkencode($url)) && $cli->status>=200 && $cli->status<300)
 			{
 			        $name = $cli->get_filename();
@@ -62,7 +62,7 @@ else
 	}
 if($success)
 {
-	@chmod($uploaded_file,0666);
+	@chmod($uploaded_file,$profileMask & 0666);
 	$uploaded_file = realpath($uploaded_file);
 	if(rTorrent::sendTorrent($uploaded_file,
 		!isset($_REQUEST['torrents_start_stopped']),

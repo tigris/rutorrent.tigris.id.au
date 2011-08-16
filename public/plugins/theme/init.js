@@ -7,6 +7,7 @@ if(theWebUI.theme)
 
 	plugin.allDone = function()
 	{
+		plugin.loadCSS("plugins");
 		$.each(theWebUI.tables, function(ndx,table)
 		{
 			table.obj.setPaletteByURL("plugins/theme/themes/"+theWebUI.theme);
@@ -16,8 +17,9 @@ if(theWebUI.theme)
 	plugin.config = theWebUI.config;
 	theWebUI.config = function(data)
 	{
-		plugin.config.call(this,data);
+		this.getTable("trt").setPaletteByURL("plugins/theme/themes/"+theWebUI.theme);
 		plugin.loadCSS("plugins");
+		plugin.config.call(this,data);
 		thePlugins.waitLoad( "thePlugins.get('theme').allDone" );
 	}
 }

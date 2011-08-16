@@ -12,7 +12,7 @@ class LFS
 	static protected function statPrim($fname)
 	{
 		$out = array();
-		$st = explode(':',@exec( getExternal('stat').' -c%d:%i:%f:%h:%u:%g:%s:%X:%Y:%Z:%B:%b '.escapeshellarg( $fname ), $out, $ret ));
+		$st = explode(':',@exec( getExternal('stat').' -Lc%d:%i:%f:%h:%u:%g:%s:%X:%Y:%Z:%B:%b '.escapeshellarg( $fname ), $out, $ret ));
 		return(($ret == 0) ? array( 
 		        "dev"	=>	intval($st[0]),
 			"ino"	=>	intval($st[1]),
@@ -31,6 +31,11 @@ class LFS
 	static public function is_file($fname)
 	{
 		return(@is_file($fname) || ((PHP_INT_SIZE<=4) && !@is_dir($fname) && @file_exists($fname) && self::test($fname,'f')));
+	}
+
+	static public function is_readable($fname)
+	{
+		return(@is_readable($fname) || ((PHP_INT_SIZE<=4) && @file_exists($fname) && self::test($fname,'r')));
 	}
 
 	static public function stat($fname)

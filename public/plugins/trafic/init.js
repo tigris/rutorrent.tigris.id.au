@@ -22,6 +22,7 @@ if(plugin.enabled && plugin.canChangeTabs())
 		this.previousPoint = null;
 		var rule = getCSSRule("div.graph_tab");
 		this.gridColor = rule ? rule.style.color : "#545454";
+		this.backgroundColor = rule ? rule.style.borderColor : null;
 
 		this.checked = [ true, true, true, true ];
 		this.datasets = [ this.down, this.up, this.oldDown, this.oldUp ];
@@ -63,6 +64,7 @@ if(plugin.enabled && plugin.canChangeTabs())
 				 	},
 					grid:
 					{
+						backgroundColor: self.backgroundColor,
 						color: self.gridColor,
 						hoverable: true
 					},
@@ -113,8 +115,8 @@ if(plugin.enabled && plugin.canChangeTabs())
 					}
 				);
 
-				$('.legendColorBox').before("<td class='legendCheckBox'><input type='checkbox'></td>");
-				$.each($('.legendCheckBox input'),function(ndx,element)
+				$('#'+self.owner.attr('id')+' .legendColorBox').before("<td class='legendCheckBox'><input type='checkbox'></td>");
+				$.each($('#'+self.owner.attr('id')+' .legendCheckBox input'),function(ndx,element)
 				{
 					$(element).click( function() 
 					{
@@ -129,11 +131,12 @@ if(plugin.enabled && plugin.canChangeTabs())
 	rTraficGraph.prototype.resize = function( newWidth, newHeight )
 	{
 		if(newWidth)
-		this.owner.width(newWidth-8);
+			this.owner.width(newWidth-8);
 		if(newHeight)
 		{
 			newHeight-=(iv($$(this.owner.attr("id")+'_ctrl').style.height)+$("#tabbar").height());
-			this.owner.height(newHeight);
+			if(newHeight>0)
+				this.owner.height(newHeight);
 		}
 		this.draw();
 	}
@@ -371,7 +374,7 @@ plugin.onLangLoaded = function()
 		 	this.attachPageToTabs(
 				$('<div>').attr("id","traf").html(
 					"<div id='traf_graph_ctrl' class='graph_tab' align=right style='height:30px;'>"+
-						"<input type='button' value='"+theUILang.ClearButton+"' class='Button' onclick='theWebUI.clearStats();return(false);'>"+
+						(plugin.disableClearButton ? "" : "<input type='button' value='"+theUILang.ClearButton+"' class='Button' onclick='theWebUI.clearStats();return(false);'>")+
 						"<select name='tracker_mode' id='tracker_mode' onchange='theWebUI.reqForTraficGraph()'>"+
 							"<option value='global' selected>"+theUILang.allTrackers+"</option>"+
 						"</select>"+

@@ -22,6 +22,11 @@ if($conf)
 	require_once($conf);
 require_once( 'lfs.php' );
 
+if(!isset($profileMask))
+	$profileMask = 0777;
+if(!isset($localhosts) || !count($localhosts))
+	$localhosts = array( "127.0.0.1", "localhost" );
+
 function stripSlashesFromArray(&$arr)
 {
         if(is_array($arr))
@@ -65,11 +70,29 @@ function quoteAndDeslashEachItem($item)
 	return('"'.addcslashes($item,"\\\'\"\n\r\t").'"'); 
 }
 
-function isInvalidUTF8($s)
-{
-	return(preg_match( '/^([\x00-\x7f]|[\xc0-\xdf][\x80-\xbf]|' .
-                '[\xe0-\xef][\x80-\xbf]{2}|[\xf0-\xf7][\x80-\xbf]{3})+$/', $s )!=1);
+define('_is_utf8_split',5000);
 
+function isInvalidUTF8($string)
+{
+	$len = strlen($string);
+	if($len > _is_utf8_split) 
+	{
+		for($i=0,$s=_is_utf8_split,$j=ceil($len/_is_utf8_split); $i < $j; $i++,$s+=_is_utf8_split) 
+			if(isInvalidUTF8(substr($string,$s,_is_utf8_split)))
+		                return(true);
+	        return(false);
+    	}
+    	else
+		return(preg_match('%^(?:'.
+			'[\x09\x0A\x0D\x20-\x7E]'.            	// ASCII
+			'| [\xC2-\xDF][\x80-\xBF]'.             // non-overlong 2-byte
+			'| \xE0[\xA0-\xBF][\x80-\xBF]'.         // excluding overlongs
+			'| [\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}'.  // straight 3-byte
+			'| \xED[\x80-\x9F][\x80-\xBF]'.         // excluding surrogates
+			'| \xF0[\x90-\xBF][\x80-\xBF]{2}'.      // planes 1-3
+			'| [\xF1-\xF3][\x80-\xBF]{3}'.          // planes 4-15
+			'| \xF4[\x80-\x8F][\x80-\xBF]{2}'.      // plane 16
+			')*$%xs', $string)!=1);
 }
 
 function win2utf($str) 
@@ -161,11 +184,16 @@ function toLog( $str )
 	}
 }
 
-function isLocalMode()
+function isLocalMode( $host = null, $port = null )
 {
 	global $scgi_host;
 	global $scgi_port;
-	return(($scgi_host == "127.0.0.1") || ($scgi_host == "localhost") || ($scgi_port == 0));
+	global $localhosts;
+	if(is_null($port))
+		$port = $scgi_port;
+	if(is_null($host))
+		$host = $scgi_host;
+	return(($port == 0) || in_array($host,$localhosts));
 }
 
 function isUserHavePermissionPrim($uid,$gids,$file,$flags)
@@ -264,13 +292,13 @@ function getPluginConf($plugin)
 	global $rootPath;
 	$conf = $rootPath.'/plugins/'.$plugin.'/conf.php';
 	if(is_file($conf) && is_readable($conf))
-		$ret.='require_once("'.$conf.'");';
+		$ret.='require("'.$conf.'");';
 	$user = getUser();
 	if($user!='')
 	{
 		$conf = $rootPath.'/conf/users/'.$user.'/plugins/'.$plugin.'/conf.php';
 		if(is_file($conf) && is_readable($conf))
-			$ret.='require_once("'.$conf.'");';
+			$ret.='require("'.$conf.'");';
 	}
 	return($ret);
 }
@@ -281,53 +309,55 @@ function getUser()
 	return( (!$forbidUserSettings && isset($_SERVER['REMOTE_USER']) && !empty($_SERVER['REMOTE_USER'])) ? strtolower($_SERVER['REMOTE_USER']) : '' );
 }
 
-function getProfilePath()
+function getProfilePath( $user = null )
 {
-	global $rootPath;
-        $ret = $rootPath.'/share';
-        $user = getUser();
+	global $profilePath;
+
+	$ret = fullpath(isset($profilePath) ? $profilePath : '../share', dirname(__FILE__));
+	if(is_null($user))
+	        $user = getUser();
         if($user!='')
         {
         	$ret.=('/users/'.$user);
         	if(!is_dir($ret))
-        	{
-	        	mkdir($ret);
-        		mkdir($ret.'/settings',0777);
-        		mkdir($ret.'/torrents',0777);
-		}
+			makeDirectory( array($ret,$ret.'/settings',$ret.'/torrents') );
 	}
 	return($ret);
 }
 
-function getSettingsPath()
+function getSettingsPath( $user = null )
 {
-	return( getProfilePath().'/settings' );
+	return( getProfilePath($user).'/settings' );
 }
 
-function getUploadsPath()
+function getUploadsPath( $user = null )
 {
-	return( getProfilePath().'/torrents' );
+	return( getProfilePath($user).'/torrents' );
 }
 
 function getUniqueFilename($fname)
 {
-	while(file_exists($fname))
+	global $overwriteUploadedTorrents;	
+	if(!$overwriteUploadedTorrents)
 	{
-		$ext = '';
-		$pos = strrpos($fname,'.');
-		if($pos!==false) 
+		while(file_exists($fname))
 		{
-			$ext = substr($fname,$pos);
-			$fname = substr($fname,0,$pos);
+			$ext = '';
+			$pos = strrpos($fname,'.');
+			if($pos!==false) 
+			{
+				$ext = substr($fname,$pos);
+				$fname = substr($fname,0,$pos);
+			}
+			$pos = preg_match('/.*\((?P<no>\d+)\)$/',$fname,$matches);
+			$no = 1;
+			if($pos)
+			{		
+				$no = intval($matches["no"])+1;
+				$fname = substr($fname,0,strrpos($fname,'('));
+			}
+			$fname = $fname.'('.$no.')'.$ext;
 		}
-		$pos = preg_match('/.*\((?P<no>\d+)\)$/',$fname,$matches);
-		$no = 1;
-		if($pos)
-		{		
-			$no = intval($matches["no"])+1;
-			$fname = substr($fname,0,strrpos($fname,'('));
-		}
-		$fname = $fname.'('.$no.')'.$ext;
 	}
 	return($fname);
 }
@@ -403,6 +433,69 @@ function cachedEcho( $content, $type = null, $cacheable = false, $exit = true )
 		exit($content);
 	else
 		echo($content);
+}
+
+function makeDirectory( $dirs, $perms = null )
+{
+	global $profileMask;
+	if(is_null($perms))
+		$perms = isset($profileMask) ? $profileMask : 0777;
+	$oldMask = umask(0);
+	if(is_array($dirs))
+		foreach($dirs as $dir)
+			@mkdir($dir,$perms,true);
+	else
+		@mkdir($dirs,$perms,true);
+	@umask($oldMask);
+} 
+
+function getFileName($path)
+{
+	$arr = explode('/',$path);
+	return(end($arr));
+}
+
+function sendFile( $filename, $contentType = null, $nameToSent = null, $mustExit = true )
+{
+	$stat = @LFS::stat($filename);
+	if($stat && @LFS::is_file($filename) && @LFS::is_readable($filename))
+	{
+		$etag = sprintf('"%x-%x-%x"', $stat['ino'], $stat['size'], $stat['mtime'] * 1000000);
+		header('Cache-Control: ');
+		header('Expires: ');
+		header('Pragma: ');
+		if( 	(isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] == $etag) ||
+                       	(isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $stat['mtime']))
+			header('HTTP/1.0 304 Not Modified');
+		else
+		{
+			header('Etag: '.$etag);
+			header('Last-Modified: ' . date('r', $stat['mtime']));
+			set_time_limit(0);
+			header('Accept-Ranges: bytes');
+			if(!ini_get("zlib.output_compression"))
+				header('Content-Length:' . $stat['size']);
+			header('Content-Type: '.(is_null($contentType) ? 'application/octet-stream' : $contentType));
+			if(is_null($nameToSent))
+				$nameToSent = end(explode('/',$filename));
+			if(isset($_SERVER['HTTP_USER_AGENT']) && strstr($_SERVER['HTTP_USER_AGENT'],'MSIE'))
+				$nameToSent = rawurlencode($nameToSent);
+			header('Content-Disposition: attachment; filename="'.$nameToSent.'"');
+			header('Content-Transfer-Encoding: binary');
+			header('Content-Description: File Transfer');
+			header('HTTP/1.0 200 OK');
+			ob_end_flush();
+			if($stat['size'] >= 2147483647)
+				passthru('cat '.escapeshellarg($filename));
+			else
+				readfile($filename);
+			if($mustExit)
+				exit;
+			else
+				return(true);
+		}
+	}
+	return(false);
 }
 
 ?>

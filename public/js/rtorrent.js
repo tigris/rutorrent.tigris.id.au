@@ -1,7 +1,7 @@
 /*
  *      Link to rTorrent.
  *
- *	$Id: rtorrent.js 1462 2010-10-13 14:04:25Z novik65 $
+ *	$Id: rtorrent.js 1697 2011-06-10 09:23:43Z novik65 $
  */
 
 var dStatus = { started : 1, paused : 2, checking : 4, hashing : 8, error : 16 };
@@ -19,7 +19,7 @@ var theRequestManager =
 			"d.get_custom1=", "d.get_peers_accounted=", "d.get_peers_not_connected=", "d.get_peers_connected=", "d.get_peers_complete=",
 			"d.get_left_bytes=", "d.get_priority=", "d.get_state_changed=", "d.get_skip_total=", "d.get_hashing=",
 			"d.get_chunks_hashed=", "d.get_base_path=", "d.get_creation_date=", "d.get_tracker_focus=", "d.is_active=",
-			"d.get_message=", "d.get_custom2=", "d.get_free_diskspace=", "d.is_private="
+			"d.get_message=", "d.get_custom2=", "d.get_free_diskspace=", "d.is_private=", "d.is_multi_file="
 		],
 		handlers: []
 	},
@@ -28,7 +28,8 @@ var theRequestManager =
 		commands: 
 		[
 		        "t.get_url=", "t.get_type=", "t.is_enabled=", "t.get_group=", "t.get_scrape_complete=", 
-			"t.get_scrape_incomplete=", "t.get_scrape_downloaded="
+			"t.get_scrape_incomplete=", "t.get_scrape_downloaded=",
+			"t.get_normal_interval=", "t.get_scrape_time_last="
 		],
 		handlers: []
 	},
@@ -63,7 +64,7 @@ var theRequestManager =
 		commands: 
 		[ 
 			"d.get_peer_exchange", "d.get_peers_max", "d.get_peers_min", "d.get_tracker_numwant", "d.get_uploads_max",
-			"d.is_private", "d.get_connection_current"
+			"d.is_private", "d.get_connection_seed"
 		],
 		handlers: []
 	},
@@ -353,6 +354,16 @@ rTorrentStub.prototype.stop = function()
 	}
 }
 
+rTorrentStub.prototype.updateTracker = function()
+{
+	for(var i=0; i<this.hashes.length; i++)
+	{
+		var cmd = new rXMLRPCCommand("d.tracker_announce");
+		cmd.addParameter("string",this.hashes[i]);
+		this.commands.push( cmd );
+	}
+}
+
 rTorrentStub.prototype.pause = function()
 {
 	for(var i=0; i<this.hashes.length; i++)
@@ -403,6 +414,49 @@ rTorrentStub.prototype.setprio = function()
 		cmd.addParameter("i4",this.vs[i]);
 		cmd.addParameter("i4",this.ss[0]);
 		this.commands.push( cmd );
+	}
+	cmd = new rXMLRPCCommand("d.update_priorities");
+	cmd.addParameter("string",this.hashes[0]);
+	this.commands.push( cmd );
+}
+
+rTorrentStub.prototype.setprioritize = function()
+{
+	for(var i=0; i<this.vs.length; i++)
+	{
+		switch(this.ss[0])
+		{
+			case '0':
+			{
+				var cmd = new rXMLRPCCommand( "f.prioritize_first.disable" );
+				cmd.addParameter("string",this.hashes[0]+":f"+this.vs[i]);
+				this.commands.push( cmd );
+				cmd = new rXMLRPCCommand( "f.prioritize_last.disable" );
+				cmd.addParameter("string",this.hashes[0]+":f"+this.vs[i]);
+				this.commands.push( cmd );
+				break;
+			}
+			case '1':
+			{
+				var cmd = new rXMLRPCCommand( "f.prioritize_first.enable" );
+				cmd.addParameter("string",this.hashes[0]+":f"+this.vs[i]);
+				this.commands.push( cmd );
+				cmd = new rXMLRPCCommand( "f.prioritize_last.disable" );
+				cmd.addParameter("string",this.hashes[0]+":f"+this.vs[i]);
+				this.commands.push( cmd );
+				break;
+			}
+			case '2':
+			{
+				var cmd = new rXMLRPCCommand( "f.prioritize_first.disable" );
+				cmd.addParameter("string",this.hashes[0]+":f"+this.vs[i]);
+				this.commands.push( cmd );
+				cmd = new rXMLRPCCommand( "f.prioritize_last.enable" );
+				cmd.addParameter("string",this.hashes[0]+":f"+this.vs[i]);
+				this.commands.push( cmd );
+				break;
+			}
+		}
 	}
 	cmd = new rXMLRPCCommand("d.update_priorities");
 	cmd.addParameter("string",this.hashes[0]);
@@ -630,6 +684,11 @@ rTorrentStub.prototype.setprioResponse = function(xml)
 	return(this.hashes[0]);
 }
 
+rTorrentStub.prototype.setprioritizeResponse = function(xml)
+{
+	return(this.hashes[0]);
+}
+
 rTorrentStub.prototype.getpropsResponse = function(xml)
 {
 	var datas = xml.getElementsByTagName('data');
@@ -646,6 +705,7 @@ rTorrentStub.prototype.getpropsResponse = function(xml)
 		ulslots: this.getValue(values,9),
 		superseed: (this.getValue(values,13)=="initial_seed") ? 1 : 0
 	};
+	var self = this;
 	$.each( theRequestManager.prp.handlers, function(i,handler)
 	{
 	        if(handler)
@@ -660,6 +720,7 @@ rTorrentStub.prototype.gettotalResponse = function(xml)
 	var data = datas[0];
 	var values = data.getElementsByTagName('value');
 	var ret = { UL: this.getValue(values,1), DL: this.getValue(values,3), rateUL: this.getValue(values,5), rateDL: this.getValue(values,7) };
+	var self = this;
 	$.each( theRequestManager.ttl.handlers, function(i,handler)
 	{
 	        if(handler)
@@ -710,7 +771,7 @@ rTorrentStub.prototype.getsettingsResponse = function(xml)
 		ret[theRequestManager.stg.commands[cmd]] = v;
 		i+=2;
 	}
-
+	var self = this;
 	$.each( theRequestManager.stg.handlers, function(i,handler)
 	{
 	        if(handler)
@@ -726,6 +787,7 @@ rTorrentStub.prototype.getfilesResponse = function(xml)
 	var hash = this.hashes[0];
 	ret[hash] = [];
 	var datas = xml.getElementsByTagName('data');
+	var self = this;
 	for(var j=1;j<datas.length;j++)
 	{
 		var data = datas[j];
@@ -756,6 +818,7 @@ rTorrentStub.prototype.getpeersResponse = function(xml)
 {
 	var ret = {};
 	var datas = xml.getElementsByTagName('data');
+	var self = this;
 	for(var j=1;j<datas.length;j++)
 	{
 		var data = datas[j];
@@ -802,6 +865,7 @@ rTorrentStub.prototype.gettrackersResponse = function(xml)
 	var hash = this.hashes[0];
 	ret[hash] = [];
 	var datas = xml.getElementsByTagName('data');
+	var self = this;
 	for(var j=1;j<datas.length;j++)
 	{
 		var data = datas[j];
@@ -814,6 +878,8 @@ rTorrentStub.prototype.gettrackersResponse = function(xml)
 		trk.seeds = this.getValue(values,4);
 		trk.peers = this.getValue(values,5);
 		trk.downloaded = this.getValue(values,6);
+		trk.interval = this.getValue(values,7);
+		trk.last = this.getValue(values,8);
 
 		$.each( theRequestManager.trk.handlers, function(i,handler)
 		{
@@ -942,6 +1008,7 @@ rTorrentStub.prototype.listResponse = function(xml)
 		} catch(e) { torrent.comment = ''; }
 		torrent.free_diskspace = this.getValue(values,32);
 		torrent.private = this.getValue(values,33);
+		torrent.multi_file = iv(this.getValue(values,34));
 		torrent.seeds = torrent.seeds_actual + " (" + torrent.seeds_all + ")";
 		torrent.peers = torrent.peers_actual + " (" + torrent.peers_all + ")";
 		var hash = this.getValue(values,0);
@@ -981,16 +1048,18 @@ function Ajax(URI, isASync, onComplete, onTimeout, onError, reqTimeout)
 		cache: stub.cache,
 		ifModified: stub.ifModified,
 		dataType: stub.dataType,
+		traditional: true,
 		global: true,
 
 		complete: function(XMLHttpRequest, textStatus)
 		{
 			if(theWebUI.deltaTime==0)
 			{
+				var diff = 0;
 				try {
-				var diff = new Date().getTime()-Date.parse(XMLHttpRequest.getResponseHeader("Date"));
-				} catch(e) { return; };
-				theWebUI.deltaTime = diff;
+				diff = new Date().getTime()-Date.parse(XMLHttpRequest.getResponseHeader("Date"));
+				} catch(e) { diff = 0; };
+				theWebUI.deltaTime = iv(diff);
 				stub = null;
 			}
 		},
@@ -1023,9 +1092,11 @@ function Ajax(URI, isASync, onComplete, onTimeout, onError, reqTimeout)
 							onComplete(responseText);
 							break;
 						case "array":
+						{
 							onComplete[0].apply(onComplete[1], 
 								new Array(responseText, onComplete[2]));
 							break;
+						}
 					}
 				}
 			}

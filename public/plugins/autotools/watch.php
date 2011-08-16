@@ -42,9 +42,7 @@ if( $is_ok )
 // Ask info from rTorrent
 if( $is_ok )
 {
-	if(!isset($theSettings))
-		$theSettings = rTorrentSettings::load();
-	$directory = rtAddTailSlash( $theSettings->directory );
+	$directory = rtAddTailSlash( rTorrentSettings::get()->directory );
 	Debug( "get_directory    : ".$directory );
 	if( $directory == '' || $directory == '/' )
 		$is_ok = false;
@@ -53,7 +51,7 @@ if( $is_ok )
 // Scan for *.torrent files at $path_to_watch
 if( $is_ok )
 {
-	$files = rtScanFiles( $path_to_watch, "*.torrent", true ); // ignore case
+	$files = rtScanFiles( $path_to_watch, "/.*\.torrent$/i" ); // ignore case
 	foreach( $files as $file )
 	{
 		$torrent_file = $path_to_watch.$file; // don't use realpath() here !!!
@@ -67,7 +65,7 @@ if( $is_ok )
 		// ( If we want to add same torrent again )
 		if( $is_ok && ( !is_writeable( $torrent_file ) || !touch( $torrent_file ) ) )
 		{
-			Debug( "no access to ".$torrent_path );
+			Debug( "no access to ".$torrent_file );
 			$is_ok = false;
 		}
 

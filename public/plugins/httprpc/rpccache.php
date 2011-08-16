@@ -1,8 +1,8 @@
 <?php
 
-define("MAX_CACHE", 	16);
-define("SIZEOF_HASH", 	40);
-define("SIZEOF_MD5", 	32);
+@define("MAX_CACHE", 	16);
+@define("SIZEOF_HASH", 	40);
+@define("SIZEOF_MD5", 	32);
 
 require_once( dirname(__FILE__)."/../../php/util.php" );
 
@@ -38,7 +38,7 @@ class rpcCache
         {
 		$this->dir = getSettingsPath()."/httprpc";
 		if(!is_dir($this->dir))
-			mkdir($this->dir, 0777);
+			makeDirectory($this->dir);
         }
 	
 	protected function store( $torrents = array() )

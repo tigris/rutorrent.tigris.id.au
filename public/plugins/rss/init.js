@@ -84,13 +84,13 @@ theWebUI.switchRSSLabel = function(el)
 	}
 	table.clearSelection();
 	var lst = $("#List");
+	var rss = $("#RSSList");
 	if(lst.is(":visible"))
 	{
 		theWebUI.dID = "";
 		theWebUI.clearDetails();
 		if((this.actLbl != "") && ($$(this.actLbl) != null))
 			$($$(theWebUI.actLbl)).removeClass("sel");
-		var rss = $("#RSSList");
 		plugin.correctCSS();
 		rss.css( { width: lst.width(), height: lst.height() } );
 		table.resize(lst.width(), lst.height());
@@ -152,11 +152,29 @@ theWebUI.rssDblClick = function( obj )
 		window.open(theWebUI.rssItems[obj.id].guid,"_blank");
 }
 
+theWebUI.showRSSTimer = function( tm )
+{
+	$("#rsstimer").text( theConverter.time( tm ) ).attr( "row", tm );
+	if(plugin.rssShowInterval)
+		window.clearInterval( plugin.rssShowInterval );
+	plugin.rssShowInterval = window.setInterval( function()
+	{
+		var tm = $("#rsstimer").attr("row")-1;
+		if(!tm)
+		{
+			$("#rsstimer").text('*');
+			window.clearInterval( plugin.rssShowInterval );
+		}
+		$("#rsstimer").text( theConverter.time( tm ) ).attr( "row", tm );
+	}, 1000 );
+}
+
 theWebUI.getRSSIntervals = function( d )
 {
         theWebUI.loadRSS();
 	theWebUI.updateRSSInterval = d.interval*60000;	
 	theWebUI.updateRSSTimer = window.setTimeout("theWebUI.updateRSS()", d.next*1000);
+	theWebUI.showRSSTimer(d.next);
 }
 
 theWebUI.RSSMarkState = function( state )
@@ -225,7 +243,7 @@ theWebUI.RSSManager = function()
 
 theWebUI.rssLabelContextMenu = function(e)
 {
-        if(e.button==2)
+        if(e.which==3)
         {
 		if(plugin.canChangeMenu())
 		{
@@ -461,7 +479,7 @@ theWebUI.rssSelect = function(e, id)
 	{
 		theWebUI.dID = "";
 		theWebUI.clearDetails();
-		if((e.button == 2) && plugin.canChangeMenu())
+		if((e.which==3) && plugin.canChangeMenu())
 		{
 			theWebUI.createRSSMenu(e, id);
 			theContextMenu.show();
@@ -508,6 +526,7 @@ theWebUI.updateRSS = function()
 		window.clearTimeout(theWebUI.updateRSSTimer);
 	theWebUI.loadRSS();
 	theWebUI.updateRSSTimer = window.setTimeout("theWebUI.updateRSS()", theWebUI.updateRSSInterval);
+	theWebUI.showRSSTimer( theWebUI.updateRSSInterval/1000 );
 }
 
 theWebUI.retryRSSRequest = function()
@@ -684,8 +703,10 @@ theWebUI.showErrors = function(d)
 {
 	for( var i=0; i<d.errors.length; i++)
 	{
-		var s = d.errors[i].time ? "["+theConverter.date(iv(d.errors[i].time)+theWebUI.deltaTime/1000)+"] "+d.errors[i].desc :
-			d.errors[i].desc;
+		var s = '';
+		if(d.errors[i].time)
+			s =  "["+theConverter.date(iv(d.errors[i].time)+theWebUI.deltaTime/1000)+"] ";
+		s += eval(d.errors[i].desc);
 		if(d.errors[i].prm)
 			s = s + " ("+d.errors[i].prm+")";
 		log(s,true);
@@ -1201,7 +1222,11 @@ rTorrentStub.prototype.rssmarkstate = function()
 {
 	this.content = "mode=mark&state="+this.ss[0];
 	for( var i=0; i<theWebUI.rssArray.length; i++)
-		this.content+=("&url="+encodeURIComponent(theWebUI.rssArray[i]));
+	{
+		var href = theWebUI.rssArray[i];
+		this.content+=("&url="+encodeURIComponent(href));
+		this.content+=("&time="+theWebUI.rssItems[href].time);
+	}
 	this.contentType = "application/x-www-form-urlencoded";
 	this.mountPoint = "plugins/rss/action.php";
 	this.dataType = "json";
@@ -1352,6 +1377,7 @@ plugin.onLangLoaded = function()
 	plugin.addPaneToCategory("prss",theUILang.rssFeeds).
 		append( $("<ul></ul>").html('<li id="_rssAll_" class="RSS cat">'+theUILang.allFeeds+'&nbsp;(<span id="_rssAll_c">0</span>)</li>')).
 		append( $("<div>").html('<ul id="rssl"></ul>') );
+	$("#prss").append( $("<span></span>").attr("id", "rsstimer") );
 	$("#_rssAll_").mouseclick( theWebUI.rssLabelContextMenu );
 
 	theDialogManager.make( "dlgAddRSS", theUILang.addRSS,

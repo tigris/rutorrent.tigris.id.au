@@ -93,7 +93,7 @@ var thePlugins =
 	}
 };
 
-function rPlugin( name, version, author, descr, restictions )
+function rPlugin( name, version, author, descr, restictions, help )
 {
 	this.name = name;
 	this.path = "plugins/"+name+"/";
@@ -103,6 +103,7 @@ function rPlugin( name, version, author, descr, restictions )
 	this.allStuffLoaded = false;
 	this.enabled = true;
 	this.restictions = restictions;
+	this.help = help;
 	thePlugins.register(this);
 }
 
@@ -134,9 +135,9 @@ rPlugin.prototype.remove = function()
 rPlugin.prototype.showError = function(err) 
 {
 	if( this.allStuffLoaded )
-		log( err );
+		log( eval(err) );
 	else
-		setTimeout( 'thePlugins.get("'+this.name+'").showError(' + err + ')', 1000 );
+		setTimeout( 'thePlugins.get("'+this.name+'").showError("' + err + '")', 1000 );
 }
 
 rPlugin.prototype.langLoaded = function() 
@@ -237,20 +238,11 @@ rPlugin.prototype.attachPageToTabs = function(dlg,name,idBefore)
 		var newLbl = document.createElement("li");
 		newLbl.id = "tab_"+dlg.id;
 		newLbl.innerHTML = "<a href=\"javascript://void();\" onmousedown=\"theTabs.show('"+dlg.id+"');\" onfocus=\"this.blur();\">" + name + "</a>";
- 		var beforeTab = idBefore ? $$(idBefore) : null;
-	 	if(beforeTab)
- 		{
-			beforeTab.parentNode.insertBefore(dlg,beforeTab);
-			var beforeLbl = $$("tab_"+idBefore);
-			beforeLbl.parentNode.insertBefore(newLbl,beforeLbl);
-		}
-		else
-		{
-			beforeTab = $$("lcont");
-			beforeTab.parentNode.appendChild(dlg);
-			var beforeLbl = $$("tab_lcont");
-			beforeLbl.parentNode.appendChild(newLbl);
-		}
+		if(!idBefore)
+			idBefore = "lcont";
+		$$(idBefore).parentNode.insertBefore(dlg,$$(idBefore));
+		var beforeLbl = $$("tab_"+idBefore);
+		beforeLbl.parentNode.insertBefore(newLbl,beforeLbl);
 		theTabs.show("lcont");
 	}
 	return(this);
@@ -330,7 +322,7 @@ rPlugin.prototype.addPaneToStatusbar = function(id,div,no)
         {
 		var row = $("#firstStatusRow").get(0);
 		var td = row.insertCell(iv(no));
-		$(td).attr("id",id).append( $(div) );
+		$(td).attr("id",id).addClass("statuscell").append( $(div) );
 	}
 	return(this);
 }
@@ -348,6 +340,7 @@ rPlugin.prototype.addPaneToCategory = function(id,name)
 		$('#CatList').append(
 			$("<div>").addClass("catpanel").attr("id",id).text(name).click(function() { theWebUI.togglePanel(this); })).
 				append($("<div>").attr("id",id+"_cont"));
+		theWebUI.showPanel($$(id),!theWebUI.settings["webui.closed_panels"][id]);
 	}
 	return($("#"+id+"_cont"));
 }

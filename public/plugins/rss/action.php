@@ -257,7 +257,7 @@ switch($cmd)
 	{
 	        if(isset($_REQUEST['no']))
 			$mngr->clearFilterTime( $_REQUEST['no'] );
-		$val = '{}';
+		$val = array();
 		break;
 	}
 	case "getdesc":
@@ -275,14 +275,18 @@ switch($cmd)
 		if(isset($HTTP_RAW_POST_DATA) && isset($_REQUEST['state']))
 		{
 			$urls = array();
+			$times = array();
 			$vars = explode('&', $HTTP_RAW_POST_DATA);
 			foreach($vars as $var)
 			{
 				$parts = explode("=",$var);
 				if($parts[0]=="url")
 					$urls[] = rawurldecode($parts[1]);
+				else
+				if($parts[0]=="time")
+					$times[] = $parts[1];
 			}
-			$mngr->setHistoryState( $urls, $_REQUEST['state'] );
+			$mngr->setHistoryState( $urls, $times, $_REQUEST['state'] );
 		}
 		break;
 	}
@@ -350,11 +354,9 @@ if($val===null)
 	$errorsReported = true;
 }
 if($dataType=="text/xml")
-	$content = '<?xml version="1.0" encoding="UTF-8"?><data><![CDATA['.$val.']]></data>';
+	cachedEcho('<?xml version="1.0" encoding="UTF-8"?><data><![CDATA['.$val.']]></data>',"text/xml",true,false);
 else
-	$content = $val;
-
-cachedEcho($content,$dataType,true,false);
+	cachedEcho(json_encode($val),$dataType,true,false);
 
 ob_flush();
 flush();

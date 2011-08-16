@@ -1,7 +1,7 @@
 /*
  *      Speed graph.
  *
- *	$Id: graph.js 1451 2010-09-23 08:45:25Z novik65 $
+ *	$Id: graph.js 1681 2011-05-03 15:43:36Z novik65 $
  */
 
 function clearElement(target)
@@ -49,6 +49,32 @@ rSpeedGraph.prototype.create = function( aOwner )
 	this.startSeconds = new Date().getTime()/1000;
 	var rule = getCSSRule("div.graph_tab");
 	this.gridColor = rule ? rule.style.color : "#545454";
+	this.backgroundColor = rule ? rule.style.borderColor : null;
+
+	this.checked = [ true, true ];
+	this.datasets = [ this.up, this.down ];
+}
+
+rSpeedGraph.prototype.getData = function()
+{
+	var ret = new Array();		
+	for( var i in this.checked )
+	{
+		if(this.checked[i])
+			ret.push(this.datasets[i]);
+		else
+		{
+			var arr = cloneObject( this.datasets[i] );
+			arr.data = [];
+			ret.push(arr);
+		}
+	}
+	return(ret);
+}
+
+rSpeedGraph.prototype.getColors = function()
+{
+	return([ this.up.color, this.down.color ]);
 }
 
 var previousSpeedPoint = null;
@@ -75,12 +101,9 @@ rSpeedGraph.prototype.draw = function()
 				return( h+":"+m+":"+s );
 			}
 
-			$.plot(self.owner, [ self.up, self.down ],
+			$.plot(self.owner, self.getData(),
 			{ 
-				colors:
-				[
-				 	self.up.color, self.down.color
-				],
+				colors: self.getColors(),
 				lines:
 				{
 					show: true
@@ -88,10 +111,12 @@ rSpeedGraph.prototype.draw = function()
 				grid:
 				{
 					color: self.gridColor,
+					backgroundColor: self.backgroundColor,
 					hoverable: true
 				},
 				xaxis: 
 				{ 
+					min: (self.seconds-self.startSeconds>=self.maxSeconds) ? null : self.startSeconds,
 					max: (self.seconds-self.startSeconds>=self.maxSeconds) ? null : self.maxSeconds+self.startSeconds,
 					tickSize: 60,
 					tickFormatter: xTick
@@ -143,6 +168,16 @@ rSpeedGraph.prototype.draw = function()
 					}
 				}
 			);
+
+			$('#'+self.owner.attr('id')+' .legendColorBox').before("<td class='legendCheckBox'><input type='checkbox'></td>");
+			$.each($('#'+self.owner.attr('id')+' .legendCheckBox input'),function(ndx,element)
+			{
+				$(element).click( function() 
+				{
+					self.checked[ndx] = !self.checked[ndx];
+					self.draw();
+				}).attr("checked",self.checked[ndx]);
+			});
 
 		}
 	}

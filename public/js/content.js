@@ -1,7 +1,7 @@
 /*
  *      UI content.
  *
- *	$Id: content.js 1583 2010-11-23 09:46:47Z novik65 $
+ *	$Id: content.js 1716 2011-07-26 14:02:27Z novik65 $
  */
 
 function makeContent()
@@ -244,9 +244,6 @@ function makeContent()
 						theUILang.ReqTimeout+":&nbsp;<input type=\"text\" id=\"webui.reqtimeout\" class=\"TextboxShort\" value=\"5000\" />"+
 						theUILang.ms+
 					"</div>"+
-					"<div class=\"op100l\"><input type=\"checkbox\" id=\"webui.ignore_timeouts\" checked=\"true\" />"+
-						"<label for=\"webui.ignore_timeouts\">"+theUILang.dontShowTimeouts+"</label>"+
-					"</div>"+
 					"<div class=\"op50l\"><input type=\"checkbox\" id=\"webui.show_cats\" checked=\"true\" />"+
 						"<label for=\"webui.show_cats\">"+theUILang.Show_cat_start+"</label>"+
 					"</div>"+
@@ -256,14 +253,33 @@ function makeContent()
 					"<div class=\"op50l\"><input type=\"checkbox\" id=\"webui.needmessage\"/>"+
 						"<label for=\"webui.needmessage\">"+theUILang.GetTrackerMessage+"</label>"+
 					"</div>"+
+
+					"<div class=\"op50l algnright\">"+
+						"<label for=\"webui.dateformat\">"+theUILang.DateFormat+":</label>&nbsp;"+
+						"<select id=\"webui.dateformat\">"+
+							"<option value='0'>31.12.2011</option>"+
+							"<option value='1'>2011-12-31</option>"+
+							"<option value='2'>12/31/2011</option>"+
+						"</select>"+
+					"</div>"+
+
+					"<div class=\"op50l\">"+
+						"<label for=\"webui.ignore_timeouts\">"+"<input type=\"checkbox\" id=\"webui.ignore_timeouts\" checked=\"true\" />"+theUILang.dontShowTimeouts+"</label>"+
+					"</div>"+
+
 					"<div class=\"op50l algnright\"><input type=\"checkbox\" id=\"webui.effects\"/>"+
 						"<label for=\"webui.effects\">"+theUILang.UIEffects+"</label>"+
 					"</div>"+
+
+
 					"<div class=\"op100l\"><input type=\"checkbox\" id=\"webui.fullrows\"  onchange=\"linked(this, 1, ['webui.no_delaying_draw']);\"/>"+
 						"<label for=\"webui.fullrows\">"+theUILang.fullTableRender+"</label>"+
 					"</div>"+
 					"<div class=\"op100l\"><input type=\"checkbox\" id=\"webui.no_delaying_draw\"/>"+
 						"<label for=\"webui.no_delaying_draw\" id=\"lbl_webui.no_delaying_draw\" >"+theUILang.showScrollTables+"</label>"+
+					"</div>"+
+					"<div class=\"op100l\"><input type=\"checkbox\" id=\"webui.log_autoswitch\"/>"+
+						"<label for=\"webui.log_autoswitch\" id=\"lbl_webui.log_autoswitch\" >"+theUILang.logAutoSwitch+"</label>"+
 					"</div>"+
 					"<div class=\"op100l\">"+
 						"<label for=\"webui.retry_on_error\">"+theUILang.retryOnErrorTitle+":</label>&nbsp;"+
@@ -568,10 +584,10 @@ function correctContent()
 	};
 
 	if(!$type(theWebUI.systemInfo))
-		theWebUI.systemInfo = { rTorrent: { version: '?', libVersion: '?', started: false } };
+		theWebUI.systemInfo = { rTorrent: { version: '?', libVersion: '?', started: false, iVersion: 0 } };
 
 	if(!theWebUI.systemInfo.rTorrent.started)
-        	theWebUI.showFlags &= ~0xFFEF;
+        	theWebUI.showFlags &= ~0xFFFF;
 
 	if(!(theWebUI.showFlags & showEnum.showDownloadsPage))
 		rPlugin.prototype.removePageFromOptions("st_dl");
@@ -624,6 +640,9 @@ function correctContent()
 		theRequestManager.aliases[""] = "";
 		$.extend(theRequestManager.aliases, 
 		{
+			"d.set_peer_exchange" 		: "d.peer_exchange.set",
+			"d.set_connection_seed"		: "d.connection_seed.set"
+/*
 			"d.get_base_filename" 		: "d.base_filename",
 			"d.get_base_path" 		: "d.base_path",
 			"d.get_bitfield" 		: "d.bitfield",
@@ -640,7 +659,6 @@ function correctContent()
 			"d.get_up_rate" 		: "d.up.rate",
 			"d.get_up_total" 		: "d.up.total",
 			"d.save_session" 		: "d.save_full_session",
-			"d.set_peer_exchange" 		: "d.peer_exchange.set",
 			"get_handshake_log" 		: "log.handshake",
 			"get_log.tracker" 		: "log.tracker",
 			"get_max_file_size" 		: "system.file.max_size",
@@ -682,7 +700,22 @@ function correctContent()
 			"system.method.list_keys" 	: "method.list_keys",
 			"system.method.set" 		: "method.set",
 			"system.method.set_key" 	: "method.set_key"
+*/
 		});
 	}
 	$("#rtorrentv").text(theWebUI.systemInfo.rTorrent.version+"/"+theWebUI.systemInfo.rTorrent.libVersion);
+
+	if(theWebUI.systemInfo.rTorrent.iVersion>=0x809)
+	{
+		theRequestManager.addRequest("fls","f.prioritize_first=",function(hash, fls, value) 
+		{
+			if(value=='1')
+				fls.prioritize = 1;
+		});
+		theRequestManager.addRequest("fls","f.prioritize_last=",function(hash, fls, value) 
+		{
+			if(value=='1')
+				fls.prioritize = 2;
+		});
+	}
 }

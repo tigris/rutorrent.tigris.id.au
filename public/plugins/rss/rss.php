@@ -16,7 +16,7 @@ class rRSS
 	public $lastModified = null;
 	public $etag = null;
 	public $encoding = null;
-	public $version = 1;
+	public $version = 0;
 	private $channeltags = array('title', 'link', 'lastBuildDate');
 	private $itemtags = array('title', 'link', 'pubDate', 'enclosure', 'guid', 'source', 'description', 'dc:date');
 	private $atomtags = array('title', 'updated');
@@ -24,6 +24,7 @@ class rRSS
 
 	public function rRSS( $url = null )
 	{
+		$this->version = 1;
 		if($url)
 		{
 			$pos = strpos($url,':COOKIE:');
@@ -52,8 +53,20 @@ class rRSS
 		}
 	}
 
+	public function getMaskedURL()
+	{
+		$ret = $this->srcURL;
+		if(preg_match("`^(?P<sheme>[^:]*)://.*@(?P<url>.*)$`i",$ret,$matches))
+			$ret = $matches["sheme"]."://".$matches["url"];
+		$pos = strpos($ret,':COOKIE:');
+		if($pos!==false)
+			$ret = substr($ret,0,$pos);
+		return($ret);
+	}
+
 	public function getTorrent( $href )
 	{
+		global $profileMask;
 		$cli = self::fetchURL(Snoopy::linkencode($href),$this->cookies);
 		if($cli && $cli->status>=200 && $cli->status<300)
 		{
@@ -66,33 +79,42 @@ class rRSS
 			{
 				@fwrite($f,$cli->results,strlen($cli->results));
 				fclose($f);
-				@chmod($name,0666);
+				@chmod($name,$profileMask & 0666);
 				return($name);
 			}
 		}
 		return(false);
 	}
 
-	public function getContents($label,$auto,$enabled,$history)
+	public function getItemTimestamp( $href )
 	{
-		$ret = '{ "label": '.self::quoteInvalidURI($label).', "auto": '.$auto.', "enabled": '.$enabled.', "hash": "'.$this->hash.'", "url": '.self::quoteInvalidURI($this->srcURL).', "items": [';
-		foreach($this->items as $href=>$item)
-		{
-			if($item['timestamp']>0)
-				$ret.='{ "time": '.$item['timestamp'];
-			else
-				$ret.='{ "time": null';
-			$ret.=', "title": "'.addslashes($item['title']).'", "href": '.self::quoteInvalidURI($href).
-				', "guid": '.self::quoteInvalidURI($item['guid']).
-				', "errcount": '.$history->getCounter($href).', "hash": "'.$history->getHash($href).'" },';
-		}
-		$len = strlen($ret);
-		if($ret[$len-1]==',')
-			$ret = substr($ret,0,$len-1);
-		return($ret.'] }');
+		return( array_key_exists($href,$this->items) ? $this->items[$href]["timestamp"] : 0 );
 	}
 
-	public function fetch()
+	public function getContents($label,$auto,$enabled,$history)
+	{
+		$ret = array(
+			"label"=>self::quoteInvalidURI($label),
+			"auto"=>intval($auto),
+			"enabled"=>intval($enabled),
+			"hash"=>$this->hash,
+			"url"=>self::quoteInvalidURI($this->srcURL),
+			"items"=>array() );
+		foreach($this->items as $href=>$item)
+		{
+			$ret["items"][] = array(
+				"time"=>($item['timestamp']>0) ? intval($item['timestamp']) : null,
+				"title"=>$item['title'],
+				"href"=>self::quoteInvalidURI($href),
+				"guid"=>self::quoteInvalidURI($item['guid']),
+				"errcount"=>$history->getCounter($href),
+				"hash"=>$history->getHash($href) 
+				);
+		}
+		return($ret);
+	}
+
+	public function fetch( $history )
 	{
 		$headers = array();
 		if($this->etag) 
@@ -272,6 +294,8 @@ class rRSS
 				}
 			}
 			rTorrentSettings::get()->pushEvent( "RSSFetched", array( "rss"=>&$this ) );
+			foreach( $this->items as $href=>$item )
+				$history->correct($href,$item['timestamp']);
 			return(true);
 		}
 		return(false);
@@ -299,6 +323,8 @@ class rRSS
 			else
 			if($needTranslate)
 				$out[1] = self::removeTegs( $out[1] );
+			if( isInvalidUTF8( $out[1] ) )
+				$out[1] = win2utf($out[1]);
 			return(trim($out[1]));
 		}
 		else
@@ -323,7 +349,7 @@ class rRSS
 
 	static protected function quoteInvalidURI($str)
 	{
-		return( '"'.preg_replace("/\s/u"," ",addslashes($str)).'"' );
+		return( preg_replace("/\s/u"," ",$str) );
 	}
 
 	static protected function fetchURL($url, $cookies = null, $headers = null )
@@ -346,33 +372,39 @@ class rRSSHistory
 {
 	public $hash = "history";
 	public $lst = array();
-	public $cnt = array();
 	public $filtersTime = array();
 	public $changed = false;
-	protected $version = 1;
+	public $version = 0;
 
-	public function add( $url, $hash )
+	public function rRSSHistory()
 	{
+		$this->version = 2;
+	}
+
+	public function add( $url, $hash, $timestamp )
+	{
+		$cnt = 0;
+		if(array_key_exists($url,$this->lst))
+			$cnt = ($this->lst[$url]["time"]==$timestamp) ? $this->lst[$url]["cnt"] : 0;
+		$this->lst[$url] = array( "hash"=>$hash, "time"=>$timestamp, "cnt"=>$cnt );
 		if($hash=='Failed')
-		{
-			if(array_key_exists($url,$this->cnt))
-				$this->cnt[$url] = $this->cnt[$url]+1;
-			else
-				$this->cnt[$url] = 1;
-		}
-		$this->lst[$url] = $hash;
+			$this->lst[$url]["cnt"] = $cnt+1;
 		$this->changed = true;
+	}
+        public function correct( $url, $timestamp )
+	{
+		if( array_key_exists($url,$this->lst) && 
+			($this->lst[$url]["time"]!=$timestamp) )
+		{
+			unset($this->lst[$url]);
+			$this->changed = true;			
+		}
 	}
 	public function del( $href )
 	{
 		if(array_key_exists($href,$this->lst))
 		{
 			unset($this->lst[$href]);
-			$this->changed = true;
-		}
-		if(array_key_exists($href,$this->cnt))
-		{
-			unset($this->cnt[$href]);
 			$this->changed = true;
 		}
 	}
@@ -382,28 +414,27 @@ class rRSSHistory
 	}
 	public function getCounter( $url )
 	{
-		if(array_key_exists($url,$this->cnt))
-			return($this->cnt[$url]);
-		return(1);
+		if(array_key_exists($url,$this->lst))
+			return(intval($this->lst[$url]["cnt"]));
+		return(0);
 	}
 	public function wasLoaded( $url )
 	{
 		$ret = false;
 		if(array_key_exists($url,$this->lst))
-			$ret = ($this->lst[$url]!=='Failed') || ($this->getCounter( $url )>=HISTORY_MAX_TRY);
+			$ret = ($this->lst[$url]["hash"]!=='Failed') || ($this->getCounter( $url )>HISTORY_MAX_TRY);
 		return($ret);
 	}
 	public function getHash( $url )
 	{
 		if(array_key_exists($url,$this->lst))
-			return($this->lst[$url]);
+			return($this->lst[$url]["hash"]);
 		return("");
 	}
 	public function clear()
 	{
 	        $this->changed = (count($this->lst)>0);
 		$this->lst = array();
-		$this->cnt = array();
 	}
 	public function isOverflow()
 	{
@@ -530,17 +561,24 @@ class rRSSFilter
 	}
 	public function getContents()
 	{
-		return('{ "name": "'.addslashes($this->name).'", "enabled": '.$this->enabled.', "pattern": "'.addslashes($this->pattern).'", "label": "'.addslashes($this->label).
-			'", "exclude": "'.addslashes($this->exclude).
-			'", "throttle": "'.addslashes($this->throttle).
-			'", "ratio": "'.addslashes($this->ratio).
-			'", "hash": "'.addslashes($this->rssHash).'", "start": '.$this->start.', "add_path": '.$this->addPath.
-			', "chktitle": '.$this->titleCheck.
-			', "chkdesc": '.$this->descCheck.
-			', "chklink": '.$this->linkCheck.
-			', "no": '.$this->no.
-			', "interval": '.$this->interval.
-			', "dir": "'.addslashes($this->directory).'" }');
+		return( array( 	
+				"name"=>$this->name,
+				"enabled"=>intval($this->enabled),
+				"pattern"=>$this->pattern,
+				"label"=>$this->label,
+				"exclude"=>$this->exclude,
+				"throttle"=>$this->throttle,
+				"ratio"=>$this->ratio,
+				"hash"=>$this->rssHash,
+				"start"=>intval($this->start),
+				"add_path"=>intval($this->addPath),
+				"chktitle"=>intval($this->titleCheck),
+				"chkdesc"=>intval($this->descCheck),
+				"chklink"=>intval($this->linkCheck),
+				"no"=>intval($this->no),
+				"interval"=>intval($this->interval),
+				"dir"=>$this->directory 
+			));
 	}
 }
 
@@ -559,16 +597,10 @@ class rRSSFilterList
 	}
 	public function getContents()
 	{
-		$ret = "[";
+		$ret = array();
 		foreach( $this->lst as $item )
-		{
-			$ret.=$item->getContents();
-			$ret.=",";
-		}
-		$len = strlen($ret);
-		if($ret[$len-1]==',')
-			$ret = substr($ret,0,$len-1);
-		return( $ret."]" );
+			$ret[] = $item->getContents();
+		return( $ret );
 	}
 }
 
@@ -585,10 +617,6 @@ class rRSSGroup
 			$this->hash = 'grp_'.uniqid(time());
 		else
 			$this->hash = $hash;
-	}
-	public function getContents()
-	{
-		return('"'.$this->hash.'" : { "name": '.quoteAndDeslashEachItem($this->name).', "lst": ['.implode(",", array_map('quoteAndDeslashEachItem', $this->lst)).']}');
 	}
 	public function check( $rssList )	
 	{
@@ -624,16 +652,10 @@ class rRSSGroupList
 	}
 	public function getContents()
 	{
-		$ret = "{";
+		$ret = array();
 		foreach( $this->lst as $item )
-		{
-			$ret.=$item->getContents();
-			$ret.=",";
-		}
-		$len = strlen($ret);
-		if($ret[$len-1]==',')
-			$ret = substr($ret,0,$len-1);
-		return( $ret."}" );
+			$ret[$item->hash] = array( "name"=>$item->name, "lst"=>$item->lst );
+		return( $ret );
 	}
 	public function check( $rssList )
 	{
@@ -732,18 +754,7 @@ class rRSSMetaList
 	}
 	public function formatErrors()
 	{
-		$ret = '{ "errors": [';
-		$time = time();
-		foreach($this->err as $err)
-		{
-			if(array_key_exists('time',$err))
-				$time = $err['time'];
-			$ret.='{ "time": '.$time.', "prm": "'.addslashes($err['prm']).'", "desc": '.$err['desc'].' },';
-		}
-		$len = strlen($ret);
-		if($ret[$len-1]==',')
-			$ret = substr($ret,0,$len-1);
-		return($ret."]");
+		return($this->err);
 	}
 	public function addError( $desc, $prm = null )
 	{
@@ -822,12 +833,12 @@ class rRSSManager
 		$this->history->clear();
                 $this->saveHistory();
 	}
-	public function setHistoryState( $urls, $state )
+	public function setHistoryState( $urls, $times, $state )
 	{
-		foreach( $urls as $url )
+		foreach( $urls as $ndx=>$url )
 		{
 			if($state)
-				$this->history->add($url,'Loaded');
+				$this->history->add($url,'Loaded',$times[$ndx]);
 			else
 				$this->history->del($url);
 		}
@@ -903,8 +914,7 @@ class rRSSManager
 				$hash = '';
 			}
 		}
-		$hrefs = array_map(  'quoteAndDeslashEachItem', array_unique($hrefs));
-		return($this->rssList->formatErrors().', "rss": "'.$hash.'","list": ['.implode(",",$hrefs).']}');
+		return(array( "errors"=>$this->rssList->formatErrors(), "rss"=>$hash, "list"=>array_unique($hrefs)));
 	}
 	public function updateRSSGroup($hash)
 	{
@@ -926,13 +936,13 @@ class rRSSManager
 				$info = $this->rssList->lst[$item];
 	                        if($this->cache->get($rss) && $info['enabled'])
 				{
-					if($rss->fetch() && $this->cache->set($rss))
+					if($rss->fetch($this->history) && $this->cache->set($rss))
 					{
 						$this->checkFilters($rss,$filters);
 						$this->saveHistory();
 					}
 					else
-						$this->rssList->addError( "theUILang.cantFetchRSS", $rss->srcURL );
+						$this->rssList->addError( "theUILang.cantFetchRSS", $rss->getMaskedURL() );
 				}
 			}
 			else
@@ -954,10 +964,10 @@ class rRSSManager
 			$rss->hash = $hash;
 			if($this->cache->get($rss) && $info['enabled'])
 			{
-				if($rss->fetch() && $this->cache->set($rss))
+				if($rss->fetch($this->history) && $this->cache->set($rss))
 					$this->checkFilters($rss,$filters);
 				else
-					$this->rssList->addError( "theUILang.cantFetchRSS", $rss->srcURL );
+					$this->rssList->addError( "theUILang.cantFetchRSS", $rss->getMaskedURL() );
 			}
 		}
 		if(!$manual)
@@ -972,23 +982,25 @@ class rRSSManager
 		global $updateInterval;
 		$nextTouch = $updateInterval*60;
 		if($this->rssList->updatedAt)
-			$nextTouch = $nextTouch-(time()-$this->rssList->updatedAt)+15;
-		return('{ "next": '.$nextTouch.', "interval": '.$updateInterval.' }');
+			$nextTouch = $nextTouch-(time()-$this->rssList->updatedAt)+45;
+		return(array( "next"=>$nextTouch, "interval"=>$updateInterval ));
 	}
 	public function get()
 	{
 		$corrected = false;
-		$ret = $this->rssList->formatErrors().', "list": [';
+		$ret = array( "errors"=>$this->rssList->formatErrors(), "list"=>array(), "groups"=>array() );
 		foreach($this->rssList->lst as $hash=>$info)
 		{
 			$rss = new rRSS(array_key_exists('url',$info) ? $info['url'] : null);
 			$rss->hash = $hash;
-			if(!$this->cache->get($rss) && !empty($rss->srcURL) && $rss->fetch())
+			if(!$this->cache->get($rss) && !empty($rss->srcURL) && $rss->fetch($this->history))
+			{
 				$this->cache->set($rss);
+				$this->saveHistory();
+			}
 			if(!empty($rss->srcURL))
 			{
-				$ret.=$rss->getContents($info['label'],$info['auto'],$info['enabled'],$this->history);
-				$ret.=",";
+				$ret["list"][] = $rss->getContents($info['label'],$info['auto'],$info['enabled'],$this->history);
 				if(!array_key_exists('url',$info))
 				{
 					$this->rssList->lst[$hash]['url'] = $rss->srcURL;
@@ -1003,13 +1015,10 @@ class rRSSManager
 		}
 		if($corrected)
 			$this->cache->set($this->rssList);
-		$len = strlen($ret);
-		if($ret[$len-1]==',')
-			$ret = substr($ret,0,$len-1);
 		if($this->groups->check($this->rssList))
 			$this->saveGroups();
-		$ret.='], "groups": '.$this->groups->getContents();
-		return($ret."}");
+		$ret["groups"] = $this->groups->getContents();
+		return($ret);
 	}
 	public function getDescription( $hash, $href )
 	{
@@ -1121,7 +1130,7 @@ class rRSSManager
 		$rss = new rRSS($rssURL);
 		if(!$this->rssList->isExist($rss))
 		{
-			if($rss->fetch() && $this->cache->set($rss))
+			if($rss->fetch($this->history) && $this->cache->set($rss))
 			{
 			        if($rssLabel)
 			        	$rssLabel = trim($rssLabel);
@@ -1138,10 +1147,10 @@ class rRSSManager
 				$this->saveHistory();
 			}
 			else
-				$this->rssList->addError( "theUILang.cantFetchRSS", $rssURL );
+				$this->rssList->addError( "theUILang.cantFetchRSS", $rss->getMaskedURL() );
 		}
 		else
-			$this->rssList->addError( "theUILang.rssAlreadyExist", $rssURL );
+			$this->rssList->addError( "theUILang.rssAlreadyExist", $rss->getMaskedURL() );
 	}
 	public function getTorrents( $rss, $url, $isStart, $isAddPath, $directory, $label, $throttle, $ratio, $needFlush = true )
 	{
@@ -1164,7 +1173,7 @@ class rRSSManager
 		}
 		if($ret===false)
 			$this->rssList->addError( "theUILang.rssCantLoadTorrent", $url );
-		$this->history->add($url,$thash);
+		$this->history->add($url,$thash,$rss->getItemTimestamp( $url ));
 		if($needFlush)
 			$this->saveHistory();
 	}
