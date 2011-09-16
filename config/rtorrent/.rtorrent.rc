@@ -10,6 +10,10 @@ check_hash = yes
 peer_exchange = no
 tracker_numwant = -1
 encoding_list = UTF-8
+safe_sync = yes
+receive_buffer_size = 8K
+send_buffer_size = 8K
+max_memory_usage = 1024M
 scgi_local = /home/danial/.rtorrent/socket/rpc.socket
 schedule = chmod,0,0,"execute=chmod,777,/home/danial/.rtorrent/socket/rpc.socket"
 schedule = watch_directory,10,10,load_start=/home/danial/.rtorrent/watch/*.torrent
