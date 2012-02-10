@@ -26,10 +26,12 @@ restart_daemons() {
   if [ "x$config" != "x" ]; then
     pid=$(cat /home/danial/.rtorrent/session/rtorrent.lock | awk -F: '{print($2)}' | sed "s/[^0-9]//g")
     if ps -A | grep -sq ${pid}.*rtorrent ; then
-      kill -INT $pid
+      kill -TERM $pid
     fi
     cp config/rtorrent/.rtorrent.rc /home/danial
     sleep 5
+    rm -f /home/danial/.rtorrent/socket/rpc.socket
+    sleep 2
     /usr/bin/screen -fa -d -m -S rtorrent /usr/local/bin/rtorrent
     daemons="$daemons rtorrent"
   fi
