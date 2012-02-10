@@ -50,15 +50,15 @@ instead) then you can just sudo apt-get install rtorrent and be done with it.
     sudo make install
 
 * Install rtorrent (note: the "unstable" version of rtorrent is not supported by rutorrent)
-    wget http://libtorrent.rakshasa.no/downloads/libtorrent-0.12.6.tar.gz
-    wget http://libtorrent.rakshasa.no/downloads/rtorrent-0.8.6.tar.gz
-    tar zxf libtorrent-0.12.6.tar.gz
-    tar zxf rtorrent-0.8.6.tar.gz
-    cd libtorrent-0.12.6
+    wget http://libtorrent.rakshasa.no/downloads/libtorrent-0.12.9.tar.gz
+    wget http://libtorrent.rakshasa.no/downloads/rtorrent-0.8.9.tar.gz
+    tar zxf libtorrent-0.12.9.tar.gz
+    tar zxf rtorrent-0.8.9.tar.gz
+    cd libtorrent-0.12.9
     ./configure
     make
     sudo make install
-    cd ../rtorrent-0.8.6/
+    cd ../rtorrent-0.8.9/
     ./configure --with-xmlrpc-c=/usr/local/bin/xmlrpc-c-config
     make
     sudo make install
