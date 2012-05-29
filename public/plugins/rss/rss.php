@@ -66,6 +66,8 @@ class rRSS
 
 	public function getTorrent( $href )
 	{
+		if(strpos($href,"magnet:")===0)
+			return("magnet");
 		global $profileMask;
 		$cli = self::fetchURL(Snoopy::linkencode($href),$this->cookies);
 		if($cli && $cli->status>=200 && $cli->status<300)
@@ -355,10 +357,6 @@ class rRSS
 	static protected function fetchURL($url, $cookies = null, $headers = null )
 	{
 		$client = new Snoopy();
-		$client->agent = HTTP_USER_AGENT;
-		$client->read_timeout = HTTP_TIME_OUT;
-		$client->_fp_timeout = HTTP_TIME_OUT;
-		$client->use_gzip = HTTP_USE_GZIP;
 		if(is_array($headers) && count($headers))
 			$client->rawheaders = $headers;
 		if(is_array($cookies) && count($cookies))
@@ -1164,7 +1162,10 @@ class rRSSManager
 			if(!empty($ratio))
 				$addition[] = getCmd("view.set_visible=").$ratio;
 			global $saveUploadedTorrents;
-			if(($thash = rTorrent::sendTorrent($ret, $isStart, $isAddPath, $directory, $label, $saveUploadedTorrents, false, true, $addition))===false)
+			$thash = ($ret==='magnet') ?
+				rTorrent::sendMagnet($url, $isStart, $isAddPath, $directory, $label, $addition) :
+				rTorrent::sendTorrent($ret, $isStart, $isAddPath, $directory, $label, $saveUploadedTorrents, false, true, $addition);
+			if($thash===false)
 			{
 				$thash = 'Failed';
 				@unlink($ret);

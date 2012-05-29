@@ -1,7 +1,7 @@
 /*
  *      UI content.
  *
- *	$Id: content.js 1716 2011-07-26 14:02:27Z novik65 $
+ *	$Id: content.js 1964 2012-02-10 09:15:25Z novik65@gmail.com $
  */
 
 function makeContent()
@@ -71,7 +71,7 @@ function makeContent()
 		$("#torrent_file").val("");
 		$("#add_button").attr("disabled",false);
 		var d = (this.contentDocument || this.contentWindow.document);
-		if(d.location.href != "about:blank")
+		if(d && (d.location.href != "about:blank"))
 			try { eval(d.body.innerHTML); } catch(e) {}
 	}));
 	$(document.body).append($("<iframe name='uploadfrmurl'/>").css({visibility: "hidden"}).attr( { name: "uploadfrmurl" } ).width(0).height(0).load(function()
@@ -413,10 +413,6 @@ function makeContent()
 							"<td>"+theUILang.Glob_max_http+":</td>"+
 							"<td class=\"alr\"><input type=\"text\" id=\"max_open_http\" class=\"Textbox num\" maxlength=\"6\" /></td>"+
 						"</tr>"+
-						"<tr>"+
-							"<td>"+theUILang.Glob_max_sockets+":</td>"+
-							"<td class=\"alr\"><input type=\"text\" id=\"max_open_sockets\" class=\"Textbox num\" maxlength=\"6\" /></td>"+
-						"</tr>"+				
 					"</table>"+
 				"</fieldset>"+
 			"</div>"+
@@ -587,7 +583,7 @@ function correctContent()
 		theWebUI.systemInfo = { rTorrent: { version: '?', libVersion: '?', started: false, iVersion: 0 } };
 
 	if(!theWebUI.systemInfo.rTorrent.started)
-        	theWebUI.showFlags &= ~0xFFFF;
+        	theWebUI.showFlags &= ~0xFFEF;
 
 	if(!(theWebUI.showFlags & showEnum.showDownloadsPage))
 		rPlugin.prototype.removePageFromOptions("st_dl");
@@ -635,6 +631,37 @@ function correctContent()
 		rPlugin.prototype.removeButtonFromToolbar("stop");
 		rPlugin.prototype.removeSeparatorFromToolbar("settings");
 	}
+	else
+	{
+		if(theWebUI.systemInfo.rTorrent.iVersion>=0x809)
+		{
+			theRequestManager.addRequest("fls","f.prioritize_first=",function(hash, fls, value) 
+			{
+				if(value=='1')
+					fls.prioritize = 1;
+			});
+			theRequestManager.addRequest("fls","f.prioritize_last=",function(hash, fls, value) 
+			{
+				if(value=='1')
+					fls.prioritize = 2;
+			});
+		}
+		if(theWebUI.systemInfo.rTorrent.iVersion>=0x900)
+		{
+			$('#st_ao_h table tr:first').remove();
+			$('#st_ao_h table tr:first').remove();
+			$('#st_ao_h table tr:first').remove();
+			$.extend(theRequestManager.aliases, 
+			{
+				"get_hash_interval"		: "cat",
+				"get_hash_max_tries"		: "cat",
+				"get_hash_read_ahead"		: "cat",
+				"set_hash_interval"		: "cat",
+				"set_hash_max_tries"		: "cat",
+				"set_hash_read_ahead"		: "cat"
+			});
+		}
+	}
 	if(theWebUI.systemInfo.rTorrent.newMethodsSet)
 	{
 		theRequestManager.aliases[""] = "";
@@ -642,80 +669,9 @@ function correctContent()
 		{
 			"d.set_peer_exchange" 		: "d.peer_exchange.set",
 			"d.set_connection_seed"		: "d.connection_seed.set"
-/*
-			"d.get_base_filename" 		: "d.base_filename",
-			"d.get_base_path" 		: "d.base_path",
-			"d.get_bitfield" 		: "d.bitfield",
-			"d.get_creation_date" 		: "d.creation_date",
-			"d.get_down_rate" 		: "d.down.rate",
-			"d.get_down_total" 		: "d.down.total",
-			"d.get_hash" 			: "d.hash",
-			"d.get_local_id" 		: "d.local_id",
-			"d.get_local_id_html" 		: "d.local_id_html",
-			"d.get_name" 			: "d.name",
-			"d.get_peer_exchange" 		: "d.peer_exchange",
-			"d.get_skip_rate" 		: "d.skip.rate",
-			"d.get_skip_total" 		: "d.skip.total",
-			"d.get_up_rate" 		: "d.up.rate",
-			"d.get_up_total" 		: "d.up.total",
-			"d.save_session" 		: "d.save_full_session",
-			"get_handshake_log" 		: "log.handshake",
-			"get_log.tracker" 		: "log.tracker",
-			"get_max_file_size" 		: "system.file.max_size",
-			"get_max_memory_usage" 		: "pieces.memory.max",
-			"get_memory_usage" 		: "pieces.memory.current",
-			"get_name" 			: "system.session_name",
-			"get_preload_min_size" 		: "pieces.preload.min_size",
-			"get_preload_required_rate" 	: "pieces.preload.min_rate",
-			"get_preload_type" 		: "pieces.preload.type",
-			"get_safe_free_diskspace" 	: "pieces.sync.safe_free_diskspace",
-			"get_safe_sync" 		: "pieces.sync.always_safe",
-			"get_session_lock"		: "system.session.use_lock",
-			"get_session_on_completion" 	: "system.session.on_completion",
-			"get_split_file_size" 		: "system.file.split_size",
-			"get_split_suffix" 		: "system.file.split_suffix",
-			"get_stats_not_preloaded" 	: "pieces.stats_not_preloaded",
-			"get_stats_preloaded" 		: "pieces.stats_preloaded",
-			"get_timeout_safe_sync" 	: "pieces.sync.timeout_safe",
-			"get_timeout_sync" 		: "pieces.sync.timeout",
-			"set_handshake_log" 		: "log.handshake.set",
-			"set_log.tracker" 		: "log.tracker.set",
-			"set_max_file_size"		: "system.file.max_size.set",
-			"set_max_memory_usage"		: "pieces.memory.max.set",
-			"set_name" 			: "system.session_name.set",
-			"set_preload_min_size" 		: "pieces.preload.min_size.set",
-			"set_preload_required_rate" 	: "pieces.preload.min_rate.set",
-			"set_preload_type" 		: "pieces.preload.type.set",
-			"set_safe_sync" 		: "pieces.sync.always_safe.set",
-			"set_session_lock" 		: "system.session.use_lock.set",
-			"set_session_on_completion" 	: "system.session.on_completion.set",
-			"set_split_file_size" 		: "system.file.split_size.set",
-			"set_split_suffix" 		: "system.file.split_suffix.set",
-			"set_timeout_safe_sync" 	: "pieces.sync.timeout_safe.set",
-			"set_timeout_sync" 		: "pieces.sync.timeout.set",
-			"system.method.erase" 		: "method.erase",
-			"system.method.get" 		: "method.get",
-			"system.method.has_key" 	: "method.has_key",
-			"system.method.insert" 		: "method.insert",
-			"system.method.list_keys" 	: "method.list_keys",
-			"system.method.set" 		: "method.set",
-			"system.method.set_key" 	: "method.set_key"
-*/
 		});
 	}
 	$("#rtorrentv").text(theWebUI.systemInfo.rTorrent.version+"/"+theWebUI.systemInfo.rTorrent.libVersion);
 
-	if(theWebUI.systemInfo.rTorrent.iVersion>=0x809)
-	{
-		theRequestManager.addRequest("fls","f.prioritize_first=",function(hash, fls, value) 
-		{
-			if(value=='1')
-				fls.prioritize = 1;
-		});
-		theRequestManager.addRequest("fls","f.prioritize_last=",function(hash, fls, value) 
-		{
-			if(value=='1')
-				fls.prioritize = 2;
-		});
-	}
+
 }

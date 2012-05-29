@@ -8,7 +8,6 @@ class rTorrent
 {
 	static public function sendTorrent($fname, $isStart, $isAddPath, $directory, $label, $saveTorrent, $isFast, $isNew = true, $addition = null)
 	{
-	        global $topDirectory;
 		$hash = false;
 		$torrent = is_object($fname) ? $fname : new Torrent($fname);
 		if(!$torrent->errors())
@@ -35,7 +34,7 @@ class rTorrent
 				@unlink($fname);
 			if($directory && (strlen($directory)>0))
 			{
-				if(strpos(addslash($directory),$topDirectory)!==0)
+				if(!rTorrentSettings::get()->correctDirectory($directory))
 					return(false);
 				$cmd->addParameter( ($isAddPath ? getCmd("d.set_directory=")."\"" : getCmd("d.set_directory_base=")."\"").$directory."\"" );
 			}
@@ -66,25 +65,43 @@ class rTorrent
 		}
 		return($hash);
 	}
-	static public function sendMagnet($magnet, $isStart, $isAddPath, $directory, $label)
+	static public function sendMagnet($magnet, $isStart, $isAddPath, $directory, $label, $addition = null)
 	{
-	        global $topDirectory;
-		$cmd = new rXMLRPCCommand( $isStart ? 'load_start' : 'load' );
-		$cmd->addParameter($magnet);
-		if($directory && (strlen($directory)>0))
-		{
-			if(strpos(addslash($directory),$topDirectory)!==0)
-				return(false);
-			$cmd->addParameter( ($isAddPath ? getCmd("d.set_directory=")."\"" : getCmd("d.set_directory_base=")."\"").$directory."\"" );
+	        $hpos = stripos($magnet,'xt=urn:btih:');
+	        if($hpos!==false)
+	        {
+	        	$hpos+=12;
+	        	$fpos = stripos($magnet,'&',$hpos);
+			if($fpos===false)
+				$fpos = strlen($magnet);
+			$hash = strtoupper(substr($magnet,$hpos,$fpos-$hpos));
+                        if(strlen($hash)==32)
+		        	$hash = base32decode($hash);
+	        	if(strlen($hash)==40)
+	        	{
+				$cmd = new rXMLRPCCommand( $isStart ? 'load_start' : 'load' );
+				$cmd->addParameter($magnet);
+				if($directory && (strlen($directory)>0))
+				{
+					if(!rTorrentSettings::get()->correctDirectory($directory))
+						return(false);
+					$cmd->addParameter( ($isAddPath ? getCmd("d.set_directory=")."\"" : getCmd("d.set_directory_base=")."\"").$directory."\"" );
+				}
+				if($label && (strlen($label)>0))
+				{
+					$label = rawurlencode($label);
+					if(strlen($label)<=4096)
+						$cmd->addParameter(getCmd("d.set_custom1=").$label);
+				}
+				if(is_array($addition))
+					foreach($addition as $key=>$prm)
+						$cmd->addParameter($prm,'string');
+				$req = new rXMLRPCRequest( $cmd );
+				if($req->success())
+					return($hash);
+			}
 		}
-		if($label && (strlen($label)>0))
-		{
-			$label = rawurlencode($label);
-			if(strlen($label)<=4096)
-				$cmd->addParameter(getCmd("d.set_custom1=").$label);
-		}
-		$req = new rXMLRPCRequest( $cmd );
-		return($req->success());
+		return(false);
 	}
 	static public function getSource($hash)
 	{

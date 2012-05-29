@@ -1,7 +1,7 @@
 /*
  *      Misc objects.
  *
- *	$Id: common.js 1716 2011-07-26 14:02:27Z novik65 $
+ *	$Id: common.js 1920 2011-12-12 14:20:55Z novik65@gmail.com $
  */
 
 function $$(id)
@@ -218,12 +218,18 @@ $.fn.extend({
 				$(this).unbind( "mousedown" );
 			}
 		}));            	
+	},
+
+	enableSysMenu: function()
+	{
+		return(this.bind("contextmenu",function(e) { e.stopImmediatePropagation(); }).
+			bind("selectstart",function(e) { e.stopImmediatePropagation(); return(true); }));
 	}
 });
 
-function addslashes(str)
+function addslashes(str) 
 {
-	return (str+'').replace(/([\\"'])/g, "\\$1").replace(/\u0000/g, "\\0");
+	return( (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0').replace(/\u000A/g, '\\n').replace(/\u000D/g, '\\r') );
 }
 
 function iv(val) 
@@ -615,6 +621,23 @@ var theFormatter =
 		}
 		return(ret);
 	},
+	pluginLaunch: function(no)
+	{
+		var ret = "";
+		switch(iv(no))
+		{
+			case 0:
+				ret = theUILang.Disabled;
+				break;
+			case 1:
+				ret = theUILang.Enabled;
+				break;
+			case 2:
+				ret = theUILang.plgLocked;
+				break;
+		}
+		return(ret);
+	},
 	peers: function(table,arr)
 	{
 		for(var i in arr)
@@ -652,6 +675,7 @@ var theFormatter =
       					arr[i] = theFormatter.trackerType(arr[i]);
 	      				break;
       				case 'enabled' : 
+      				case 'private' : 
       					arr[i] = theFormatter.yesNo(arr[i]);
       					break;
       				case 'interval' : 
@@ -675,6 +699,9 @@ var theFormatter =
    			{
       				case 'status' : 
       					arr[i] = theFormatter.pluginStatus(arr[i]);
+	      				break;
+      				case 'launch' : 
+      					arr[i] = theFormatter.pluginLaunch(arr[i]);
 	      				break;
       				case 'version' : 
       					arr[i] = new Number(arr[i]).toFixed(2);
@@ -807,6 +834,7 @@ var theTabs =
 			this.blur();
 		}));
    		this.show("gcont");
+   		$('#gcont,#lcont').enableSysMenu();
    	}, 
 	onShow : function(id)
 	{
@@ -864,7 +892,7 @@ var theTabs =
    	}
 };
 
-function log(text,noTime,divClass) 
+function log(text,noTime,divClass,force) 
 {
 	var tm = '';
 	if(!noTime)
@@ -876,12 +904,12 @@ function log(text,noTime,divClass)
 	{
 		obj.append( $("<div>").addClass(divClass).text(tm + " " + text).show() );
 		obj[0].scrollTop = obj[0].scrollHeight;
-		if(iv(theWebUI.settings["webui.log_autoswitch"]))
+		if(iv(theWebUI.settings["webui.log_autoswitch"]) || force)
 			theTabs.show("lcont");
 	}
 }
 
-function logHTML(text,divClass) 
+function logHTML(text,divClass,force) 
 {
 	var obj = $("#lcont");
 	if(!divClass)
@@ -890,7 +918,8 @@ function logHTML(text,divClass)
 	{
 		obj.append( $("<div>").addClass(divClass).html(text).show() );
 		obj[0].scrollTop = obj[0].scrollHeight;
-		theTabs.show("lcont");
+		if(iv(theWebUI.settings["webui.log_autoswitch"]) || force)
+			theTabs.show("lcont");
 	}
 }
 
@@ -1466,7 +1495,7 @@ function json_encode(obj)
 		case "boolean":
 			return(obj ? "1" : "0");
 		case "string":
-			return('"'+obj+'"');
+			return('"'+addslashes(obj)+'"');
 		case "array":
 		{
 		        var s = '';
@@ -1492,3 +1521,4 @@ function json_encode(obj)
 	}
 	return("null");
 }
+

@@ -22,7 +22,9 @@ class rTorrentSettings
 	public $started = 0;
 	public $server = '';
 	public $portRange = '6890-6999';
+	public $port = '6890';
 	public $idNotFound = false;
+	public $home = '';
 
 	static private $theSettings = null;
 
@@ -160,6 +162,16 @@ class rTorrentSettings
 					$this->libVersion = $req->val[2];
 					$this->server = $req->val[4];
 					$this->portRange = $req->val[5];
+					$this->port = intval($this->portRange);
+
+					if($this->iVersion>=0x809)
+					{
+						$req = new rXMLRPCRequest( new rXMLRPCCommand("network.listen.port") );
+						$req->important = false;
+						if($req->success())
+							$this->port = intval($req->val[0]);
+					}
+
 					if(isLocalMode())
 					{
 	                                        if(!empty($this->session))
@@ -176,9 +188,10 @@ class rTorrentSettings
 						{
 							$this->uid = intval(trim($line[0]));
 							$this->gid = explode(' ',trim($line[1]));
+							$this->home = trim($line[2]);
 							if(!empty($this->directory) &&
 								($this->directory[0]=='~'))
-								$this->directory = trim($line[2]).substr($this->directory,1);	
+								$this->directory = $this->home.substr($this->directory,1);	
 							$req = new rXMLRPCRequest(new rXMLRPCCommand( "execute", array("rm",$randName) ));
 							$req->run();
 						}
@@ -232,6 +245,14 @@ class rTorrentSettings
 	public function getOnHashdoneCommand($args)
 	{
         	return($this->getEventCommand('on_hash_done','hash_done',$args));
+	}
+	public function correctDirectory(&$dir)
+	{
+		global $topDirectory;
+		if(strlen($dir) && ($dir[0]=='~'))
+			$dir = $this->home.substr($dir,1);
+		$dir = fullpath($dir,$this->directory);
+		return(strpos(addslash($dir),$topDirectory)===0);
 	}
 }
 

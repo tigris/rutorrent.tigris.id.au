@@ -20,7 +20,8 @@ if(isset($_REQUEST['hash']) && isset($_REQUEST['no']))
 			if($req->success())
 				$filename = $req->val[1];
 		}
-		sendFile($filename);
+		if(sendFile($filename))
+			exit;
 	}
 }
 

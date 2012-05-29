@@ -46,6 +46,7 @@ function injectCSSText(text)
 var thePlugins = 
 {
 	list: {},
+	topMenu: [],
 	restictions:  
 	{
 		cantChangeToolbar: 	0x0001,
@@ -54,7 +55,9 @@ var thePlugins =
 		cantChangeTabs:		0x0008,
 		cantChangeColumns:	0x0010,
 		cantChangeStatusBar:	0x0020,
-		cantChangeCategory:	0x0040
+		cantChangeCategory:	0x0040,
+		cantShutdown:		0x0080,
+		canBeLaunched:		0x0100
 	},
 
 	register: function(plg)
@@ -90,7 +93,14 @@ var thePlugins =
 			eval( callback+'()' );
 		else
 			window.setTimeout( 'thePlugins.waitLoad("'+callback+'")', 500 );
+	},
+
+	registerTopMenu: function( plg, weight )
+	{
+		this.topMenu.push( { "name": plg.name, "weight": weight } );
+		this.topMenu.sort( function(a,b) { return(a.weight-b.weight); } );
 	}
+
 };
 
 function rPlugin( name, version, author, descr, restictions, help )
@@ -102,6 +112,7 @@ function rPlugin( name, version, author, descr, restictions, help )
 	this.author = (author==null) ? "unknown" : author;
 	this.allStuffLoaded = false;
 	this.enabled = true;
+	this.launched = true;
 	this.restictions = restictions;
 	this.help = help;
 	thePlugins.register(this);
@@ -121,6 +132,18 @@ rPlugin.prototype.enable = function()
 rPlugin.prototype.disable = function() 
 {
 	this.enabled = false;
+	return(this);
+}
+
+rPlugin.prototype.launch = function() 
+{
+	this.launched = true;
+	return(this);
+}
+
+rPlugin.prototype.unlaunch = function() 
+{
+	this.launched = false;
 	return(this);
 }
 
@@ -206,6 +229,16 @@ rPlugin.prototype.canChangeCategory = function()
 	return(!(this.restictions & thePlugins.restictions.cantChangeCategory));
 }
 
+rPlugin.prototype.canShutdown = function()
+{
+	return(!(this.restictions & thePlugins.restictions.cantShutdown));
+}
+
+rPlugin.prototype.canBeLaunched = function()
+{
+	return(this.restictions & thePlugins.restictions.canBeLaunched);
+}
+
 rPlugin.prototype.attachPageToOptions = function(dlg,name)
 {
         if(this.canChangeOptions())
@@ -263,6 +296,17 @@ rPlugin.prototype.removePageFromTabs = function(id)
 	delete theTabs.tabs[id]; 
 	$('#'+id).remove();
 	$('#tab_'+id).remove();
+	return(this);
+}
+
+rPlugin.prototype.registerTopMenu = function(weight)
+{
+        if(this.canChangeToolbar())
+        {
+        	if( !$$("mnu_plugins") )
+        		this.addButtonToToolbar("plugins",theUILang.Plugins+"...","theWebUI.showPluginsMenu()","help");
+		thePlugins.registerTopMenu( this, weight );
+	}
 	return(this);
 }
 
@@ -339,7 +383,7 @@ rPlugin.prototype.addPaneToCategory = function(id,name)
         {
 		$('#CatList').append(
 			$("<div>").addClass("catpanel").attr("id",id).text(name).click(function() { theWebUI.togglePanel(this); })).
-				append($("<div>").attr("id",id+"_cont"));
+				append($("<div>").attr("id",id+"_cont").addClass("catpanel_cont"));
 		theWebUI.showPanel($$(id),!theWebUI.settings["webui.closed_panels"][id]);
 	}
 	return($("#"+id+"_cont"));

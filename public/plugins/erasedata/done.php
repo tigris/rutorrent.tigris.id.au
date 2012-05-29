@@ -1,11 +1,10 @@
 <?php
 
-$params = array( getCmd('cat='), getCmd('cat=') );
-if(isLocalMode())
-	$params[] = getCmd('cat=');
-$req = new rXMLRPCRequest();
-foreach( $params as $i=>$prm )
-	$req->addCommand($theSettings->getOnEraseCommand(array('erasedata'.$i.getUser(), $prm )));
+$req = new rXMLRPCRequest( array(
+	rTorrentSettings::get()->getOnEraseCommand(array('erasedata0'.getUser(), getCmd('cat='))),
+	rTorrentSettings::get()->getOnEraseCommand(array('erasedata1'.getUser(), getCmd('cat='))),
+	new rXMLRPCCommand('schedule_remove', 'erasedata'.getUser())
+	));
 $req->run();
 
 ?>

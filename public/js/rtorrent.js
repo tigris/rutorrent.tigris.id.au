@@ -1,7 +1,7 @@
 /*
  *      Link to rTorrent.
  *
- *	$Id: rtorrent.js 1697 2011-06-10 09:23:43Z novik65 $
+ *	$Id: rtorrent.js 1931 2011-12-28 07:46:19Z novik65@gmail.com $
  */
 
 var dStatus = { started : 1, paused : 2, checking : 4, hashing : 8, error : 16 };
@@ -281,7 +281,8 @@ rTorrentStub.prototype.doneplugins = function()
 {
 	this.mountPoint = theURLs.GetDonePluginsURL;
 	this.dataType = "script";
-	this.content = "dummy=1";
+	this.content = "cmd="+this.ss[0];
+	this.contentType = "application/x-www-form-urlencoded";
 	for(var i=0; i<this.hashes.length; i++)
 		this.content += ("&plg="+this.hashes[i]);
 }

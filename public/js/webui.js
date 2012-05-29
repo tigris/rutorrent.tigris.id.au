@@ -1,12 +1,12 @@
 /*
  *      Main object.
  *
- *	$Id: webui.js 1737 2011-07-29 09:32:26Z novik65 $
+ *	$Id: webui.js 1968 2012-02-29 10:51:02Z novik65@gmail.com $
  */
 
 var theWebUI = 
 {
-        version: "3.3",
+        version: "3.4",
 	tables:
 	{
 		trt: 
@@ -79,7 +79,8 @@ var theWebUI =
 				{ text: theUILang.Peers, 		width: "60px", 	id: "peers",		type: TYPE_NUMBER },
 				{ text: theUILang.scrapeDownloaded,	width: "80px", 	id: "downloaded",	type: TYPE_NUMBER },
 				{ text: theUILang.scrapeUpdate,		width: "85px", 	id: "last",		type: TYPE_NUMBER },
-				{ text: theUILang.trkInterval,		width: "80px", 	id: "interval",		type: TYPE_NUMBER }
+				{ text: theUILang.trkInterval,		width: "80px", 	id: "interval",		type: TYPE_NUMBER },
+				{ text: theUILang.trkPrivate, 		width: "60px", 	id: "private",		type: TYPE_STRING, 	"align" : ALIGN_RIGHT}
 			],
 
 			container:	"TrackerList",
@@ -118,6 +119,7 @@ var theWebUI =
 				{ text: theUILang.plgName,			width: "150px", id: "name",		type: TYPE_STRING },
 				{ text: theUILang.plgVersion,			width: "60px",	id: "version",		type: TYPE_NUMBER },
 				{ text: theUILang.plgStatus, 			width: "80px", 	id: "status",		type: TYPE_STRING, 	"align" : ALIGN_RIGHT},
+				{ text: theUILang.plgLaunch,			width: "80px", 	id: "launch",		type: TYPE_STRING, 	"align" : ALIGN_RIGHT},
 				{ text: theUILang.plgAuthor,			width: "80px", 	id: "author",		type: TYPE_STRING },
 				{ text: theUILang.plgDescr,			width: "500px",	id: "descr",		type: TYPE_STRING }
 			],
@@ -355,12 +357,18 @@ var theWebUI =
 				table.obj.sIndex = iv(theWebUI.settings["webui."+ndx+".sindex"]);
 			if($type(theWebUI.settings["webui."+ndx+".rev"]))
 				table.obj.reverse = iv(theWebUI.settings["webui."+ndx+".rev"]);
+			if($type(theWebUI.settings["webui."+ndx+".sindex2"]))
+				table.obj.secIndex = iv(theWebUI.settings["webui."+ndx+".sindex2"]);
+			if($type(theWebUI.settings["webui."+ndx+".rev2"]))
+				table.obj.secRev = iv(theWebUI.settings["webui."+ndx+".rev2"]);
 			if($type(theWebUI.settings["webui."+ndx+".colorder"]))
 				table.obj.colOrder = theWebUI.settings["webui."+ndx+".colorder"];
 			table.obj.onsort = function()
 			{
-   				if( ((this.sIndex != theWebUI.settings["webui."+this.prefix+".sindex"]) || 
-		   			(this.reverse != theWebUI.settings["webui."+this.prefix+".rev"])) ) 
+   				if( (this.sIndex != theWebUI.settings["webui."+this.prefix+".sindex"]) || 
+		   			(this.reverse != theWebUI.settings["webui."+this.prefix+".rev"]) ||
+					(this.secIndex != theWebUI.settings["webui."+this.prefix+".sindex2"]) || 
+		   			(this.secRev != theWebUI.settings["webui."+this.prefix+".rev2"])) 
 		      			theWebUI.save();
 			}
 		});
@@ -409,7 +417,7 @@ var theWebUI =
 				this.toggleDetails();
 		}
 		theDialogManager.setEffects( iv(this.settings["webui.effects"])*200 );
-		this.setStatusUpdate();
+//		this.setStatusUpdate();
 		$.each(this.tables, function(ndx,table)
 		{
 			table.obj.create($$(table.container), table.columns, ndx);
@@ -425,7 +433,8 @@ var theWebUI =
 					version: plugin.version,
 					author: plugin.author,
 					descr: plugin.descr,
-					status: plugin.enabled ? 1 : 0
+					status: plugin.enabled ? 1 : 0,
+					launch: plugin.launched ? (plugin.canBeLaunched() ? 1 : 2) : 0
 				}, "_plg_"+plugin.name);
 			});
 		}
@@ -453,17 +462,38 @@ var theWebUI =
 // plugins
 //
 
+	showPluginsMenu: function()
+	{
+		theContextMenu.clear();
+		for( var item in thePlugins.topMenu )
+			thePlugins.get(thePlugins.topMenu[item].name).createPluginMenu();
+        	var offs = $("#plugins").offset();
+		theContextMenu.show(offs.left-5,offs.top+5+$("#plugins").height());
+	},
+
 	plgSelect: function(e, id) 
 	{
 		if($type(id) && (e.which==3))
 		{
 		        theContextMenu.clear();
 		        if(this.getTable("plg").selCount > 1) 
+		        {
 				theContextMenu.add([theUILang.plgShutdown, "theWebUI.plgShutdown()"]);
+				theContextMenu.add([CMENU_CHILD, theUILang.plgLaunch,
+					[
+						[theUILang.EnableTracker, "theWebUI.plgLaunch(true)"],
+						[theUILang.DisableTracker, "theWebUI.plgLaunch(false)"]
+					]]);
+			}
 			else
 			{
 				var plugin = thePlugins.get(id.substr(5));
-				theContextMenu.add([theUILang.plgShutdown, plugin.enabled ? "theWebUI.plgShutdown()" : null]);
+				theContextMenu.add([theUILang.plgShutdown, (plugin.enabled && plugin.canShutdown()) ? "theWebUI.plgShutdown()" : null]);
+				theContextMenu.add([CMENU_CHILD, theUILang.plgLaunch,
+					[
+						[theUILang.EnableTracker, !plugin.launched && plugin.canBeLaunched() ? "theWebUI.plgLaunch(true)" : null],
+						[theUILang.DisableTracker, plugin.launched && plugin.canBeLaunched() ? "theWebUI.plgLaunch(false)" : null]
+					]]);
 				if(plugin.help)
 				{
 					theContextMenu.add([CMENU_SEP]); 
@@ -485,13 +515,33 @@ var theWebUI =
    		{
       			if(sr[k]) 
       			{
-      				var plg = k.substr(5);
-      			        if(thePlugins.isInstalled(plg))
-            				str += "&hash=" + plg;
+      				var name = k.substr(5);
+	      			var plugin = thePlugins.get(name);
+      			        if(plugin.enabled && plugin.canShutdown())
+            				str += "&hash=" + name;
          		}
       		}
 		if(str.length>0)
-	      		this.request("?action=doneplugins" + str, [this.plgRefresh, this]);
+	      		this.request("?action=doneplugins&s=done" + str, [this.plgRefresh, this]);
+        },
+
+	plgLaunch : function(enable)
+	{
+		var table = this.getTable("plg");
+   		var sr = table.rowSel;
+   		var str = "";
+   		for(var k in sr) 
+   		{
+      			if(sr[k]) 
+      			{
+      				var name = k.substr(5);
+	      			var plugin = thePlugins.get(name);
+      			        if( (enable ^ plugin.launched) && plugin.canBeLaunched())
+            				str += "&hash=" + name;
+         		}
+      		}
+		if(str.length>0)
+	      		this.request("?action=doneplugins&s="+(enable ? "launch" : "unlaunch") + str, [this.plgRefresh, this]);
         },
 
         plgRefresh : function()
@@ -500,6 +550,7 @@ var theWebUI =
 		$.each( thePlugins.list, function(ndx,plugin) 
 		{
 			table.setValueById( "_plg_"+plugin.name, "status", plugin.enabled ? 1 : 0 );
+			table.setValueById( "_plg_"+plugin.name, "launch", plugin.launched ? (plugin.canBeLaunched() ? 1 : 2) : 0 );
 		});
         },
 
@@ -709,6 +760,8 @@ var theWebUI =
 			theWebUI.settings["webui."+ndx+".colorder"] = table.obj.colOrder;
 			theWebUI.settings["webui."+ndx+".sindex"] = table.obj.sIndex;
 			theWebUI.settings["webui."+ndx+".rev"] = table.obj.reverse;
+			theWebUI.settings["webui."+ndx+".sindex2"] = table.obj.secIndex;
+			theWebUI.settings["webui."+ndx+".rev2"] = table.obj.secRev;
 		});
 	        var cookie = {};
 	        theWebUI.settings["webui.search"] = theSearchEngines.current;
@@ -843,6 +896,13 @@ var theWebUI =
 // trackers
 //
 
+	trkIsPrivate: function(url)
+	{
+		return(
+			(/(http|https:udp):\/\/[a-z0-9-\.]+\.[a-z]{2,4}((:(\d){2,5})|).*\/an.*\?.+=.+/i).test(url) ||
+			(/(http|https:udp):\/\/[a-z0-9-\.]+\.[a-z]{2,4}((:(\d){2,5})|)\/.*[0-9a-z]{8,32}\/an/i).test(url) ? 1 : 0 );
+	},
+
    	trkSelect: function(e, id) 
 	{
 		if($type(id))
@@ -871,12 +931,12 @@ var theWebUI =
 	addTrackers: function(data) 
 	{
    		var table = this.getTable("trk");
-   		$.extend(this.trackers,data);
 		$.each(data,function(hash,trk)
 		{
-			if(theWebUI.dID == hash)
+			for(var i = 0; i < trk.length; i++)			
 			{
-				for(var i = 0; i < trk.length; i++)
+				trk[i].private = theWebUI.trkIsPrivate(trk[i].name);
+				if(theWebUI.dID == hash)
 				{
 					var sId = hash + "_t_" + i;
         	 			if(!$type(table.rowdata[sId]) )
@@ -892,9 +952,9 @@ var theWebUI =
 	        	 		$('#'+sId+" > .stable-TrackerList-col-0").css( "font-weight", 
 			        	 	($type(theWebUI.torrents[hash]) && (i==theWebUI.torrents[hash].tracker_focus)) ? "bold" : "normal" );
         	 		}
-        	 		return(false);
 			}
 	   	});
+   		$.extend(this.trackers,data);
 	   	var rowIDs = table.rowIDs.slice(0);
 		for(var i in rowIDs) 
 		{
@@ -1472,7 +1532,7 @@ var theWebUI =
 		{
 			tdl += iv(torrent.dl);
 			tul += iv(torrent.ul);
-			var sInfo = theWebUI.getStatusIcon(torrent.state, torrent.done);
+			var sInfo = theWebUI.getStatusIcon(torrent);
 			torrent.status = sInfo[1];
 			var lbl = theWebUI.getLabels(hash, torrent);
 			if(!$type(theWebUI.torrents[hash]))
@@ -1588,8 +1648,10 @@ var theWebUI =
 	        $.extend(this.total,d);
 	},
 
-	getStatusIcon: function(state, completed) 
+	getStatusIcon: function(torrent) 
 	{
+		var state = torrent.state;
+		var completed = torrent.done;
 		var icon = "", status = "";
 		if(state & dStatus.checking)
 		{
@@ -2054,7 +2116,7 @@ var theWebUI =
    		this.dID = hash;
    		this.getFiles(hash);
  		this.getTrackers(hash);
-   		if(!noSwitch)
+   		if(!noSwitch && !theWebUI.settings["webui.show_dets"])
    		{
 			$("#tdetails").show();
       			theWebUI.settings["webui.show_dets"] = true;

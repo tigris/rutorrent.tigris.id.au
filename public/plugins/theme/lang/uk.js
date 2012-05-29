@@ -1,5 +1,6 @@
 ﻿
- theUILang.themeStandard = "Standard";
- theUILang.theme	 = "Theme";
+
+ theUILang.themeStandard	= "Стандартна";
+ theUILang.theme		= "Палітра";
 
 thePlugins.get("theme").langLoaded();

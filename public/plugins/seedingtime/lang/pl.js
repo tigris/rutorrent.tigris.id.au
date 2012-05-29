@@ -1,5 +1,6 @@
 ﻿
+
  theUILang.seedingTime		= "Ukończono";
- theUILang.addTime		= "Added";
+ theUILang.addTime		= "Dodano";
 
 thePlugins.get("seedingtime").langLoaded();

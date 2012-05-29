@@ -9,9 +9,10 @@ $btn_id = "'".$_REQUEST['btn']."'";
 $edit_id = "'".$_REQUEST['edit']."'";
 $frame_id = "'".$_REQUEST['frame']."'";
 
-if(isset($_REQUEST['dir']))
+if(isset($_REQUEST['dir']) && strlen($_REQUEST['dir']))
 {
 	$dir = rawurldecode($_REQUEST['dir']);
+	rTorrentSettings::get()->correctDirectory($dir);
 	$dh = @opendir($dir);
 	$dir = addslash($dir);
 

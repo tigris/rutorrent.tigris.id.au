@@ -1,6 +1,7 @@
 <?php
 
-require_once( dirname(__FILE__)."/../../php/cache.php");
+require_once( dirname(__FILE__)."/../../php/settings.php");
+eval(getPluginConf('autotools'));
 
 class rAutoTools
 {
@@ -9,10 +10,10 @@ class rAutoTools
 	public $label_template = "{DIR}";
 	public $enable_move = 0;
 	public $path_to_finished = "";
+	public $fileop_type = "Move";
 	public $enable_watch = 0;
 	public $path_to_watch = "";
 	public $watch_start = 0;
-//	public $list = array();
 
 	static public function load()
 	{
@@ -36,12 +37,11 @@ class rAutoTools
 			$this->enable_label = 0;
 			$this->label_template = "{DIR}";
 			$this->enable_move = 0;
+			$this->fileop_type = "Move";
 			$this->path_to_finished = "";
 			$this->enable_watch = 0;
 			$this->path_to_watch = "";
 			$this->watch_start = 0;
-//			$this->list = array();
-//			$sample = array();
 			foreach( $vars as $var )
 			{
 				$parts = explode( "=", $var );
@@ -57,9 +57,15 @@ class rAutoTools
 				{
 					$this->enable_move = $parts[1];
 				}
+				else if( $parts[0] == "fileop_type" )
+				{
+					$this->fileop_type = $parts[1];
+				}
 				else if( $parts[0] == "path_to_finished" )
 				{
 					$this->path_to_finished = $parts[1];
+					if(!rTorrentSettings::get()->correctDirectory($this->path_to_finished))
+						$this->path_to_finished = '';
 				}
 				else if( $parts[0] == "enable_watch" )
 				{
@@ -68,27 +74,15 @@ class rAutoTools
 				else if( $parts[0] == "path_to_watch" )
 				{
 					$this->path_to_watch = $parts[1];
+					if(!rTorrentSettings::get()->correctDirectory($this->path_to_watch))
+						$this->path_to_watch = '';
 				}
 				else if( $parts[0] == "watch_start" )
 				{
 					$this->watch_start = $parts[1];
 				}
-//				else if( $parts[0] == "sample" )
-//				{
-//					$value = trim( rawurldecode( $parts[1] ) );
-//					if( strlen( $value ) > 0 )
-//					{
-//						$sample[] = $value;
-//					}
-//					else if( count( $sample) > 0 )
-//					{
-//						$this->list[] = $sample;
-//						$sample = array();
-//					}
-//				}
 			}
-//			if( count( $sample ) > 0 )
-//				$this->list[] = $sample;
+			$this->setHandlers();
 		}
 		$this->store();
 	}
@@ -98,27 +92,72 @@ class rAutoTools
 		$ret .= "EnableLabel: ".$this->enable_label;
 		$ret .= ", LabelTemplate: '".addslashes( $this->label_template )."'";
 		$ret .= ", EnableMove: ".$this->enable_move;
+		$ret .= ", FileOpType: '".$this->fileop_type."'";
 		$ret .= ", PathToFinished: '".addslashes( $this->path_to_finished )."'";
 		$ret .= ", EnableWatch: ".$this->enable_watch;
 		$ret .= ", PathToWatch: '".addslashes( $this->path_to_watch )."'";
 		$ret .= ", WatchStart: ".$this->watch_start;
-//		$ret .= ", sample: [";
-//		for( $i = 0; $i < count( $this->list ); $i++ )
-//		{
-//			$grp = array_map( 'quoteAndDeslashEachItem', $this->list[$i] );
-//			$cnt = count( $grp );
-//			if( $cnt > 0 )
-//			{
-//				$ret .= "[";
-//				$ret .= implode( ",", $grp );
-//				$ret .= "],";
-//			}
-//		}
-//		$len = strlen( $ret );
-//		if( $ret[$len - 1] == ',' )
-//			$ret = substr( $ret, 0, $len - 1 );
-//		$ret .= "]";
 		return $ret." };\n";
+	}
+	public function setHandlers()
+	{
+		global $autowatch_interval;
+		$theSettings = rTorrentSettings::get();
+		$req = new rXMLRPCRequest( 
+// old version fix
+			$theSettings->getOnInsertCommand(array('autolabel'.getUser(), getCmd('cat=')))
+			);
+		$pathToAutoTools = dirname(__FILE__);
+
+		if($this->enable_label)
+			$cmd = 	$theSettings->getOnInsertCommand(array('_autolabel'.getUser(), 
+				getCmd('branch').'=$'.getCmd('not').'=$'.getCmd("d.get_custom1").'=,"'.
+				getCmd('execute').'={'.getPHP().','.$pathToAutoTools.'/label.php,$'.getCmd("d.get_hash").'=,'.getUser().'}"'));
+		else
+			$cmd = 	$theSettings->getOnInsertCommand(array('_autolabel'.getUser(), getCmd('cat=')));
+		$req->addCommand($cmd);
+		if($this->enable_move && (trim($this->path_to_finished)!=''))
+		{
+			if(rTorrentSettings::get()->iVersion<0x808)
+			{
+				$cmd = 	$theSettings->getOnFinishedCommand(array('automove'.getUser(), 
+						getCmd('d.set_custom').'=x-dest,"$'.getCmd('execute_capture').
+						'={'.getPHP().','.$pathToAutoTools.'/move.php,$'.getCmd('d.get_hash').'=,$'.getCmd('d.get_base_path').'=,$'.
+						getCmd('d.get_base_filename').'=,$'.getCmd('d.is_multi_file').'=,'.getUser().'}" ; '.
+						getCmd('branch').'=$'.getCmd('not').'=$'.getCmd('d.get_custom').'=x-dest,,'.getCmd('d.set_directory_base').'=$'.getCmd('d.get_custom').'=x-dest'
+					));
+			}
+			else
+			{
+				if($this->fileop_type=="Move")
+				{
+					$cmd = 	$theSettings->getOnFinishedCommand(array('automove'.getUser(), 
+							getCmd('d.set_directory_base').'="$'.getCmd('execute_capture').
+							'={'.getPHP().','.$pathToAutoTools.'/check.php,$'.getCmd('d.get_base_path').'=,$'.
+							getCmd('d.get_base_filename').'=,$'.getCmd('d.is_multi_file').'=,'.getUser().'}" ; '.
+							getCmd('execute').'={'.getPHP().','.$pathToAutoTools.'/move.php,$'.getCmd('d.get_hash').'=,$'.getCmd('d.get_base_path').'=,$'.
+							getCmd('d.get_base_filename').'=,$'.getCmd('d.is_multi_file').'=,'.getUser().'}'
+						));
+				}
+				else
+				{
+					$cmd = 	$theSettings->getOnFinishedCommand(array('automove'.getUser(), 
+							getCmd('execute').'={'.getPHP().','.$pathToAutoTools.'/move.php,$'.getCmd('d.get_hash').'=,$'.getCmd('d.get_base_path').'=,$'.
+							getCmd('d.get_base_filename').'=,$'.getCmd('d.is_multi_file').'=,'.getUser().'}'
+						));
+				}
+			}
+		}
+		else
+			$cmd = $theSettings->getOnFinishedCommand(array('automove'.getUser(), getCmd('cat=')));
+		$req->addCommand($cmd);
+		if($this->enable_watch && (trim($this->path_to_watch)!='')) 
+			$cmd = 	new rXMLRPCCommand('schedule', array( 'autowatch'.getUser(), '10', $autowatch_interval."", 
+				getCmd('execute').'={sh,-c,'.escapeshellarg(getPHP()).' '.escapeshellarg($pathToAutoTools.'/watch.php').' '.escapeshellarg(getUser()).' &}' ));
+		else
+			$cmd = new rXMLRPCCommand('schedule_remove', 'autowatch'.getUser());
+		$req->addCommand($cmd);
+		return($req->success());
 	}
 }
 

@@ -63,13 +63,14 @@ function fix_magic_quotes_gpc()
 }
 
 fix_magic_quotes_gpc();
-setlocale(LC_CTYPE, "UTF8", "en_US.UTF-8");
+setlocale(LC_CTYPE, "UTF8", "UTF-8", "en_US.UTF-8", "en_US.UTF8");
 
 function quoteAndDeslashEachItem($item)
 {
 	return('"'.addcslashes($item,"\\\'\"\n\r\t").'"'); 
 }
 
+/*
 define('_is_utf8_split',5000);
 
 function isInvalidUTF8($string)
@@ -93,6 +94,12 @@ function isInvalidUTF8($string)
 			'| [\xF1-\xF3][\x80-\xBF]{3}'.          // planes 4-15
 			'| \xF4[\x80-\x8F][\x80-\xBF]{2}'.      // plane 16
 			')*$%xs', $string)!=1);
+}
+*/
+
+function isInvalidUTF8($string)
+{
+	return(!preg_match('/./u',$string));
 }
 
 function win2utf($str) 
@@ -233,9 +240,9 @@ function isUserHavePermission($uid,$gids,$file,$flags)
 	if(isUserHavePermissionPrim($uid,$gids,$file,$flags))
 	{
 		if(($flags & 0x0002) && !is_dir($file))
-			$flags = 0x0007;
+			$flags = 0x0003;
 		else
-			$flags = 0x0005;
+			$flags = 0x0001;
 		return(isUserHavePermissionPrim($uid,$gids,dirname($file),$flags));
 	}
 	return(false);
@@ -256,7 +263,7 @@ function delslash( $str )
 function fullpath($path,$base = '')
 {
 	$root  = '';
-	if($path[0] == '/')
+	if(strlen($path) && ($path[0] == '/'))
         	$root = '/';
 	else
 		return(fullpath(addslash($base).$path,getcwd()));
@@ -303,10 +310,15 @@ function getPluginConf($plugin)
 	return($ret);
 }
 
+function getLogin()
+{
+	return( (isset($_SERVER['REMOTE_USER']) && !empty($_SERVER['REMOTE_USER'])) ? strtolower($_SERVER['REMOTE_USER']) : '' );
+}
+
 function getUser()
 {
         global $forbidUserSettings;
-	return( (!$forbidUserSettings && isset($_SERVER['REMOTE_USER']) && !empty($_SERVER['REMOTE_USER'])) ? strtolower($_SERVER['REMOTE_USER']) : '' );
+	return( !$forbidUserSettings ? getLogin() : '' );
 }
 
 function getProfilePath( $user = null )
@@ -484,18 +496,62 @@ function sendFile( $filename, $contentType = null, $nameToSent = null, $mustExit
 			header('Content-Transfer-Encoding: binary');
 			header('Content-Description: File Transfer');
 			header('HTTP/1.0 200 OK');
-			ob_end_flush();
-			if($stat['size'] >= 2147483647)
+
+			if(ob_get_level()) 
+				while(@ob_end_clean());
+
+			$limit = ini_get("memory_limit");
+			if(empty($limit))
+				$limit = 2147483647;
+			else
+			{
+				$limit = $limit*1048576-memory_get_usage(true);
+				if(($limit>2147483647) || ($limit<0))
+					$limit = 2147483647;
+			}
+			if($stat['size'] >= $limit)
 				passthru('cat '.escapeshellarg($filename));
 			else
 				readfile($filename);
-			if($mustExit)
-				exit;
-			else
-				return(true);
 		}
+		if($mustExit)
+			exit(0);
+		else
+			return(true);
 	}
 	return(false);
+}
+
+function base32decode($input)
+{
+	$keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567=";
+        $buffer = 0;
+        $bitsLeft = 0;    
+        $output = '';
+        $i = 0;
+        $input = strtoupper($input);
+        $len = strlen($input);
+        while($i < $len)
+        {
+		$val = strpos( $keyStr, $input[$i++]);
+		if($val >= 0 && $val < 32) 
+		{
+			$buffer <<= 5;
+			$buffer |= $val;
+			$bitsLeft += 5;
+			if($bitsLeft >= 8) 
+			{
+				$output .= chr(($buffer >> ($bitsLeft - 8)) & 0xFF);
+				$bitsLeft -= 8;
+			}
+		} 
+        }
+        if($bitsLeft > 0) 
+        {
+		$buffer <<= 5;    
+		$output .= chr(($buffer >> ($bitsLeft - 3)) & 0xFF);
+        }         
+	return( strtoupper(bin2hex($output)) );
 }
 
 ?>

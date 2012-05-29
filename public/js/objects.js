@@ -1,7 +1,7 @@
 /*
  *      Common UI objects.
  *
- *	$Id: objects.js 1655 2011-03-24 15:06:11Z novik65 $
+ *	$Id: objects.js 1875 2011-09-29 15:11:51Z novik65 $
  */
 
 // Drag & Drop object 
@@ -323,7 +323,6 @@ var theContextMenu =
 		 	        	var a = $("<a></a>").addClass("sel menu-cmd").text(val[1]);
 			 	        switch($type(val[2]))
 			 	        {
-//			 	        	case "string": a.attr("href", "javascript:"+val[2] ); break;
 						case "string": a.attr("href","javascript://void();").click( function() { eval(val[2]) } ); break;
 						case "function": a.attr("href","javascript://void();").click(val[2]); break;
 					}
@@ -331,15 +330,17 @@ var theContextMenu =
 				}
 				else
 				{
-					var a = $("<a></a>").addClass("menu-cmd").text(val[0]);
-					switch($type(val[1]))
+					if($type(val[0]))
 					{
-			 	        	case false: a.addClass("dis"); break;
-//		 		        	case "string": a.attr( "href", "javascript:"+val[1] ); break;
-						case "string": a.attr("href","javascript://void();").click( function() { eval(val[1]) } ); break;
-						case "function": a.attr("href","javascript://void();").click(val[1]); break;
+						var a = $("<a></a>").addClass("menu-cmd").text(val[0]);
+						switch($type(val[1]))
+						{
+				 	        	case false: a.addClass("dis"); break;
+							case "string": a.attr("href","javascript://void();").click( function() { eval(val[1]) } ); break;
+							case "function": a.attr("href","javascript://void();").click(val[1]); break;
+						}
+						li.append(a.focus( function() { this.blur(); } ));
 					}
-					li.append(a.focus( function() { this.blur(); } ));
 				}
 				if(aft)
 					aft.after(li);
@@ -369,6 +370,14 @@ var theContextMenu =
 		if(y<0)
 			y = 0;
 		this.obj.css( { left: x, top: y, "z-index": ++theDialogManager.maxZ } );
+                $("ul.CMenu a.exp").hover( function() 
+                { 
+                	var submenu = $(this).next();
+                	if(submenu.offset().left + submenu.width() > $(window).width()) 
+	                	submenu.css( "left", -150 );
+                	if(submenu.offset().top + submenu.height() > $(window).height()) 
+	                	submenu.css( "top", -submenu.height()+20 );
+                });
                 this.obj.show(theDialogManager.divider);
 	},
 	hide: function()

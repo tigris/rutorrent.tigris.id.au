@@ -11,11 +11,23 @@ class rCache
 		if(!is_dir($this->dir))
 			makeDirectory($this->dir);
 	}
+	public static function flock( $fp )
+	{
+		$i = 0;
+		while(!flock($fp, LOCK_EX | LOCK_NB))
+		{
+			usleep(round(rand(0, 100)*1000));
+			if(++$i>20)
+				return(false);
+		}
+		return(true);
+	}
 	public function set( $rss, $arg = null )
 	{
 		global $profileMask;
 		$name = $this->getName($rss);
-		if(isset($rss->modified) &&
+		if(     is_object($rss) &&
+			isset($rss->modified) &&
 			method_exists($rss,"merge") &&
 			($rss->modified < filemtime($name)))
 		{
@@ -25,14 +37,23 @@ class rCache
 				!$rss->merge($newInstance, $arg))
 				return(false);
 		}
-		$fp = @fopen( $name, 'w' );
-		if($fp)
+		$fp = fopen( $name.'.tmp', "a" );
+		if($fp!==false)
 		{
-		        fwrite( $fp, serialize( $rss ) );
-        		fclose( $fp );
-			@chmod($name,$profileMask & 0666);
-	        	return(true);
-        	}
+			if(self::flock( $fp ))
+			{
+				ftruncate( $fp, 0 );
+	        		fwrite( $fp, serialize( $rss ) );
+		        	fflush( $fp );
+				flock( $fp, LOCK_UN );
+        			fclose( $fp );
+       				rename( $name.'.tmp', $name );
+				@chmod($name,$profileMask & 0666);
+        			return(true);
+	        	}
+	        	else
+		        	fclose( $fp );
+		}
 	        return(false);
 	}
 	public function get( &$rss )
@@ -42,17 +63,25 @@ class rCache
 		if($ret!==false)
 		{
 			$tmp = unserialize($ret);
-			if(($tmp!==false) && 
-				(!isset($rss->version) || 
-				(isset($rss->version) && !isset($tmp->version)) ||
-				(isset($tmp->version) && ($tmp->version==$rss->version))))
+			if(is_array($tmp))
 			{
-			        $rss = $tmp;
-				$rss->modified = filemtime($fname);
+			        $rss = $tmp;				
 				$ret = true;
 			}
 			else
-				$ret = false;
+			{
+				if(($tmp!==false) && 
+					(!isset($rss->version) || 
+					(isset($rss->version) && !isset($tmp->version)) ||
+					(isset($tmp->version) && ($tmp->version==$rss->version))))
+				{
+				        $rss = $tmp;
+					$rss->modified = filemtime($fname);
+					$ret = true;
+				}
+				else
+					$ret = false;
+			}
         	}
 		return($ret);
 	}
@@ -62,7 +91,7 @@ class rCache
 	}
 	protected function getName($rss)
 	{
-	        return($this->dir."/".$rss->hash);
+	        return($this->dir."/".(is_object($rss) ? $rss->hash : $rss['__hash__']));
 	}
 	public function getModified( $obj = null )
 	{
