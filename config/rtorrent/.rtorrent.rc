@@ -10,9 +10,6 @@ trackers.numwant.set = -1
 # MEMORY #
 pieces.hash.on_completion.set = yes
 pieces.memory.max.set = 1073741824
-system.hash_read_ahead.set = 16
-system.hash_interval.set = 40
-system.hash_max_tries.set = 1
 pieces.preload.type.set = 1
 
 # NETWORKING #
