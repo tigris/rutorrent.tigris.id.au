@@ -17,7 +17,7 @@ packages so we can compile the json module (required by the HTTPRPC plugin which
 we use instead of the scgi webserver module)
 
 * Install php
-  sudo apt-get install php5-cgi php5-cli php5-dev php-pear
+  sudo apt-get install php5-cgi php5-cli php5-dev php-pear php-fpm
   sudo pecl install json
 
 If you want the geoip plugin to work, you need the following as well.
@@ -29,6 +29,12 @@ If you want the geoip plugin to work, you need the following as well.
   wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
   gunzip GeoLiteCity.dat.gz
   sudo mv GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
+
+* Edit /etc/php5/fpm/php.ini so that cgi.fix_pathinfo=1 is enabled
+
+* Edit /etc/php5/fpm/pool.d/www.conf so that listen = /var/run/php-fpm/php-fpm.sock (create that folder too)
+
+* Restart php-fpm
 
 === rTorrent
 
@@ -73,9 +79,9 @@ instead) then you can just sudo apt-get install rtorrent and be done with it.
     cd /srv/rutorrent.tigris.id.au/.git/hooks
     ln -s ../../config/hooks/post-merge
 
-* Setup the lighttpd config
-    cd /etc/lighttpd/conf-enabled
-    sudo cp /srv/rutorrent.tigris.id.au/config/lighttpd/rutorrent.tigris.id.au .
+* Setup the nginx config
+    cd /etc/nginx/sites-enabled
+    sudo cp /srv/rutorrent.tigris.id.au/config/nginx/rutorrent.tigris.id.au .
 
 * Permissions (you should do this again AFTER you've logged into ruttorent the
   first time, since it will create some default user files)

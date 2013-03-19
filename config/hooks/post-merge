@@ -15,11 +15,11 @@ update_cron() {
 }
 
 restart_daemons() {
-  config=$(git diff $old_tag | grep "^+++ b/config/lighttpd")
+  config=$(git diff $old_tag | grep "^+++ b/config/nginx")
   if [ "x$config" != "x" ]; then
-    sudo cp config/lighttpd/*.conf /etc/lighttpd/conf-enabled
-    sudo service lighttpd reload > /dev/null
-    daemons="$daemons lighttpd"
+    sudo cp config/nginx/*.conf /etc/nginx/sites-enabled
+    sudo service nginx reload > /dev/null
+    daemons="$daemons nginx"
   fi
 
   config=$(git diff $old_tag | grep "^+++ b/config/rtorrent")
