@@ -30,12 +30,6 @@ If you want the geoip plugin to work, you need the following as well.
   gunzip GeoLiteCity.dat.gz
   sudo mv GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
 
-* Edit /etc/php5/fpm/php.ini so that cgi.fix_pathinfo=1 is enabled
-
-* Edit /etc/php5/fpm/pool.d/www.conf so that listen = /var/run/php-fpm/php-fpm.sock (create that folder too)
-
-* Restart php-fpm
-
 === rTorrent
 
 The ubuntu version of rtorrent is not compiled with a new enough version of
