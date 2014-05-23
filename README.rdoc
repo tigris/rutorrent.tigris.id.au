@@ -17,8 +17,7 @@ packages so we can compile the json module (required by the HTTPRPC plugin which
 we use instead of the scgi webserver module)
 
 * Install php
-  sudo apt-get install php5-cgi php5-cli php5-dev php-pear php-fpm
-  sudo pecl install json
+  sudo apt-get install php5-cgi php5-cli php5-fpm
 
 If you want the geoip plugin to work, you need the following as well.
 
@@ -86,7 +85,7 @@ instead) then you can just sudo apt-get install rtorrent and be done with it.
 === rTorrent setup
 
 * Configs
-    cp /srv/rutorrent.tigris.id.au/config/rtorrent/danial.rtorrent.rc /home/danial
+    cp /srv/rutorrent.tigris.id.au/config/rtorrent/danial.rtorrent.rc /home/danial/.rtorrent.rc
     mkdir -p /home/danial/.rtorrent/session
     mkdir -p /home/danial/.rtorrent/socket
     mkdir -p /home/danial/.rtorrent/watch
