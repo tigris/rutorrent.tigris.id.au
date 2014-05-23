@@ -1,4 +1,10 @@
-﻿
+﻿/*
+ * PLUGIN AUTOTOOLS
+ *
+ * Vietnamese language file.
+ *
+ * Author: Ta Xuan Truong (truongtx8 AT gmail DOT com)
+ */
 
  var s_PluginFail			= "Thành phần bổ sung sẽ không hoạt động.";
 
@@ -11,10 +17,10 @@
  theUILang.autotoolsWatchStart		= "Tự động tải xuống";
  theUILang.autotoolsNoPathToFinished	= "Công cụ tự động: Chưa đặt đường dẫn lưu torrent tải xuống. " + s_PluginFail;
  theUILang.autotoolsNoPathToWatch	= "Công cụ tự động: Chưa đặt đường dẫn theo dõi. " + s_PluginFail;
- theUILang.autotoolsFileOpType		= "Operation type";
- theUILang.autotoolsFileOpMove		= "Move";
- theUILang.autotoolsFileOpHardLink 	= "Hard link";
- theUILang.autotoolsFileOpCopy		= "Copy";
- theUILang.autotoolsFileOpSoftLink	= "Soft link";
+ theUILang.autotoolsFileOpType		= "Hành động";
+ theUILang.autotoolsFileOpMove		= "Di chuyển";
+ theUILang.autotoolsFileOpHardLink 	= "Liên kết cứng";
+ theUILang.autotoolsFileOpCopy		= "Sao chép";
+ theUILang.autotoolsFileOpSoftLink	= "Liên kết mềm";
 
 thePlugins.get("autotools").langLoaded();

@@ -1,7 +1,7 @@
 /*
  *      Misc objects.
  *
- *	$Id: common.js 1920 2011-12-12 14:20:55Z novik65@gmail.com $
+ *	$Id: common.js 2388 2013-10-14 12:39:24Z novik65 $
  */
 
 function $$(id)
@@ -142,9 +142,12 @@ $.event.fix = function(e)
 {
 	e = $.event.inheritedfix(e);
 	e.fromTextCtrl = (e.target && e.target.tagName && (/^input|textarea|a$/i).test(e.target.tagName));
+	if(!e.metaKey)
+		e.metaKey = e.ctrlKey;
 	return(e);
 }
-$.fn.extend({
+$.fn.extend(
+{
 	mouseclick: function( handler )
 	{
 		var contextMenuPresent = ("oncontextmenu" in document.createElement("foo")) || browser.isFirefox || $.support.touchable;
@@ -224,6 +227,24 @@ $.fn.extend({
 	{
 		return(this.bind("contextmenu",function(e) { e.stopImmediatePropagation(); }).
 			bind("selectstart",function(e) { e.stopImmediatePropagation(); return(true); }));
+	},
+
+	setCursorPosition: function(pos)
+	{
+		if($(this).get(0).setSelectionRange) 
+		{
+			$(this).get(0).setSelectionRange(pos, pos);
+		} 
+		else 
+			if($(this).get(0).createTextRange) 
+			{
+				var range = $(this).get(0).createTextRange();
+				range.collapse(true);
+				range.moveEnd('character', pos);
+				range.moveStart('character', pos);
+				range.select();
+			}
+		return(this);
 	}
 });
 
@@ -327,7 +348,7 @@ var theURLs =
 	GetSettingsURL		: "php/getsettings.php",
 	GetPluginsURL		: "php/getplugins.php",
 	GetDonePluginsURL	: "php/doneplugins.php",
-	RIPEURL			: "http://www.db.ripe.net/whois?alt_database=ALL&form_type=advanced&searchtext="
+	RIPEURL			: "https://apps.db.ripe.net/search/query.html?searchtext="
 };
 
 var theOptionsSwitcher =
@@ -375,7 +396,8 @@ var theConverter =
 	{
 		if((noRound==null) && (tm >= 2419200))
 			return "\u221e";
-		var val = tm % (604800 * 52);
+//		var val = tm % (604800 * 52);
+		var val = tm;
 		var w = iv(val / 604800);
 		val = val % 604800;
 		var d = iv(val / 86400);
@@ -740,11 +762,8 @@ var theSearchEngines =
 	sites:
 	[
 		{ name: 'Mininova', 		url: 'http://www.mininova.org/search/?utorrent&search=' },
-		{ name: 'HQTtracker.ru', 	url: 'http://hqtracker.ru/browse.php?cat=0&search_in=1&search=' },
 		{ name: 'The Pirate Bay', 	url: 'http://thepiratebay.org/search.php?q=' },
-		{ name: 'INTERFILM', 		url: 'http://interfilm.nu/movie/?do=search&str=' },
 		{ name: 'IsoHunt', 		url: 'http://isohunt.com/torrents.php?ext=&op=and&ihq=' },
-		{ name: 'VideoTracker.ru', 	url: 'http://videotracker.ru/browse.php?cat=0&search_in=1&search=' },
 		{ name: '', 			url: '' },
 		{ name: 'Google', 		url: 'http://google.com/search?q=' }
 	],
@@ -853,6 +872,8 @@ var theTabs =
             				switch(n)
             				{
             					case "FileList":
+							if(theWebUI.dID!="")
+								theWebUI.updateFiles(theWebUI.dID);
 							prefix = "fls";
 							break;
                					case "TrackerList":
@@ -919,6 +940,30 @@ function logHTML(text,divClass,force)
 		obj.append( $("<div>").addClass(divClass).html(text).show() );
 		obj[0].scrollTop = obj[0].scrollHeight;
 		if(iv(theWebUI.settings["webui.log_autoswitch"]) || force)
+			theTabs.show("lcont");
+	}
+}
+
+function noty(msg,status,noTime) 
+{
+	if($.noty)
+	{
+		$.noty(
+		{
+			text: escapeHTML(msg), 
+			layout : 'bottomRight',
+			type: status
+		});
+	}
+	var obj = $("#lcont");
+	if(obj.length)
+	{
+		var tm = '';
+		if(!noTime)
+			tm = "[" + theConverter.date(new Date().getTime()/1000) + "]";
+		obj.append( $("<div>").addClass('std').text(tm + " " + msg).show() );
+		obj[0].scrollTop = obj[0].scrollHeight;
+		if(iv(theWebUI.settings["webui.log_autoswitch"]) && !$.noty)
 			theTabs.show("lcont");
 	}
 }

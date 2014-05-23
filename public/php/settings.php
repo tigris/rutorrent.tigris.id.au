@@ -15,6 +15,7 @@ class rTorrentSettings
 	public $iVersion = null;
 	public $version;
 	public $libVersion;
+	public $apiVersion = 0;
 	public $plugins = array();
 	public $hooks = array();
 	public $mostOfMethodsRenamed = false;
@@ -142,6 +143,15 @@ class rTorrentSettings
 				if($req->success())
 					$this->iVersion=0x809;
 			}
+			$this->apiVersion = 0;
+			if($this->iVersion>=0x901)
+			{
+				$req = new rXMLRPCRequest( new rXMLRPCCommand("system.api_version") );
+				$req->important = false;
+				if($req->success())
+					$this->apiVersion = $req->val[0];
+			}
+
                         $req = new rXMLRPCRequest( new rXMLRPCCommand("to_kb", floatval(1024)) );
 			if($req->run())
 			{
@@ -180,11 +190,10 @@ class rTorrentSettings
 							if($this->started===false)
 								$this->started = 0;
 						}
-						$randName = uniqid("/tmp/rutorrent-stats-".rand());
 						$id = getExternal('id');
 						$req = new rXMLRPCRequest(
-        						new rXMLRPCCommand("execute",array("sh","-c",$id." -u > ".$randName." ; ".$id." -G >> ".$randName." ; echo ~ >> ".$randName." ; chmod 0644 ".$randName)));
-						if($req->run() && !$req->fault && (($line=file($randName))!==false) && (count($line)>2))
+        						new rXMLRPCCommand("execute_capture",array("sh","-c",$id." -u ; ".$id." -G ; echo ~ ")));
+						if($req->run() && !$req->fault && (($line=explode("\n",$req->val[0]))!==false) && (count($line)>2))
 						{
 							$this->uid = intval(trim($line[0]));
 							$this->gid = explode(' ',trim($line[1]));
@@ -192,8 +201,6 @@ class rTorrentSettings
 							if(!empty($this->directory) &&
 								($this->directory[0]=='~'))
 								$this->directory = $this->home.substr($this->directory,1);	
-							$req = new rXMLRPCRequest(new rXMLRPCCommand( "execute", array("rm",$randName) ));
-							$req->run();
 						}
 						else
 							$this->idNotFound = true;
@@ -246,14 +253,46 @@ class rTorrentSettings
 	{
         	return($this->getEventCommand('on_hash_done','hash_done',$args));
 	}
-	public function correctDirectory(&$dir)
+	public function getAbsScheduleCommand($name,$interval,$cmd)	// $interval in seconds
+	{
+		global $schedule_rand;
+		if(!isset($schedule_rand))
+			$schedule_rand = 10;
+		$startAt = $interval+rand(0,$schedule_rand);
+		return( new rXMLRPCCommand("schedule", array( $name.getUser(), $startAt."", $interval."", $cmd )) );
+	}
+	public function getScheduleCommand($name,$interval,$cmd,&$startAt = null)	// $interval in minutes
+	{
+		global $schedule_rand;
+		if(!isset($schedule_rand))
+			$schedule_rand = 10;
+		$tm = getdate();
+		$startAt = mktime($tm["hours"],
+			((integer)($tm["minutes"]/$interval))*$interval+$interval,
+			0,$tm["mon"],$tm["mday"],$tm["year"])-$tm[0]+rand(0,$schedule_rand);
+		if($startAt<0)
+			$startAt = 0;
+		$interval = $interval*60;
+		return( new rXMLRPCCommand("schedule", array( $name.getUser(), $startAt."", $interval."", $cmd )) );
+	}
+	public function getRemoveScheduleCommand($name)
+	{
+		return(	new rXMLRPCCommand("schedule_remove", $name.getUser()) );	
+	}
+	public function correctDirectory(&$dir,$resolve_links = false)
 	{
 		global $topDirectory;
 		if(strlen($dir) && ($dir[0]=='~'))
 			$dir = $this->home.substr($dir,1);
 		$dir = fullpath($dir,$this->directory);
+		if($resolve_links)
+		{
+			$path = realpath($dir);
+			if(!$path)
+				$dir = addslash(realpath(dirname($dir))).basename($dir);
+			else
+				$dir = $path;	
+		}
 		return(strpos(addslash($dir),$topDirectory)===0);
 	}
 }
-
-?>

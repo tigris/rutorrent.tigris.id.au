@@ -1,6 +1,12 @@
-﻿
+﻿/*
+ * PLUGIN SeedingTime
+ *
+ * Spanish language file.
+ *
+ * Author: 
+ */
 
- theUILang.seedingTime		= "Finished";
- theUILang.addTime		= "Added";
+ theUILang.seedingTime		= "Finalizado";
+ theUILang.addTime		= "Agregado";
 
 thePlugins.get("seedingtime").langLoaded();

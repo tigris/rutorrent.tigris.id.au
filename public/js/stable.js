@@ -20,7 +20,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *	$Id: stable.js 1875 2011-09-29 15:11:51Z novik65 $
+ *	$Id: stable.js 2311 2013-06-03 13:26:19Z novik65 $
 */
 
 var TYPE_STRING = 0;
@@ -1381,7 +1381,7 @@ dxSTable.prototype.clearRows = function()
 		}
 		this.rows = 0;
 		this.viewRows = 0;
-
+		this.selCount = 0;		
 		this.rowSel = new Array(0);
 		this.rowdata = new Array(0);
 		this.rowIDs = new Array(0);

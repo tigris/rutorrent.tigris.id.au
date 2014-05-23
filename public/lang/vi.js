@@ -1,32 +1,11 @@
 ﻿/*
- * WebUI - The WEB interface for uTorrent - http://www.utorrent.com
- * NO COPYCATS of language update
+ * Vietnamese language file.
  *
- * == BEGIN LICENSE ==
- *
- * Licensed under the terms of any of the following licenses at your
- * choice:
- *
- *  - GNU General Public License Version 2 or later (the "GPL")
- *    http://www.gnu.org/licenses/gpl.html
- *
- *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
- *    http://www.gnu.org/licenses/lgpl.html
- *
- *  - Mozilla Public License Version 1.1 or later (the "MPL")
- *    http://www.mozilla.org/MPL/MPL-1.1.html
- *
- * == END LICENSE ==
- *
- * File Name: vi.js
- *      Vietnamese language file.
- *
- * File Author:
- *              Ta Xuan Truong (truongtx8 AT gmail DOT com)
+ * Author: Ta Xuan Truong (truongtx8 AT gmail DOT com)
  */
 
- var theUILang =
- {
+var theUILang =
+{
  kbs				: "kB/s",
  General			: "Tổng quan",
  Downloads			: "Tải xuống",
@@ -35,7 +14,7 @@
  Advanced			: "Nâng cao",
  User_Interface 		: "Giao diện người dùng",
  Confirm_del_torr		: "Hỏi lại khi xóa torrent",
- Update_GUI_every		: "Cập nhật giao diện mỗi",
+ Update_GUI_every		: "Cập nhật sau mỗi",
  ms				: "ms",
  Alt_list_bckgnd		: "Xen kẽ màu nền trong danh sách",
  Show_cat_start 		: "Hiển thị các mục khi khởi động",
@@ -55,7 +34,7 @@
  Ip_report_track		: "Địa chỉ IP/Tên máy báo về Máy theo dõi",
  Disabled			: "Vô hiệu",
  Enabled			: "Kích hoạt",
- uTorrent_settings		: "Cài đặt rTorrent",
+ ruTorrent_settings		: "Cài đặt",
  Doesnt_support 		: "ruTorrent không hỗ trợ trình duyệt này.",
  Name				: "Tên",
  Status 			: "Trạng Thái",
@@ -117,7 +96,6 @@
  Bandwidth_sett 		: "Cài đặt băng thông",
  Number_ul_slots		: "Số khe tải lên",
  Peer_ex			: "Trao đổi ngang",
- About				: "Giới thiệu",
  Enter_label_prom		: "Nhập nhãn mới cho các Torrent đã chọn",
  Remove_torrents		: "Bỏ Torrent",
  Rem_torrents_prompt		: "Bạn thực sự muốn bỏ các torrent đã chọn?",
@@ -164,13 +142,12 @@
  Number_Peers_For_Seeds_max	: "Số nguồn tối đa",
  Enable_port_open		: "Mở cổng",
  dht_port			: "Sử dụng cổng UDP cho DHT",
- Ather_Limiting 		: "Các giới hạn khác",
+ Other_Limiting 		: "Các giới hạn khác",
  Number_dl_slots		: "Số khe tải xuống",
  Glob_max_memory		: "Bộ nhớ sử dụng tối đa",
  Glob_max_files 		: "Số tập tin mở tối đa",
  Glob_max_http			: "Số kết nối HTTP tối đa",
- Glob_max_sockets		: "Số phiên kết nối tối đa",
- Ather_sett			: "Khác",
+ Other_sett			: "Khác",
  Directory_For_Dl		: "Thư mục mặc định khi tải về",
  Check_hash			: "Kiểm tra hash sau khi tải",
  Hash				: "Mã Hash",
@@ -254,25 +231,40 @@
  noTorrentList			: "Không có danh sách torrent, chưa xác lập kết nối đến rTorrent.",
  yes				: "có",
  no				: "không",
- DateFormat			: "Định dạng ngày tháng",
- DLStrategy			: "Download Strategy",
- prioritizeFirst		: "Leading Chunk First",
- prioritizeLast 		: "Trailing Chunk First",
- prioritizeNormal		: "Normal",
- updateTracker			: "Update Trackers",
- scrapeUpdate			: "Last Updated",
- trkInterval			: "Interval",
- logAutoSwitch			: "Autoswitch to 'Log' tab",
+ DateFormat			: "Định dạng ngày",
+ DLStrategy			: "Cách tải về",
+ prioritizeFirst		: "Ưu tiên các khối đầu",
+ prioritizeLast 		: "Ưu tiên các khối cuối",
+ prioritizeNormal		: "Bình thường",
+ updateTracker			: "Cập nhật máy theo dõi",
+ scrapeUpdate			: "Cập nhật lần cuối",
+ trkInterval			: "mỗi",
+ logAutoSwitch			: "Tự chuyển qua thẻ 'Nhật ký'",
  phpParameterUnavailable	: "PHP directive register_argc_argv is set to OFF. Change to ON, otherwise some plugins won't work correctly.",
- addTorrentFailedURL		: "Failed to add torrent. Can't retrieve URL.",
- addTorrentFailedFile		: "Failed to add torrent. The retrieved content is not a valid torrent file.",
- addTorrentFailedDirectory	: "Failed to add torrent. Incorrect downloads directory was specified.",
- plgLaunch			: "Launch",
- plgLocked			: "Mandatory",
- phpExtensionNotFoundWarning	: "Some functionality will be unavailable. PHP extension must be installed",
- phpExtensionNotFoundError	: "Plugin will not work. PHP extension must be installed",
- trkPrivate			: "Private",
- dontSet			: "Don't set",
- webBadSessionError		: "Plugin will not work. Webserver user must have execute access to the rtorrent session directory",
- webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory"
- };
+ addTorrentFailedURL		: "Không thêm torrent được. Không thể tải được URL.",
+ addTorrentFailedFile		: "Không thêm torrent được. Nội dung tải về không phải là tập tin torrent.",
+ addTorrentFailedDirectory	: "Không thêm torrent được. Chọn sai thư mục tải về.",
+ plgLaunch			: "Chạy",
+ plgLocked			: "Bắt buộc",
+ phpExtensionNotFoundWarning	: "Một số tính năng sẽ không có. Phải cài đặt phần mở rộng cho PHP",
+ phpExtensionNotFoundError	: "Trình bổ sung sẽ không chạy. Phải cài đặt phần mở rộng cho PHP",
+ trkPrivate			: "Riêng tư",
+ dontSet			: "Không đặt",
+ webBadSessionError		: "Trình bổ sung sẽ không chạy. Người chạy máy chủ Web phải có quyền thực thi trong thư mục quản lý phiên rtorrent",
+ webBadSessionWarning		: "Một số tính năng sẽ không có. Người chạy máy chủ Web phải có quyền thực thi trong thư mục quản lý phiên rtorrent",
+ Developers			: "Phát triển",
+ Check_new_version		: "Kiểm tra phiên bản mới",
+ here				: "ở đây",
+ Num_No 			: "STT", // This means "Number". To be used as header for number count, e.g.: throttle/ratio plugin
+ This_screen			: "This screen",
+ About_program			: "About ruTorrent",
+ Toggle_menu			: "Bật tắt trình đơn",
+ Toggle_details 		: "Bật tắt chi tiết",
+ Toggle_categories		: "Bật tắt danh mục",
+ Delete_current_torrents	: "Xóa torrent hiện tại",
+ Select_all			: "Chọn tất cả",
+ Deselect_all			: "Bỏ chọn tất cả",
+ showSpeedInTitle		: "Hiển thị tốc độ ở tiêu đề",
+ badTempPath 			: "Webserver user doesn't have read/write/execute access to the tmp directory. ruTorrent will not work.",
+ badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work."
+};

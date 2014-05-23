@@ -1,34 +1,13 @@
 ﻿/*
- * WebUI - The WEB interface for uTorrent - http://www.utorrent.com
- * NO COPYCATS of language update
+ * Polish language file.
  *
- * == BEGIN LICENSE ==
+ * Initial Author: Penknife (penknife1@gmail.com)
  *
- * Licensed under the terms of any of the following licenses at your
- * choice:
- *
- *  - GNU General Public License Version 2 or later (the "GPL")
- *    http://www.gnu.org/licenses/gpl.html
- *
- *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
- *    http://www.gnu.org/licenses/lgpl.html
- *
- *  - Mozilla Public License Version 1.1 or later (the "MPL")
- *    http://www.mozilla.org/MPL/MPL-1.1.html
- *
- * == END LICENSE ==
- *
- * Nazwa pliku: pl.js
- * 	Polish language file.
- *
- * Author:
- * 		Penknife (penknife1@gmail.com)
- * Updates:
- *		Dare (piczok@gmail.com)
+ * Author: Dare (piczok@gmail.com)
  */
 
- var theUILang =
- {
+var theUILang =
+{
  kbs				: "kB/s",
  General			: "Główne",
  Downloads			: "Pobieranie",
@@ -57,7 +36,7 @@
  Ip_report_track		: "IP/Nazwa hosta wysyłana do trackera",
  Disabled			: "Wyłączone",
  Enabled			: "Włączone",
- uTorrent_settings		: "Ustawienia rTorrent",
+ ruTorrent_settings		: "Ustawienia",
  Doesnt_support 		: "ruTorrent nie obsługuje twojej przeglądarki.",
  Name				: "Nazwa",
  Status 			: "Status",
@@ -119,7 +98,6 @@
  Bandwidth_sett 		: "Ustawienia łącza",
  Number_ul_slots		: "Liczba slotów wysyłania",
  Peer_ex			: "Wymiana peerów",
- About				: "O...",
  Enter_label_prom		: "Wprowadź etykietę dla wybranych torrentów",
  Remove_torrents		: "Usuń torrent(y)",
  Rem_torrents_prompt		: "Czy napewno chcesz usunąć wybrany torrent(y)?",
@@ -166,13 +144,12 @@
  Number_Peers_For_Seeds_max	: "Maksymalna liczba seedów",
  Enable_port_open		: "Otwórz port nasłuchujący",
  dht_port			: "Port UDP dla DHT",
- Ather_Limiting 		: "Inne ograniczenia",
+ Other_Limiting 		: "Inne ograniczenia",
  Number_dl_slots		: "Liczba slotów pobierań",
  Glob_max_memory		: "Maksymalne użycie pamięci",
  Glob_max_files 		: "Maksymalna liczba otwartych plików",
  Glob_max_http			: "Maksymalna liczba otwartych połączeń http",
- Glob_max_sockets		: "Maksymalna liczba otwartych gniazd",
- Ather_sett			: "Inne",
+ Other_sett			: "Inne",
  Directory_For_Dl		: "Domyślne katalog pobierań",
  Check_hash			: "Sprawdzaj sumę kontrolą po pobraniu",
  Hash				: "Hash",
@@ -247,11 +224,11 @@
  rTorrentBadPHPScriptPath	: "Plugin nie zadziała. User rTorrenta musi posiadać uprawnienia odczytu na pliku",
  dependenceError		: "Plugin nie zadziała. Wymagany(/e) plugin(y)",
  peerAdd			: "Dodaj Peera...",
- peerBan			: "Banuj",
- peerKick			: "Kickuj",
- peerSnub			: "Zkekceważ",
+ peerBan			: "Zablokuj",
+ peerKick			: "Wykop",
+ peerSnub			: "Ignoruj",
  peerDetails			: "Szczegóły",
- peerUnsnub			: "Odlekceważ",
+ peerUnsnub			: "Nie ignoruj",
  peerAddLabel			: "Wprowadź IP/Host[:port]",
  noTorrentList			: "Lista torrentów niedostępna, nie można połączyć z rTorrentem.",
  yes				: "tak",
@@ -276,5 +253,20 @@
  trkPrivate			: "Prywatny",
  dontSet			: "Nie ustawiaj",
  webBadSessionError		: "Plugin will not work. Webserver user must have execute access to the rtorrent session directory",
- webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory"
- };
+ webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory",
+ Developers			: "Developers",
+ Check_new_version		: "Check new version",
+ here				: "here",
+ Num_No 			: "No.", // This means "Number". To be used as header for number count, e.g.: throttle/ratio plugin
+ This_screen			: "This screen",
+ About_program			: "About ruTorrent",
+ Toggle_menu			: "Toggle menu",
+ Toggle_details 		: "Toggle details",
+ Toggle_categories		: "Toggle categories",
+ Delete_current_torrents	: "Delete current torrent(s)",
+ Select_all			: "Select all",
+ Deselect_all			: "Deselect all",
+ showSpeedInTitle		: "Show speed in the title",
+ badTempPath 			: "Webserver user doesn't have read/write/execute access to the tmp directory. ruTorrent will not work.",
+ badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work."
+};

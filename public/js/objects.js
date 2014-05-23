@@ -1,7 +1,7 @@
 /*
  *      Common UI objects.
  *
- *	$Id: objects.js 1875 2011-09-29 15:11:51Z novik65 $
+ *	$Id: objects.js 2293 2013-04-15 09:40:12Z novik65 $
  */
 
 // Drag & Drop object 
@@ -88,20 +88,22 @@ var theDialogManager =
 	divider: 0,
 	modalState: false,
 
-	make: function( id, name, content, isModal )
+	make: function( id, name, content, isModal, noClose )
 	{
 		$(document.body).append($("<div>").attr("id",id).addClass("dlg-window").html(content).
 			prepend( $("<div>").attr("id",id+"-header").addClass("dlg-header").text(name) ).
 			prepend( $("<a></a>").addClass("dlg-close") ));
-		return(this.add(id,isModal));
+		return(this.add(id,isModal,noClose));
 	},
-        add: function( id, isModal )
+        add: function( id, isModal, noClose )
 	{
 	        var obj = $('#'+id);
 	        if(!isModal)
 		        isModal = false;
 		obj.css( { position: "absolute", display: "none", outline: "0px solid transparent" } ).
-	        	data("modal",isModal).find(".dlg-close").attr("href","javascript:theDialogManager.hide('"+id+"');");
+	        	data("modal",isModal).data("nokeyclose",noClose);
+	        if(!noClose)
+		        obj.find(".dlg-close").attr("href","javascript:theDialogManager.hide('"+id+"');");
 	        var self = this;
 		var checkForButtons = function me(val)
 		{
@@ -125,7 +127,7 @@ var theDialogManager =
 				self.bringToTop(this.id);
 		}).attr("tabindex","0").keypress( function (e)
 		{
-			if((e.keyCode==13) && !(e.target && e.target.tagName && (/^textarea$/i).test(e.target.tagName)))
+			if((e.keyCode==13) && !(e.target && e.target.tagName && (/^textarea$/i).test(e.target.tagName)) && !$('#'+id+' .OK').prop('disabled'))
 				$('#'+id+' .OK').click();
 		});
 
@@ -218,7 +220,7 @@ var theDialogManager =
 	},
 	hideTopmost: function()
 	{
-		if(this.visible.length)
+		if(this.visible.length && !$('#'+this.visible[this.visible.length-1]).data("nokeyclose"))
 		{
 			this.hide(this.visible.pop());
 			return(true);
@@ -359,17 +361,18 @@ var theContextMenu =
 	},
 	show: function(x,y)
 	{
+		var obj = this.obj;
 		if(x==null)
 			x = this.mouse.x;
 		if(y==null)
 			y = this.mouse.y;
-		if(x + this.obj.width() > $(window).width()) 
-			x -= this.obj.width();
+		if(x + obj.width() > $(window).width()) 
+			x -= obj.width();
 		if(y + this.obj.height() > $(window).height()) 
-			y -= this.obj.height();
+			y -= obj.height();
 		if(y<0)
 			y = 0;
-		this.obj.css( { left: x, top: y, "z-index": ++theDialogManager.maxZ } );
+		obj.css( { left: x, top: y, "z-index": ++theDialogManager.maxZ } );
                 $("ul.CMenu a.exp").hover( function() 
                 { 
                 	var submenu = $(this).next();
@@ -377,8 +380,10 @@ var theContextMenu =
 	                	submenu.css( "left", -150 );
                 	if(submenu.offset().top + submenu.height() > $(window).height()) 
 	                	submenu.css( "top", -submenu.height()+20 );
+	                if(submenu.offset().top<0)
+				submenu.css( "top", -submenu.height()+20-submenu.offset().top );
                 });
-                this.obj.show(theDialogManager.divider);
+                obj.show(theDialogManager.divider, function() { obj.css( { overflow: "visible" } ); } );
 	},
 	hide: function()
 	{

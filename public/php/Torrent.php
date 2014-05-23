@@ -19,6 +19,7 @@ class Torrent
 	private $data;
 	protected $log_callback = null;
 	protected $err_callback = null;
+	protected $filename = null;
 
 	/** Read and decode torrent file/data OR build a torrent from source folder/file(s)
 	 * Supported signatures:
@@ -96,6 +97,11 @@ class Torrent
 		return(empty( $this->errors ) ? false : $this->errors);
 	}
 
+	public function getFileName() 
+	{
+		return($this->filename);
+	}
+
 	/**** Encode BitTorrent ****/
 
 	/** Encode torrent data
@@ -110,7 +116,7 @@ class Torrent
 			case 'double':
 				return self::encode_integer( $mixed );
 			case 'object':
-				$mixed = (array) $mixed; //Bugfix by W-Shadow. Objects can't be ksort'ed anyway (see encode_array()).
+				$mixed = (array) $mixed;
 			case 'array':
 				return self::encode_array( $mixed );
 			default:
@@ -179,7 +185,13 @@ class Torrent
 
 	protected function decode( $string ) 
 	{
-		$this->data = is_file( $string ) ? file_get_contents( $string ) : $string;
+		if(is_file( $string ))
+		{
+			$this->data = file_get_contents( $string );
+			$this->filename = $string;
+		}
+		else
+			$this->data = $string;
 		$this->pointer = 0;
 		return($this->decode_data());
 	}
@@ -364,7 +376,8 @@ class Torrent
 	 */
 	public function save( $filename = null ) 
 	{
-        	return file_put_contents( is_null( $filename ) ? $this->info['name'] . '.torrent' : $filename, $this->__toString() );
+	        $this->filename = is_null( $filename ) ? $this->info['name'] . '.torrent' : $filename;
+        	return file_put_contents( $this->filename, $this->__toString() );
 	}
 
 	/** Send torrent file to client
@@ -422,8 +435,8 @@ class Torrent
 			return(false);
         	}
 		$pieces = '';
-		while( ! feof( $handle ) )
-			$pieces .= self::pack( fread( $handle, $piece_length ) );
+		while( $piece = fread( $handle, $piece_length ) )
+			$pieces .= self::pack( $piece );
 		fclose( $handle );
 		return(array(
             		'length'        => filesize( $file ),
@@ -569,5 +582,3 @@ class Torrent
         	return(isset( $this->info ) ? strtoupper(sha1( self::encode( $this->info ) )) : null);
 	}
 }
-
-?>

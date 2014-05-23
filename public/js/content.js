@@ -1,7 +1,7 @@
 /*
  *      UI content.
  *
- *	$Id: content.js 1964 2012-02-10 09:15:25Z novik65@gmail.com $
+ *	$Id: content.js 2404 2013-10-16 11:05:49Z novik65 $
  */
 
 function makeContent()
@@ -72,14 +72,16 @@ function makeContent()
 		$("#add_button").attr("disabled",false);
 		var d = (this.contentDocument || this.contentWindow.document);
 		if(d && (d.location.href != "about:blank"))
-			try { eval(d.body.innerHTML); } catch(e) {}
+		{
+			try { var txt = d.body.textContent ? d.body.textContent : d.body.innerText; eval(txt); } catch(e) {}
+		}
 	}));
 	$(document.body).append($("<iframe name='uploadfrmurl'/>").css({visibility: "hidden"}).attr( { name: "uploadfrmurl" } ).width(0).height(0).load(function()
 	{
 		$("#url").val("");
 		var d = (this.contentDocument || this.contentWindow.document);
 		if(d.location.href != "about:blank")
-			try { eval(d.body.innerHTML); } catch(e) {}
+			try { eval(d.body.textContent ? d.body.textContent : d.body.innerText); } catch(e) {}
 	}));
 	theDialogManager.make("padd",theUILang.peerAdd,
 		'<div class="content fxcaret">'+theUILang.peerAddLabel+'<br><input type="text" id="peerIP" class="Textbox" value="my.friend.addr:6881"/></div>'+
@@ -95,7 +97,7 @@ function makeContent()
 				'<label>&nbsp;</label><input type="checkbox" name="fast_resume" id="fast_resume"/>'+theUILang.doFastResume+'<br/>'+
 				'<label>'+theUILang.Label+':</label><input type="text" id="tadd_label" name="tadd_label" class="TextboxLarge"/><br/>'+
 				'<hr/>'+
-				'<label>'+theUILang.Torrent_file+':</label><input type="file" name="torrent_file" id="torrent_file" class="TextboxLarge"/><br/>'+
+				'<label>'+theUILang.Torrent_file+':</label><input type="file" multiple="multiple" name="torrent_file[]" id="torrent_file" accept="application/x-bittorrent" class="TextboxLarge"/><br/>'+
 				'<label>&nbsp;</label><input type="submit" value="'+theUILang.add_button+'" id="add_button" class="Button" /><br/>'+
 			'</form>'+
 			'<hr/>'+
@@ -108,7 +110,8 @@ function makeContent()
 	{
 		$("#add_button").attr("disabled",false);
 	});
-	var input = $$('url');
+
+	input = $$('url');
 	input.onupdate = input.onkeyup = function() { $('#add_url').attr('disabled',$.trim(input.value)==''); };
 	input.onpaste = function() { setTimeout( input.onupdate, 10 ) };
 	var makeAddRequest = function(frm)
@@ -164,27 +167,27 @@ function makeContent()
 		'<div class="content">'+
 			'<center>'+
 				'<table width=100% border=0>'+
-					'<tr><td><strong>F1</strong></td><td>This screen</td></tr>'+
-					'<tr><td><strong><strong>Ctrl-F1</strong></td><td><a href="javascript://void();" onclick="theDialogManager.toggle(\'dlgAbout\'); return(false);">About program</a></td></tr>'+
-					'<tr><td><strong><strong>F4</strong></td><td><a href="javascript://void();" onclick="theWebUI.toggleMenu(); return(false);">Toggle menu</a></td></tr>'+
-					'<tr><td><strong><strong>F6</strong></td><td><a href="javascript://void();" onclick="theWebUI.toggleDetails(); return(false);">Toggle details</a></td></tr>'+
-					'<tr><td><strong><strong>F7</strong></td><td><a href="javascript://void();" onclick="theWebUI.toggleCategories(); return(false);">Toggle categories</a></td></tr>'+
-					'<tr><td><strong><strong>Ctrl-O</strong></td><td><a href="javascript://void();" onclick="theWebUI.showAdd(); return(false);">Add new torrent</a></td></tr>'+
-					'<tr><td><strong><strong>Ctrl-P</strong></td><td><a href="javascript://void();" onclick="theWebUI.showSettings(); return(false);">Show program properties</a></td></tr>'+
-					'<tr><td><strong><strong>Del</strong></td><td>Delete current torrent(s)</td></tr>'+
-					'<tr><td><strong><strong>Ctrl-A</strong></td><td>Select all</td></tr>'+
-					'<tr><td><strong><strong>Ctrl-Z</strong></td><td>Deselect all</td></tr>'+
+					'<tr><td><strong>F1</strong></td><td>'+theUILang.This_screen+'</td></tr>'+
+					'<tr><td><strong><strong>Ctrl-F1</strong></td><td><a href="javascript://void();" onclick="theDialogManager.toggle(\'dlgAbout\'); return(false);">'+theUILang.About_program+'</a></td></tr>'+
+					'<tr><td><strong><strong>F4</strong></td><td><a href="javascript://void();" onclick="theWebUI.toggleMenu(); return(false);">'+theUILang.Toggle_menu+'</a></td></tr>'+
+					'<tr><td><strong><strong>F6</strong></td><td><a href="javascript://void();" onclick="theWebUI.toggleDetails(); return(false);">'+theUILang.Toggle_details+'</a></td></tr>'+
+					'<tr><td><strong><strong>F7</strong></td><td><a href="javascript://void();" onclick="theWebUI.toggleCategories(); return(false);">'+theUILang.Toggle_categories+'</a></td></tr>'+
+					'<tr><td><strong><strong>Ctrl-O</strong></td><td><a href="javascript://void();" onclick="theWebUI.showAdd(); return(false);">'+theUILang.torrent_add+'</a></td></tr>'+
+					'<tr><td><strong><strong>Ctrl-P</strong></td><td><a href="javascript://void();" onclick="theWebUI.showSettings(); return(false);">'+theUILang.ruTorrent_settings+'</a></td></tr>'+
+					'<tr><td><strong><strong>Del</strong></td><td>'+theUILang.Delete_current_torrents+'</td></tr>'+
+					'<tr><td><strong><strong>Ctrl-A</strong></td><td>'+theUILang.Select_all+'</td></tr>'+
+					'<tr><td><strong><strong>Ctrl-Z</strong></td><td>'+theUILang.Deselect_all+'</td></tr>'+
 				'</table>'+
 			'</center>'+
 		'</div>');
-	theDialogManager.make("dlgAbout",theUILang.About,
-		'<div class="content"> <strong>Developers</strong>:<br/><br/>'+
+	theDialogManager.make("dlgAbout","ruTorrent v"+theWebUI.version,
+		'<div class="content"> <strong>'+theUILang.Developers+'</strong>:<br/><br/>'+
 			'&nbsp;&nbsp;&nbsp;Original &micro;Torrent WebUI:<br/>'+
 			'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Carsten Niebuhr (Directrix)<br/><br/>'+
 			'&nbsp;&nbsp;&nbsp;rTorrent adaptation (ruTorrent):<br/>'+
 			'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Moskalets Alexander (<a href="mailto:novik65@gmail.com">Novik</a>)<br/>'+
 			'<br/>'+
-			'<strong>Check new vesion <a href="http://rutorrent.googlecode.com" target=_blank>here</a></strong><br/>'+
+			'<strong>'+theUILang.Check_new_version+'&nbsp;<a href="http://rutorrent.googlecode.com" target=_blank>'+theUILang.here+'</a></strong><br/>'+
 			'<br/>'+
 			'<center><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=2KEV2MSBTF99U" target=_blank><img src="images/btn_donate.gif" border=0/></a></center>'+
 		'</div>');
@@ -205,7 +208,7 @@ function makeContent()
 	var retries = '';
 	for (var i in theUILang.retryOnErrorList)
 		retries+="<option value='"+i+"'>"+theUILang.retryOnErrorList[i]+"</option>";
-	theDialogManager.make("stg",theUILang.uTorrent_settings,
+	theDialogManager.make("stg",theUILang.ruTorrent_settings,
 		'<div id="stg_c" class="fxcaret">'+
 			"<div class=\"lm\">"+
 				"<ul>"+
@@ -270,11 +273,14 @@ function makeContent()
 					"<div class=\"op50l algnright\"><input type=\"checkbox\" id=\"webui.effects\"/>"+
 						"<label for=\"webui.effects\">"+theUILang.UIEffects+"</label>"+
 					"</div>"+
-
-
-					"<div class=\"op100l\"><input type=\"checkbox\" id=\"webui.fullrows\"  onchange=\"linked(this, 1, ['webui.no_delaying_draw']);\"/>"+
+					"<div class=\"op50l\"><input type=\"checkbox\" id=\"webui.fullrows\"  onchange=\"linked(this, 1, ['webui.no_delaying_draw']);\"/>"+
 						"<label for=\"webui.fullrows\">"+theUILang.fullTableRender+"</label>"+
 					"</div>"+
+
+					"<div class=\"op50l algnright\"><input type=\"checkbox\" id=\"webui.speedintitle\"/>"+
+						"<label for=\"webui.speedintitle\">"+theUILang.showSpeedInTitle+"</label>"+
+					"</div>"+					
+
 					"<div class=\"op100l\"><input type=\"checkbox\" id=\"webui.no_delaying_draw\"/>"+
 						"<label for=\"webui.no_delaying_draw\" id=\"lbl_webui.no_delaying_draw\" >"+theUILang.showScrollTables+"</label>"+
 					"</div>"+
@@ -339,7 +345,7 @@ function makeContent()
 					"</table>"+
 				"</fieldset>"+
 				"<fieldset>"+
-					"<legend>"+theUILang.Ather_sett+"</legend>"+
+					"<legend>"+theUILang.Other_sett+"</legend>"+
 					"<table>"+
 						"<tr>"+
 							"<td><input id=\"check_hash\" type=\"checkbox\"/>"+
@@ -391,7 +397,7 @@ function makeContent()
 					"</table>"+
 				"</fieldset>"+
 				"<fieldset>"+
-					"<legend>"+theUILang.Ather_Limiting+"</legend>"+
+					"<legend>"+theUILang.Other_Limiting+"</legend>"+
 					"<table>"+
 						"<tr>"+
 							"<td>"+theUILang.Number_ul_slots+":</td>"+
@@ -580,7 +586,7 @@ function correctContent()
 	};
 
 	if(!$type(theWebUI.systemInfo))
-		theWebUI.systemInfo = { rTorrent: { version: '?', libVersion: '?', started: false, iVersion: 0 } };
+		theWebUI.systemInfo = { rTorrent: { version: '?', libVersion: '?', started: false, iVersion: 0, apiVersion : 0 } };
 
 	if(!theWebUI.systemInfo.rTorrent.started)
         	theWebUI.showFlags &= ~0xFFEF;

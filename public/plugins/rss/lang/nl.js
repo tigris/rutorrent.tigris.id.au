@@ -1,4 +1,10 @@
-﻿
+﻿/*
+ * PLUGIN RSS
+ *
+ * Dutch language file.
+ *
+ * Author: rascalli (rascallim@gmail.com)
+ */
 
  theUILang.addRSS			= "Toevoegen RSS-feed";
  theUILang.feedURL			= "Feed URL";
@@ -65,5 +71,8 @@
  theUILang.rssDeleteGroupPrompt 	= "Weet u zeker dat u de geslecteerde groep wilt verwijderen ?";
  theUILang.rssDeleteGroupContentsPrompt = "Weet u zeker dat u de geslecteerde groep + inhoud wilt verwijderen?";
  theUILang.rssAllFiters 		= "Alle filters";
+ theUILang.rssUpdateInterval 		= "Update interval";
+ theUILang.Directories			= "Directories";
+ theUILang.Labels			= "Labels";
 
 thePlugins.get("rss").langLoaded();

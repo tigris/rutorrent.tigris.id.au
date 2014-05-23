@@ -1,32 +1,11 @@
 ﻿/*
- * WebUI - The WEB interface for uTorrent - http://www.utorrent.com
- * NO COPYCATS of language update
+ * Serbian language file.
  *
- * == BEGIN LICENSE ==
- *
- * Licensed under the terms of any of the following licenses at your
- * choice:
- *
- *  - GNU General Public License Version 2 or later (the "GPL")
- *    http://www.gnu.org/licenses/gpl.html
- *
- *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
- *    http://www.gnu.org/licenses/lgpl.html
- *
- *  - Mozilla Public License Version 1.1 or later (the "MPL")
- *    http://www.mozilla.org/MPL/MPL-1.1.html
- *
- * == END LICENSE ==
- *
- * File Name: sr.js
- * 	Serbian language file.
- *
- * File Author:
- * 		Zoltan Csala (zcsala021 at gmail dot com)
+ * Author: Zoltan Csala (zcsala021 at gmail dot com)
  */
 
- var theUILang =
- {
+var theUILang =
+{
  kbs				: "kB/s",
  General			: "Опште",
  Downloads			: "Низтовари",
@@ -55,7 +34,7 @@
  Ip_report_track		: "IP/Hostname to report to tracker",
  Disabled			: "Disabled",
  Enabled			: "Enabled",
- uTorrent_settings		: "rTorrent Settings",
+ ruTorrent_settings		: "Settings",
  Doesnt_support 		: "ruTorrent does not support your browser.",
  Name				: "Име",
  Status 			: "Статус",
@@ -117,7 +96,6 @@
  Bandwidth_sett 		: "Bandwidth Settings",
  Number_ul_slots		: "Number of upload slots",
  Peer_ex			: "Парњачка размена",
- About				: "О програму",
  Enter_label_prom		: "Enter the new label for the selected torrents",
  Remove_torrents		: "Remove Torrent(s)",
  Rem_torrents_prompt		: "Do you really want to remove the selected torrent(s)?",
@@ -164,13 +142,12 @@
  Number_Peers_For_Seeds_max	: "Maximum number of peers for seeding",
  Enable_port_open		: "Open listening port",
  dht_port			: "UDP port to use for DHT",
- Ather_Limiting 		: "Друга ограничења",
+ Other_Limiting 		: "Друга ограничења",
  Number_dl_slots		: "Number of download slots",
  Glob_max_memory		: "Максимална потрошња меморије",
  Glob_max_files 		: "Максималан број отворених датотека",
  Glob_max_http			: "Максималан број отворених НТТР веза",
- Glob_max_sockets		: "Maximum number of open sockets",
- Ather_sett			: "Друго",
+ Other_sett			: "Друго",
  Directory_For_Dl		: "Подразумевани директоријум за низтоваре",
  Check_hash			: "Провери хеш после низтовара",
  Hash				: "Хеш",
@@ -274,5 +251,20 @@
  trkPrivate			: "Private",
  dontSet			: "Don't set",
  webBadSessionError		: "Plugin will not work. Webserver user must have execute access to the rtorrent session directory",
- webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory"
- };
+ webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory",
+ Developers			: "Developers",
+ Check_new_version		: "Check new version",
+ here				: "here",
+ Num_No 			: "No.", // This means "Number". To be used as header for number count, e.g.: throttle/ratio plugin
+ This_screen			: "This screen",
+ About_program			: "About ruTorrent",
+ Toggle_menu			: "Toggle menu",
+ Toggle_details 		: "Toggle details",
+ Toggle_categories		: "Toggle categories",
+ Delete_current_torrents	: "Delete current torrent(s)",
+ Select_all			: "Select all",
+ Deselect_all			: "Deselect all",
+ showSpeedInTitle		: "Show speed in the title",
+ badTempPath 			: "Webserver user doesn't have read/write/execute access to the tmp directory. ruTorrent will not work.",
+ badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work."
+};

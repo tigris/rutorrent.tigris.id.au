@@ -1,6 +1,12 @@
-﻿
+﻿/*
+ * PLUGIN SOURCE
+ *
+ * Spanish language file.
+ *
+ * Author: 
+ */
 
- theUILang.getSource		= "Get .torrent";
- theUILang.cantFindTorrent	= "Source torrent file for this download not found.";
+ theUILang.getSource		= "Obtener .torrent";
+ theUILang.cantFindTorrent	= "Archivo torrent original no encontrado.";
 
 thePlugins.get("source").langLoaded();

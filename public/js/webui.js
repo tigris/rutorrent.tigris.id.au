@@ -1,12 +1,12 @@
 /*
  *      Main object.
  *
- *	$Id: webui.js 1968 2012-02-29 10:51:02Z novik65@gmail.com $
+ *	$Id: webui.js 2404 2013-10-16 11:05:49Z novik65 $
  */
 
 var theWebUI = 
 {
-        version: "3.4",
+        version: "3.6 (svn $Rev: 2404 $)",
 	tables:
 	{
 		trt: 
@@ -151,6 +151,7 @@ var theWebUI =
 		"webui.closed_panels":		{},
 		"webui.timeformat":		0,
 		"webui.dateformat":		0,
+		"webui.speedintitle":		0,
 		"webui.log_autoswitch":		1
 	},
 	showFlags: 0,
@@ -196,6 +197,7 @@ var theWebUI =
 	tegs:		{},
 	lastTeg:	0,
 	deltaTime:	0,
+	serverDeltaTime:0,
 
 //
 // init
@@ -305,7 +307,7 @@ var theWebUI =
 
 	updateServerTime: function()
 	{
-		$('#servertime').text(theConverter.date( (new Date().getTime()-theWebUI.deltaTime)/1000, true ));
+		$('#servertime').text(theConverter.date( (new Date().getTime()-theWebUI.serverDeltaTime)/1000, true ));
 	},
 
 	getPlugins: function()
@@ -313,7 +315,7 @@ var theWebUI =
 		this.request("?action=getplugins", null, false);
 		if(thePlugins.isInstalled("_getdir"))
 		{
-			$('#dir_edit').after($("<input type=button>").addClass("Button").width(30).attr("id","dir_btn").focus( function() { this.blur(); } ));
+			$('#dir_edit').after($("<input type=button>").addClass("Button").attr("id","dir_btn").focus( function() { this.blur(); } ));
 			var btn = new this.rDirBrowser( 'tadd', 'dir_edit', 'dir_btn' );
 			theDialogManager.setHandler('tadd','afterHide',function()
 			{
@@ -449,7 +451,6 @@ var theWebUI =
 
 	setStatusUpdate: function()
 	{
-		document.title = "ruTorrent v" + this.version;
 		if(this.sTimer)
 		{
 			window.clearInterval(this.sTimer);
@@ -626,7 +627,7 @@ var theWebUI =
 			if(o)
 			{
 				o = $(o);
-				var nv = o.is("input:checkbox") ? (o.attr('checked') ? 1 : 0) : o.val();
+				var nv = o.is("input:checkbox") ? (o.prop('checked') ? 1 : 0) : o.val();
 				switch(i)
 				{
 				        case "max_memory_usage":
@@ -899,8 +900,8 @@ var theWebUI =
 	trkIsPrivate: function(url)
 	{
 		return(
-			(/(http|https:udp):\/\/[a-z0-9-\.]+\.[a-z]{2,4}((:(\d){2,5})|).*\/an.*\?.+=.+/i).test(url) ||
-			(/(http|https:udp):\/\/[a-z0-9-\.]+\.[a-z]{2,4}((:(\d){2,5})|)\/.*[0-9a-z]{8,32}\/an/i).test(url) ? 1 : 0 );
+			(/(http|https|udp):\/\/[a-z0-9-\.]+\.[a-z]{2,4}((:(\d){2,5})|).*\/an.*\?.+=.+/i).test(url) ||
+			(/(http|https|udp):\/\/[a-z0-9-\.]+\.[a-z]{2,4}((:(\d){2,5})|)\/.*[0-9a-z]{8,32}\/an/i).test(url) ? 1 : 0 );
 	},
 
    	trkSelect: function(e, id) 
@@ -1150,11 +1151,11 @@ var theWebUI =
 	{
 		if($type(id))
 		{
-	   		var p = -1;
+	   		var p = null;
 	   		if(theWebUI.settings["webui.fls.view"])
 			{
 				var arr = id.split('_f_');
-		   		p = theWebUI.files[theWebUI.dID][iv(arr[1])].priority;
+		   		p = theWebUI.files[theWebUI.dID][iv(arr[1])];
 			}
 			else
 				p = theWebUI.dirs[theWebUI.dID].getEntry(id);
@@ -1563,7 +1564,8 @@ var theWebUI =
 				}
 				if(oldTorrent.downloaded!=torrent.downloaded)
 				{
-				        if(theWebUI.dID == hash)
+				        if((theWebUI.dID == hash) &&
+				                (theWebUI.activeView=='FileList'))
 						theWebUI.updateFiles(hash);
 					else	
 						delete theWebUI.files[hash];
@@ -2189,10 +2191,23 @@ var theWebUI =
 	updateStatus: function()
 	{
 	        var self = theWebUI;
-	        $("#stup_speed").text(theConverter.speed(self.total.speedUL));
+		var ul = theConverter.speed(self.total.speedUL);
+		var dl = theConverter.speed(self.total.speedDL);
+		var newTitle = '';
+		if(theWebUI.settings["webui.speedintitle"])
+		{	
+			if(ul.length)
+				newTitle+=('↑'+ul+' ');
+			if(dl.length)
+				newTitle+=('↓'+dl+' ');
+		}
+		newTitle+="ruTorrent v"+self.version;
+		if(document.title!=newTitle)
+			document.title = newTitle;
+	        $("#stup_speed").text(ul);
 	        $("#stup_limit").text((self.total.rateUL>0 && self.total.rateUL<100*1024*1024) ? theConverter.speed(self.total.rateUL) : theUILang.no);
 	        $("#stup_total").text(theConverter.bytes(self.total.UL));
-	        $("#stdown_speed").text(theConverter.speed(self.total.speedDL));
+	        $("#stdown_speed").text(dl);
 	        $("#stdown_limit").text((self.total.rateDL>0 && self.total.rateDL<100*1024*1024) ? theConverter.speed(self.total.rateDL) : theUILang.no);
 	        $("#stdown_total").text(theConverter.bytes(self.total.DL));
 	},
@@ -2459,7 +2474,7 @@ var theWebUI =
 	   		window.onerror = function(msg, url, line) 
 			{
 			        theWebUI.show();
-				log("JS error: [" + url + " : " + line + "] " + msg);
+				noty("JS error: [" + url + " : " + line + "] " + msg,"error");
 				return true;
 			}
 		else
@@ -2475,14 +2490,14 @@ var theWebUI =
 	error: function(status,text) 
 	{
 		theWebUI.show();
-		log("Bad response from server: ("+status+") "+(text ? text : ""));
+		noty("Bad response from server: ("+status+") "+(text ? text : ""),"error");
 	},
 
 	timeout: function() 
 	{
 		theWebUI.show();
 		if(!theWebUI.settings["webui.ignore_timeouts"])
-			log(theUILang.Request_timed_out);
+			noty(theUILang.Request_timed_out,"alert");
 	}
 };
 

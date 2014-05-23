@@ -1,32 +1,13 @@
 ﻿/*
- * WebUI - The WEB interface for uTorrent - http://www.utorrent.com
- * NO COPYCATS of language update
+ * Dutch language file.
  *
- * == BEGIN LICENSE ==
+ * Initial Author: Lord Alderaan (lordalderaan@gmail.com)
  *
- * Licensed under the terms of any of the following licenses at your
- * choice:
- *
- *  - GNU General Public License Version 2 or later (the "GPL")
- *    http://www.gnu.org/licenses/gpl.html
- *
- *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
- *    http://www.gnu.org/licenses/lgpl.html
- *
- *  - Mozilla Public License Version 1.1 or later (the "MPL")
- *    http://www.mozilla.org/MPL/MPL-1.1.html
- *
- * == END LICENSE ==
- *
- * File Name: nl.js
- * 	Dutch language file.
- *
- * File Author:
- * 		Lord Alderaan (lordalderaan@gmail.com)
+ * Author: rascalli (rascallim@gmail.com)
  */
 
- var theUILang =
- {
+var theUILang =
+{
  kbs				: "kB/s",
  General			: "Algemeen",
  Downloads			: "Downloads",
@@ -55,7 +36,7 @@
  Ip_report_track		: "Deze IP/Hostnaam aan tracker rapporteren",
  Disabled			: "Uitgeschakeld",
  Enabled			: "Ingeschakeld",
- uTorrent_settings		: "rTorrent Instellingen",
+ ruTorrent_settings		: "Instellingen",
  Doesnt_support 		: "ruTorrent ondersteund uw browser niet.",
  Name				: "Naam",
  Status 			: "Status",
@@ -117,7 +98,6 @@
  Bandwidth_sett 		: "Bandbreedte opties",
  Number_ul_slots		: "Aantal uploadslots",
  Peer_ex			: "Peer Exchange",
- About				: "Over rTorrent",
  Enter_label_prom		: "Vul het nieuwe Etiket voor de geselecteerde torrents in",
  Remove_torrents		: "Verwijder Torrent(s)",
  Rem_torrents_prompt		: "Weet u zeker dat u de geselecteerde torrents wilt verwijderen?",
@@ -164,13 +144,12 @@
  Number_Peers_For_Seeds_max	: "Maximaal aantal seeds",
  Enable_port_open		: "Open poort",
  dht_port			: "UDP poort voor DHT",
- Ather_Limiting 		: "Overige Limieten",
+ Other_Limiting 		: "Overige Limieten",
  Number_dl_slots		: "Aantal download slots",
  Glob_max_memory		: "Maximaal geheugen gebruik",
  Glob_max_files 		: "Maximaal aantal open bestanden",
  Glob_max_http			: "Maximaal aantal open http connecties",
- Glob_max_sockets		: "Maximal aantal open sockets",
- Ather_sett			: "Andere Opties",
+ Other_sett			: "Andere Opties",
  Directory_For_Dl		: "Standaard folder voor downloads",
  Check_hash			: "Hash controle na download",
  Hash				: "Hash",
@@ -274,5 +253,20 @@
  trkPrivate			: "Private",
  dontSet			: "Don't set",
  webBadSessionError		: "Plugin will not work. Webserver user must have execute access to the rtorrent session directory",
- webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory"
- };
+ webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory",
+ Developers			: "Developers",
+ Check_new_version		: "Check new version",
+ here				: "here",
+ Num_No 			: "No.", // This means "Number". To be used as header for number count, e.g.: throttle/ratio plugin
+ This_screen			: "This screen",
+ About_program			: "About ruTorrent",
+ Toggle_menu			: "Toggle menu",
+ Toggle_details 		: "Toggle details",
+ Toggle_categories		: "Toggle categories",
+ Delete_current_torrents	: "Delete current torrent(s)",
+ Select_all			: "Select all",
+ Deselect_all			: "Deselect all",
+ showSpeedInTitle		: "Show speed in the title",
+ badTempPath 			: "Webserver user doesn't have read/write/execute access to the tmp directory. ruTorrent will not work.",
+ badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work."
+};

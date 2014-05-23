@@ -1,4 +1,10 @@
-﻿
+﻿/*
+ * PLUGIN RATIO
+ *
+ * English language file.
+ *
+ * Author: 
+ */
 
  theUILang.ratios		= "Ratio Groups";
  theUILang.ratio		= "RatioGroup";
@@ -15,5 +21,6 @@
  theUILang.ratioEraseData	= "Remove data";
  theUILang.maxTime		= "Time";
  theUILang.ratioDefault 	= "Default ratio group";
+ theUILang.setThrottleTo	= "Set channel to";
 
 thePlugins.get("ratio").langLoaded();

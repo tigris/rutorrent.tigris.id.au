@@ -1,32 +1,13 @@
 ﻿/*
- * WebUI - The WEB interface for uTorrent - http://www.utorrent.com
- * NO COPYCATS of language update
+ * German language file.
  *
- * == BEGIN LICENSE ==
+ * Initial Author: schnurlos (utorrent@gmx.at)
  *
- * Licensed under the terms of any of the following licenses at your
- * choice:
- *
- *  - GNU General Public License Version 2 or later (the "GPL")
- *    http://www.gnu.org/licenses/gpl.html
- *
- *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
- *    http://www.gnu.org/licenses/lgpl.html
- *
- *  - Mozilla Public License Version 1.1 or later (the "MPL")
- *    http://www.mozilla.org/MPL/MPL-1.1.html
- *
- * == END LICENSE ==
- *
- * File Name: de.js
- * 	German language file.
- *
- * File Author:
- * 		schnurlos (utorrent@gmx.at)
+ * Author: 
  */
 
- var theUILang =
- {
+var theUILang =
+{
  kbs				: "kB/s",
  General			: "Allgemein",
  Downloads			: "Downloads",
@@ -55,7 +36,7 @@
  Ip_report_track		: "IP/Hostname an den Tracker melden",
  Disabled			: "Deaktiviert",
  Enabled			: "Erlaubt",
- uTorrent_settings		: "rTorrent Einstellungen",
+ ruTorrent_settings		: "Einstellungen",
  Doesnt_support 		: "Diese ruTorrent unterstützt deinen Browser nicht.",
  Name				: "Name",
  Status 			: "Status",
@@ -101,7 +82,7 @@
  Low_priority			: "Niedrige",
  Dont_download			: "Nicht Laden",
  Files				: "Dateien",
- Logger 			: "Logger",
+ Logger 			: "Log",
  s				: "s", // part of "KB/s"
  bytes				: "Bytes",
  KB				: "kB",
@@ -117,7 +98,6 @@
  Bandwidth_sett 		: "Bandbreiten Einstellungen",
  Number_ul_slots		: "Anzahl Upload-Slots",
  Peer_ex			: "Peerlistentausch",
- About				: "über rTorrent...",
  Enter_label_prom		: "Neue Gruppe für markierte Torrents eingeben",
  Remove_torrents		: "Torrent(s) löschen",
  Rem_torrents_prompt		: "Möchtest Du den/die markierte(n) Torrent(s) wirklich löschen?",
@@ -164,13 +144,12 @@
  Number_Peers_For_Seeds_max	: "Maximum number of peers for seeding",
  Enable_port_open		: "Open listening port",
  dht_port			: "UDP port to use for DHT",
- Ather_Limiting 		: "Other limitations",
+ Other_Limiting 		: "Other Limitations",
  Number_dl_slots		: "Number of download slots",
  Glob_max_memory		: "Maximum memory usage",
  Glob_max_files 		: "Maximum number of open files",
  Glob_max_http			: "Maximum number of open http connections",
- Glob_max_sockets		: "Maximum number of open sockets",
- Ather_sett			: "Other",
+ Other_sett			: "Other",
  Directory_For_Dl		: "Default directory for downloads",
  Check_hash			: "Check hash after download",
  Hash				: "Hash",
@@ -274,5 +253,20 @@
  trkPrivate			: "Private",
  dontSet			: "Don't set",
  webBadSessionError		: "Plugin will not work. Webserver user must have execute access to the rtorrent session directory",
- webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory"
- };
+ webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory",
+ Developers			: "Developers",
+ Check_new_version		: "Check new version",
+ here				: "here",
+ Num_No 			: "Nr.", // This means "Number". To be used as header for number count, e.g.: throttle/ratio plugin
+ This_screen			: "This screen",
+ About_program			: "About ruTorrent",
+ Toggle_menu			: "Toggle menu",
+ Toggle_details 		: "Toggle details",
+ Toggle_categories		: "Toggle categories",
+ Delete_current_torrents	: "Delete current torrent(s)",
+ Select_all			: "Select all",
+ Deselect_all			: "Deselect all",
+ showSpeedInTitle		: "Show speed in the title",
+ badTempPath 			: "Webserver user doesn't have read/write/execute access to the tmp directory. ruTorrent will not work.",
+ badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work."
+};

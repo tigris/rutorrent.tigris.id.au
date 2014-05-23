@@ -285,11 +285,9 @@ switch($mode)
 		{
 			$ret = makeMulticall($cmds,$h,$add,'t');
 			if($ret===false)
-			{
-				$result = null;
-				break;
-			}
-			$result[] = $ret;
+				$result[] = array();
+			else
+				$result[] = $ret;
 		}
 		break;
 	}
@@ -402,8 +400,14 @@ switch($mode)
 			new rXMLRPCCommand( "d.get_bitfield", $hash[0] ),
 			new rXMLRPCCommand( "d.get_chunk_size", $hash[0] ),
 			new rXMLRPCCommand( "d.get_size_chunks", $hash[0] ) ));
+		if(rTorrentSettings::get()->apiVersion>=4)
+			$req->addCommand(new rXMLRPCCommand( "d.chunks_seen", $hash[0] ));
 		if($req->success())
+		{
 	        	$result = array( "chunks"=>$req->val[0], "size"=>$req->val[1], "tsize"=>$req->val[2] );
+			if(rTorrentSettings::get()->apiVersion>=4)
+				$result["seen"] = $req->val[3];
+	        }
 		break;
 	}
 	default:
@@ -430,4 +434,3 @@ if(is_null($result))
 }
 else
 	cachedEcho(json_encode($result),"application/json");
-?>

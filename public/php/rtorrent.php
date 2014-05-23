@@ -6,6 +6,8 @@ require_once( 'Torrent.php' );
 
 class rTorrent
 {
+	const RTORRENT_PACKET_LIMIT = 1572864;
+
 	static public function sendTorrent($fname, $isStart, $isAddPath, $directory, $label, $saveTorrent, $isFast, $isNew = true, $addition = null)
 	{
 		$hash = false;
@@ -25,17 +27,28 @@ class rTorrent
 				if(isset($torrent->{'rtorrent'}))
 					unset($torrent->{'rtorrent'});
 			}
-			$cmd = new rXMLRPCCommand( $isStart ? 'load_raw_start' : 'load_raw' );
-			$cmd->addParameter(base64_encode($torrent->__toString()),"base64");
-			if(!is_object($fname) && (rTorrentSettings::get()->iVersion>=0x805))
-				$cmd->addParameter(getCmd("d.set_custom")."=x-filename,".rawurlencode(getFileName($fname)));
-				
-			if(!$saveTorrent && is_string($fname))
-				@unlink($fname);
+			$raw_value = base64_encode($torrent->__toString());
+			$filename = is_object($fname) ? $torrent->getFileName() : $fname;
+			if((strlen($raw_value)<self::RTORRENT_PACKET_LIMIT) || is_null($filename) || !isLocalMode())
+			{
+				$cmd = new rXMLRPCCommand( $isStart ? 'load_raw_start' : 'load_raw' );
+				$cmd->addParameter($raw_value,"base64");
+				if(!is_null($filename) && !$saveTorrent)
+					@unlink($filename);
+			}
+			else
+			{
+				$cmd = new rXMLRPCCommand( $isStart ? 'load_start' : 'load' );
+				$cmd->addParameter($filename);
+			}
+			if(!is_null($filename) && (rTorrentSettings::get()->iVersion>=0x805))
+				$cmd->addParameter(getCmd("d.set_custom")."=x-filename,".rawurlencode(getFileName($filename)));
+			$req = new rXMLRPCRequest();				
 			if($directory && (strlen($directory)>0))
 			{
 				if(!rTorrentSettings::get()->correctDirectory($directory))
 					return(false);
+				$req->addCommand( new rXMLRPCCommand( 'execute', array('mkdir','-p',$directory) ) );
 				$cmd->addParameter( ($isAddPath ? getCmd("d.set_directory=")."\"" : getCmd("d.set_directory_base=")."\"").$directory."\"" );
 			}
 			$comment = $torrent->comment();
@@ -59,7 +72,7 @@ class rTorrent
 			if(is_array($addition))
 				foreach($addition as $key=>$prm)
 					$cmd->addParameter($prm,'string');
-			$req = new rXMLRPCRequest( $cmd );
+			$req->addCommand( $cmd );
 			if($req->run() && !$req->fault)
 				$hash = $torrent->hash_info();
 		}
@@ -79,6 +92,7 @@ class rTorrent
 		        	$hash = base32decode($hash);
 	        	if(strlen($hash)==40)
 	        	{
+				$req = new rXMLRPCRequest();
 				$cmd = new rXMLRPCCommand( $isStart ? 'load_start' : 'load' );
 				$cmd->addParameter($magnet);
 				if($directory && (strlen($directory)>0))
@@ -86,6 +100,7 @@ class rTorrent
 					if(!rTorrentSettings::get()->correctDirectory($directory))
 						return(false);
 					$cmd->addParameter( ($isAddPath ? getCmd("d.set_directory=")."\"" : getCmd("d.set_directory_base=")."\"").$directory."\"" );
+					$req->addCommand( new rXMLRPCCommand( 'execute', array('mkdir','-p',$directory) ) );
 				}
 				if($label && (strlen($label)>0))
 				{
@@ -96,7 +111,7 @@ class rTorrent
 				if(is_array($addition))
 					foreach($addition as $key=>$prm)
 						$cmd->addParameter($prm,'string');
-				$req = new rXMLRPCRequest( $cmd );
+				$req->addCommand( $cmd );
 				if($req->success())
 					return($hash);
 			}
@@ -146,9 +161,9 @@ class rTorrent
 	        	if($req->success())
 	        		$base=$req->val[0];
 	        }
-	        $base = addslash($base);
-	        if($psize && ($base!=''))
+	        if($psize && rTorrentSettings::get()->correctDirectory($base))
 	        {
+		        $base = addslash($base);
 	                $tsize = 0.0;
 			if(isset($info['files']))
 			{
@@ -182,5 +197,3 @@ class rTorrent
 		return(false);
 	}
 }
-
-?>

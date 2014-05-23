@@ -2,7 +2,7 @@
 require_once( '../../php/xmlrpc.php' );
 
 if(isset($_REQUEST['result']))
-	cachedEcho('log(theUILang.cantAccessData);',"text/html");
+	cachedEcho('noty(theUILang.cantAccessData,"error");',"text/html");
 
 if(isset($_REQUEST['hash']) && isset($_REQUEST['no']))
 {
@@ -32,4 +32,3 @@ else
 	header("HTTP/1.0 302 Moved Temporarily");
 	header("Location: ".$_SERVER['PHP_SELF'].'?result=0');
 }
-?>

@@ -1,35 +1,13 @@
 ﻿/*
- * WebUI - The WEB interface for uTorrent - http://www.utorrent.com
- * NO COPYCATS of language update
+ * Ukrainian language file.
  *
- * == BEGIN LICENSE ==
+ * Initial Author: Artem Lopata (mod-s@yandex.ru)
  *
- * Licensed under the terms of any of the following licenses at your
- * choice:
- *
- *  - GNU General Public License Version 2 or later (the "GPL")
- *    http://www.gnu.org/licenses/gpl.html
- *
- *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
- *    http://www.gnu.org/licenses/lgpl.html
- *
- *  - Mozilla Public License Version 1.1 or later (the "MPL")
- *    http://www.mozilla.org/MPL/MPL-1.1.html
- *
- * == END LICENSE ==
- *
- * File Name: uk.js
- * 	Ukrainian language file.
- *
- * File Author:
- * 		Oleksandr Natalenko (pfactum@gmail.com)
- *
- * Initial Author:
- * 		Artem Lopata (mod-s@yandex.ru)
+ * Author: Oleksandr Natalenko (pfactum@gmail.com)
  */
 
- var theUILang =
- {
+var theUILang =
+{
  kbs				: "кб/с",
  General			: "Загальне",
  Downloads			: "Завантаження",
@@ -43,7 +21,7 @@
  Alt_list_bckgnd		: "Альтернативний колір списку",
  Show_cat_start 		: "Показати категорії під час запуску",
  Show_det_start 		: "Показати деталі під час запуску",
- Dnt_start_down_auto		: "Не починати завантаження автоматично",
+ Dnt_start_down_auto		: "Не завантажувати автоматично",
  Listening_Port 		: "Порт",
  Port_f_incom_conns		: "Порт для вхідних з’єднань",
  Rnd_port_torr_start		: "Випадковий порт під час кожного запуску rTorrent",
@@ -58,7 +36,7 @@
  Ip_report_track		: "IP/адреса вузла, які передаються трекеру",
  Disabled			: "Вимкнено",
  Enabled			: "Увімкнено",
- uTorrent_settings		: "Настройки rTorrent",
+ ruTorrent_settings		: "Настройки",
  Doesnt_support 		: "ruTorrent не підтримує ваш браузер.",
  Name				: "Назва",
  Status 			: "Статус",
@@ -112,15 +90,14 @@
  GB				: "Гб",
  TB				: "Тб",
  PB				: "Пб",
- Loading			: "Завантаження…",
+ Loading			: "Триває завантаження…",
  Torrent_file			: "Файл торента",
- Torrent_URL			: "URL-адреса торента",
+ Torrent_URL			: "URL торента",
  Torrent_properties		: "Властивості торента",
  Trackers			: "Трекери",
  Bandwidth_sett 		: "Настройки обмежень",
  Number_ul_slots		: "Кількість слотів віддачі",
  Peer_ex			: "Обмін пірами",
- About				: "Про програму",
  Enter_label_prom		: "Введіть нову мітку для виділених торентів",
  Remove_torrents		: "Видалити торенти",
  Rem_torrents_prompt		: "Справді видалити вибрані торенти?",
@@ -141,7 +118,7 @@
  Save_as			: "Зберегти як",
  Comment			: "Коментар",
  add_button			: "Дод. файл",
- add_url			: "Дод. URL-адресу",
+ add_url			: "Дод. URL",
  ok				: "ОК",
  Cancel 			: "Скасувати",
  mnu_add			: "Додати торент",
@@ -153,7 +130,7 @@
  mnu_settings			: "Настройки",
  mnu_search			: "Пошук",
  mnu_lang			: "Мова",
- torrent_add			: "Додати торент", /*Caption of torrent add box*/
+ torrent_add			: "Додавання торента", /*Caption of torrent add box*/
  time_w 			: " тижн. ", /*for x weeks*/
  time_d 			: " дн. ", /*for x days remaining*/
  time_h 			: " год ", /*for x hours remaining*/
@@ -167,13 +144,12 @@
  Number_Peers_For_Seeds_max	: "Макс. кількісті пірів для роздавання",
  Enable_port_open		: "Відкривати порт для вихідного трафіка",
  dht_port			: "Порт UDP для DHT",
- Ather_Limiting 		: "Інші обмеження",
+ Other_Limiting 		: "Інші обмеження",
  Number_dl_slots		: "Кількість слотів завантаження",
  Glob_max_memory		: "Макс. об’єм використовуваної пам’яті",
  Glob_max_files 		: "Макс. кількість відкритих файлів",
  Glob_max_http			: "Макс. кількість відкритих з’єднань HTTP",
- Glob_max_sockets		: "Макс. кількість відкритих сокетів",
- Ather_sett			: "Інше",
+ Other_sett			: "Інше",
  Directory_For_Dl		: "Каталог завантажень",
  Check_hash			: "Перевіряти дані після завантаження",
  Hash				: "Хеш",
@@ -276,6 +252,21 @@
  phpExtensionNotFoundError	: "Плагін не працюватиме. Потрібно інсталювати розширення PHP",
  trkPrivate			: "Приватний",
  dontSet			: "Не встановлювати",
- webBadSessionError		: "Plugin will not work. Webserver user must have execute access to the rtorrent session directory",
- webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory"
- };
+ webBadSessionError		: "Плагін не працюватиме. Користувач веб-сервера повинен мати права на виконання на каталог сесії rtorrent",
+ webBadSessionWarning		: "Деякі функції не будуть доступні. Користувач веб-сервера повинен мати права на виконання на каталог сесії rtorrent",
+ Developers			: "Розробники",
+ Check_new_version		: "Перевірка наявності нових версій",
+ here				: "тут",
+ Num_No 			: "№", // This means "Number". To be used as header for number count, e.g.: throttle/ratio plugin
+ This_screen			: "Це вікно",
+ About_program			: "Про ruTorrent",
+ Toggle_menu			: "Перемкнути меню",
+ Toggle_details 		: "Перемкнути деталі",
+ Toggle_categories		: "Перемкнути категорії",
+ Delete_current_torrents	: "Видлити поточні торенти",
+ Select_all			: "Вибрати все",
+ Deselect_all			: "Скасувати вибір",
+ showSpeedInTitle		: "Show speed in the title",
+ badTempPath 			: "Webserver user doesn't have read/write/execute access to the tmp directory. ruTorrent will not work.",
+ badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work."
+};

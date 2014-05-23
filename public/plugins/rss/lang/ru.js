@@ -1,4 +1,10 @@
-﻿
+﻿/*
+ * PLUGIN RSS
+ *
+ * Russian language file.
+ *
+ * Author: 
+ */
 
  theUILang.addRSS			= "Добавить рассылку";
  theUILang.feedURL			= "URL";
@@ -65,5 +71,8 @@
  theUILang.rssDeleteGroupPrompt 	= "Вы действительно хотите удалить выбранную группу?";
  theUILang.rssDeleteGroupContentsPrompt = "Вы действительно хотите удалить выбранную группу со всем ее содержимым?";
  theUILang.rssAllFiters 		= "Все фильтры";
+ theUILang.rssUpdateInterval 		= "Интервал обновления";
+ theUILang.Directories			= "Директории";
+ theUILang.Labels			= "Метки";
 
 thePlugins.get("rss").langLoaded();

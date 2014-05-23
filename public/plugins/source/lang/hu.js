@@ -1,6 +1,12 @@
-﻿
+﻿/*
+ * PLUGIN SOURCE
+ *
+ * Hungarian language file.
+ *
+ * Author: Olivér (titititatatatititi@gmail.com)
+ */
 
- theUILang.getSource		= "Get .torrent";
- theUILang.cantFindTorrent	= "Source torrent file for this download not found.";
+ theUILang.getSource		= ".torrent letöltése";
+ theUILang.cantFindTorrent	= "A letöltés torrent fájlja nem található.";
 
 thePlugins.get("source").langLoaded();

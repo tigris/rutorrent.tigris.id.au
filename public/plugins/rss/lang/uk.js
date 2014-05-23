@@ -1,4 +1,10 @@
-﻿
+﻿/*
+ * PLUGIN RSS
+ *
+ * Ukrainian language file.
+ *
+ * Author: Oleksandr Natalenko (pfactum@gmail.com)
+ */
 
  theUILang.addRSS			= "Додати розсилку";
  theUILang.feedURL			= "URL-адреса";
@@ -65,5 +71,8 @@
  theUILang.rssDeleteGroupPrompt 	= "Справді видалити вибрану групу?";
  theUILang.rssDeleteGroupContentsPrompt = "Справді видалити вибрану групу з усім її вмістом?";
  theUILang.rssAllFiters 		= "Усі фільтри";
+ theUILang.rssUpdateInterval 		= "Інтервал оновлення";
+ theUILang.Directories			= "Директорії";
+ theUILang.Labels			= "Мітки";
 
 thePlugins.get("rss").langLoaded();

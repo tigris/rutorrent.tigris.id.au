@@ -75,7 +75,7 @@ class rRSS
 			$name = $cli->get_filename();
 			if($name===false)
 				$name = md5($href).".torrent";
-			$name = getUniqueFilename(getUploadsPath()."/".$name);
+			$name = getUniqueUploadedFilename($name);
 			$f = @fopen($name,"w");
 			if($f!==false)
 			{
@@ -152,7 +152,8 @@ class rRSS
 				$this->encoding = null;
 			$this->channel = array();
 			$this->items = array();
-			if(preg_match("'<channel.*?>(.*?)</channel>'si", $cli->results, $out)==1)
+			if(preg_match("'<channel.*?>(.*?)</channel>'si", $cli->results, $out) || 
+				preg_match("'<channel.*?>(.*?)'si", $cli->results, $out))	// for damned lostfilm.tv with broken rss
 			{
 				foreach($this->channeltags as $channeltag)
 				{
@@ -219,11 +220,11 @@ class rRSS
 						if(!array_key_exists('timestamp',$item))
 						{
 // hack for iptorrents.com
-// Category: Movies/Non-English  Size: 707.38 MB Added: 2009-10-21 07:42:37
+// Category: Movies/Non-English  Size: 707.38 MB Uploaded: 2009-10-21 07:42:37
 							if(array_key_exists('description',$item) && 
 								(strlen($item['description'])<255) &&
-								(($pos = strpos($item['description'],'Added: '))!==false) &&
-								(($timestamp = strtotime(substr($item['description'],$pos+7)))!==-1))
+								(($pos = strpos($item['description'],'Uploaded: '))!==false) &&
+								(($timestamp = strtotime(substr($item['description'],$pos+10)))!==-1))
 								$item['timestamp'] = $timestamp;
 							else
 								$item['timestamp'] = 0;
@@ -296,11 +297,29 @@ class rRSS
 				}
 			}
 			rTorrentSettings::get()->pushEvent( "RSSFetched", array( "rss"=>&$this ) );
-			foreach( $this->items as $href=>$item )
-				$history->correct($href,$item['timestamp']);
+			if(!$this->hasIncorrectTimes())
+				foreach( $this->items as $href=>$item )
+					$history->correct($href,$item['timestamp']);
 			return(true);
 		}
 		return(false);
+	}
+	
+	protected function hasIncorrectTimes()
+	{
+		global $feedsWithIncorrectTimes;
+		$ret = false;
+		$uparts = @parse_url($this->url);
+		$host = $uparts['host'];
+		foreach( $feedsWithIncorrectTimes as $url )
+		{
+			if( stripos($host,$url)!==false )
+			{
+				$ret = true;
+				break;
+			}
+		}
+		return($ret);
 	}
 
 	static public function removeTegs( $s )
@@ -489,6 +508,14 @@ class rRSSFilter
 	public $linkCheck = 0;
 	public $no = -1;
 	public $interval = -1;
+	public $matches = array();
+	private static $search = array
+	( 
+		null,
+		'${1}', '${2}', '${3}', '${4}', '${5}', '${6}', '${7}', '${8}', '${9}', '${10}',
+		'${11}', '${12}', '${13}', '${14}', '${15}', '${16}', '${17}', '${18}', '${19}', '${20}',
+		'${21}', '${22}', '${23}', '${24}', '${25}', '${26}', '${27}', '${28}', '${29}', '${30}',
+	);
 
 	public function	rRSSFilter( $name, $pattern = '', $exclude = '', $enabled = 0, $rssHash = '', 
 		$start = 0, $addPath = 1, $directory = null, $label = null, 
@@ -511,6 +538,7 @@ class rRSSFilter
 		$this->ratio = $ratio;
 		$this->no = $no;
 		$this->interval = $interval;
+		$this->matches = array();
 	}
 	public function isApplicable( $rss, $history, $groups )
 	{
@@ -520,10 +548,19 @@ class rRSSFilter
 			$history->mayBeApplied( $this->no, $this->interval )
 			);
 	}
+	public function getDirectory()
+	{
+		return(str_replace(self::$search,$this->matches,$this->directory));
+	}
+	public function getLabel()
+	{
+		return(str_replace(self::$search,$this->matches,$this->label));
+	}	
 	protected function isOK( $string )
 	{
+		$this->matches = array();
 		return(	(($this->pattern!='') || ($this->exclude!='')) &&
-			(($this->pattern=='') || (@preg_match($this->pattern.'u',$string)==1)) &&
+			(($this->pattern=='') || (@preg_match($this->pattern.'u',$string,$this->matches)==1)) &&
 			(($this->exclude=='') || (@preg_match($this->exclude.'u',$string)!=1)));
 	}
 	public function checkItem( $href, $rssItem )
@@ -767,12 +804,19 @@ class rRSSMetaList
 	}
 }
 
+class rRSSData
+{
+	public $hash = "data";
+	public $interval = 30;
+}
+
 class rRSSManager
 {
 	public $cache = null;
 	public $history = null;
 	public $rssList = null;
 	public $groups = null;
+	public $data = null;
 
 	public function rRSSManager()
 	{
@@ -784,6 +828,31 @@ class rRSSManager
 		$this->cache->get($this->history);
 		$this->groups = new rRSSGroupList();
 		$this->cache->get($this->groups);
+		$this->data = new rRSSData();
+		$this->cache->get($this->data);
+	}
+	public function setInterval($interval)
+	{
+		global $minInterval;
+		if(!isset($minInterval))
+			$minInterval = 2;
+		if($interval<$minInterval)
+			$interval = $minInterval;
+		$this->data->interval = $interval;
+		$this->cache->set($this->data);
+		$this->setHandlers();
+	}
+	public function setHandlers()
+	{
+	        $startAt = 0;
+		$req = new rXMLRPCRequest( rTorrentSettings::get()->getScheduleCommand("rss",$this->data->interval,
+			getCmd('execute').'={sh,-c,'.escapeshellarg(getPHP()).' '.escapeshellarg(dirname(__FILE__).'/update.php').' '.escapeshellarg(getUser()).' & exit 0}', $startAt) );
+		if($req->success())
+		{
+			$this->setStartTime($startAt);
+			return(true);
+		}
+		return(false);
 	}
 	public function getModified($obj = null)
 	{
@@ -860,7 +929,7 @@ class rRSSManager
 					rTorrentSettings::get()->pushEvent( "RSSAutoLoad", array( "rss"=>&$rss, "href"=>&$href, "item"=>&$item, "filter"=>&$filter ) );
 
 					$this->getTorrents( $rss, $href, 
-						$filter->start, $filter->addPath, $filter->directory, $filter->label, $filter->throttle, $filter->ratio, false );
+						$filter->start, $filter->addPath, $filter->getDirectory(), $filter->getLabel(), $filter->throttle, $filter->ratio, false );
 					if(WAIT_AFTER_LOADING)
 						sleep(WAIT_AFTER_LOADING);
 				}
@@ -878,7 +947,7 @@ class rRSSManager
 			{
 				if( $filter->checkItem($href, $item) )
 				{
-					$hrefs[] = $href;
+					$hrefs[$href] = array( 'label'=>$filter->getLabel(), 'dir'=>$filter->getDirectory() );
 				}
 			}
 		}
@@ -912,7 +981,13 @@ class rRSSManager
 				$hash = '';
 			}
 		}
-		return(array( "errors"=>$this->rssList->formatErrors(), "rss"=>$hash, "list"=>array_unique($hrefs)));
+		return(array
+		( 
+			"errors"=>$this->rssList->formatErrors(), 
+			"rss"=>$hash, 
+			"count"=>count($hrefs),
+			"list"=>$hrefs, 
+		));
 	}
 	public function updateRSSGroup($hash)
 	{
@@ -949,8 +1024,7 @@ class rRSSManager
 	}
 	public function setStartTime( $startAt )
 	{
-		global $updateInterval;
-		$this->rssList->updatedAt = time()+($startAt-$updateInterval*60);
+		$this->rssList->updatedAt = time()+($startAt-$this->data->interval*60);
 		$this->saveState(false);
 	}
         public function update( $manual = false )
@@ -977,11 +1051,10 @@ class rRSSManager
 	}
 	public function getIntervals()
 	{
-		global $updateInterval;
-		$nextTouch = $updateInterval*60;
+		$nextTouch = $this->data->interval*60;
 		if($this->rssList->updatedAt)
 			$nextTouch = $nextTouch-(time()-$this->rssList->updatedAt)+45;
-		return(array( "next"=>$nextTouch, "interval"=>$updateInterval ));
+		return(array( "next"=>$nextTouch, "interval"=>$this->data->interval ));
 	}
 	public function get()
 	{
@@ -1234,6 +1307,3 @@ class rRSSManager
 		$this->saveHistory();
 	}
 }
-
-
-?>

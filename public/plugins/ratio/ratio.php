@@ -9,6 +9,7 @@ eval(getPluginConf('ratio'));
 @define('RAT_STOP_AND_REMOVE',1);
 @define('RAT_ERASE',2);
 @define('RAT_ERASEDATA',3);
+@define('RAT_FIRSTTHROTTLE',10);
 
 class rRatio
 {
@@ -94,12 +95,10 @@ class rRatio
 	public function setHandlers()
 	{
 		global $checkTimesInterval;
-		$interval = $checkTimesInterval*60;
 		$req =  new rXMLRPCRequest( $this->hasTimes() ? 
-			new rXMLRPCCommand("schedule", 			
-				array( "ratio".getUser(), "1", $interval."", 
-					getCmd('execute').'={sh,-c,'.escapeshellarg(getPHP()).' '.escapeshellarg(dirname(__FILE__).'/update.php').' '.escapeshellarg(getUser()).' & exit 0}' )) :
-			new rXMLRPCCommand("schedule_remove", "ratio".getUser()) );	
+			rTorrentSettings::get()->getScheduleCommand("ratio",$checkTimesInterval,
+				getCmd('execute').'={sh,-c,'.escapeshellarg(getPHP()).' '.escapeshellarg(dirname(__FILE__).'/update.php').' '.escapeshellarg(getUser()).' & exit 0}' ) :
+			rTorrentSettings::get()->getRemoveScheduleCommand("ratio") );
 		return($req->success());
 	}
 	public function isCorrect($no)
@@ -179,6 +178,13 @@ class rRatio
 								getCmd("d.stop=")."; ".getCmd("d.close=")."; ".getCmd("d.set_custom5=")."1; ".getCmd("d.erase="))));
 							break;
 						}
+						default:
+						{
+							$thr = "thr_".($rat["action"]-RAT_FIRSTTHROTTLE);
+							$req->addCommand(new rXMLRPCCommand("system.method.set", array("group.rat_".$i.".ratio.command", 
+								getCmd('cat').'=$'.getCmd("d.stop").'=,$'.getCmd("d.set_throttle_name=").$thr.',$'.getCmd('d.start='))));
+							break;
+						}
 					}
 				}
 			}
@@ -245,5 +251,3 @@ class rRatio
 		return($ret."];\ntheWebUI.maxRatio = ".MAX_RATIO.";\ntheWebUI.defaultRatio = ".$this->default.";\n");
 	}
 }
-
-?>

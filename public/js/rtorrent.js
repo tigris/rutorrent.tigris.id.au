@@ -1,7 +1,7 @@
 /*
  *      Link to rTorrent.
  *
- *	$Id: rtorrent.js 1931 2011-12-28 07:46:19Z novik65@gmail.com $
+ *	$Id: rtorrent.js 2308 2013-04-23 07:14:03Z novik65 $
  */
 
 var dStatus = { started : 1, paused : 2, checking : 4, hashing : 8, error : 16 };
@@ -640,7 +640,9 @@ rTorrentStub.prototype.getValue = function(values,i)
 		var el = value.childNodes[0];
 		while(!el.tagName)
 			el = el.childNodes[0];
-		ret = el.childNodes.length ? el.childNodes[0].data : "";
+		ret = $type(el.textContent) ? $.trim(el.textContent) : 
+			el.childNodes.length ? 
+			el.childNodes[0].data : "";
 	}
 	return((ret==null) ? "" : ret);
 }
@@ -1031,7 +1033,7 @@ rTorrentStub.prototype.isError = function()
 rTorrentStub.prototype.logErrorMessages = function()
 {
 	for(var i in this.faultString)
-		log(this.faultString[i]);
+		noty(this.faultString[i],"error");
 }
 
 function Ajax(URI, isASync, onComplete, onTimeout, onError, reqTimeout) 
@@ -1061,8 +1063,14 @@ function Ajax(URI, isASync, onComplete, onTimeout, onError, reqTimeout)
 				diff = new Date().getTime()-Date.parse(XMLHttpRequest.getResponseHeader("Date"));
 				} catch(e) { diff = 0; };
 				theWebUI.deltaTime = iv(diff);
-				stub = null;
 			}
+			if(theWebUI.serverDeltaTime==0)
+			{
+				var timestamp = XMLHttpRequest.getResponseHeader("X-Server-Timestamp");
+				if(timestamp != null)
+					theWebUI.serverDeltaTime = new Date().getTime()-iv(timestamp)*1000;
+			}
+			stub = null;
 		},
 		error: function(XMLHttpRequest, textStatus, errorThrown)
 		{

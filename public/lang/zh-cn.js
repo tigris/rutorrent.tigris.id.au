@@ -1,32 +1,13 @@
 ﻿/*
- * WebUI - The WEB interface for uTorrent - http://www.utorrent.com
- * NO COPYCATS of language update
+ * Chinese Simplified language file.
  *
- * == BEGIN LICENSE ==
+ * Initial Author: skevin (skevin@china.com)
  *
- * Licensed under the terms of any of the following licenses at your
- * choice:
- *
- *  - GNU General Public License Version 2 or later (the "GPL")
- *    http://www.gnu.org/licenses/gpl.html
- *
- *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
- *    http://www.gnu.org/licenses/lgpl.html
- *
- *  - Mozilla Public License Version 1.1 or later (the "MPL")
- *    http://www.mozilla.org/MPL/MPL-1.1.html
- *
- * == END LICENSE ==
- *
- * File Name: zh-cn.js
- * 	Chinese Simplified language file.
- *
- * File Author:
- * 		skevin (skevin@china.com)
+ * Author: 
  */
 
- var theUILang =
- {
+var theUILang =
+{
  kbs				: "kB/s",
  General			: "常规",
  Downloads			: "下载",
@@ -55,7 +36,7 @@
  Ip_report_track		: "向 Tracker 提交的 IP 地址/主机名",
  Disabled			: "禁用",
  Enabled			: "启用",
- uTorrent_settings		: "rTorrent 设置",
+ ruTorrent_settings		: "设置",
  Doesnt_support 		: "这个 ruTorrent 不支持你使用的浏览器.",
  Name				: "名称",
  Status 			: "状态",
@@ -64,8 +45,8 @@
  Downloaded			: "已下载",
  Uploaded			: "已上传",
  Ratio				: "分享率",
- DL				: "下载速度",
- UL				: "上传速度",
+ DL				: "下载量",
+ UL				: "上传量",
  ETA				: "剩余时间",
  Label				: "标签",
  Peers				: "用户数量",
@@ -117,7 +98,6 @@
  Bandwidth_sett 		: "带宽设置",
  Number_ul_slots		: "上传通道数",
  Peer_ex			: "用户交换",
- About				: "关于",
  Enter_label_prom		: "为选定的 Torrent 输入新的标签",
  Remove_torrents		: "移除 Torrent(s)",
  Rem_torrents_prompt		: "您确定要移除选定的 Torrent 吗?",
@@ -151,11 +131,11 @@
  mnu_search			: "搜索",
  mnu_lang			: "选用语言",
  torrent_add			: "添加 Torrent", /*Caption of torrent add box*/
- time_w 			: "w ", /*for x weeks*/
- time_d 			: "d ", /*for x days remaining*/
- time_h 			: "h ", /*for x hours remaining*/
- time_m 			: "m ", /*for x minutes remaining*/
- time_s 			: "s ", /*for x seconds remaining*/
+ time_w 			: "周 ", /*for x weeks*/
+ time_d 			: "天 ", /*for x days remaining*/
+ time_h 			: "小时 ", /*for x hours remaining*/
+ time_m 			: "分钟 ", /*for x minutes remaining*/
+ time_s 			: "秒 ", /*for x seconds remaining*/
  Base_directory 		: "目录",
  Number_Peers_min		: "最小用户数",
  Number_Peers_max		: "最大用户数",
@@ -164,13 +144,12 @@
  Number_Peers_For_Seeds_max	: "最大种子数",
  Enable_port_open		: "打开监听端口",
  dht_port			: "DHT 使用的 UDP 端口",
- Ather_Limiting 		: "其他限制",
+ Other_Limiting 		: "其他限制",
  Number_dl_slots		: "下载通道数",
  Glob_max_memory		: "最大使用内存",
  Glob_max_files 		: "最大打开文件数",
  Glob_max_http			: "最大打开 HTTP 连接数",
- Glob_max_sockets		: "最大打开 Sockets 数",
- Ather_sett			: "其他",
+ Other_sett			: "其他",
  Directory_For_Dl		: "默认下载目录",
  Check_hash			: "下载完成后检查 Hash",
  Hash				: "Hash",
@@ -195,7 +174,7 @@
  AsTree 			: "为树状",
  Group				: "组",
  SuperSeed			: "超级种子",
- badTestPath			: "rTorrent user must have read/execute access to the file ./test.sh",
+ badTestPath			: "rTorrent 执行用户必须拥有 ./test.sh 文件的执行权限",
  badSettingsPath2		: "rTorrent user must have read/write/execute access to the settings directory.",
  scrapeDownloaded		: "已下载",
  Total				: "总计",
@@ -274,5 +253,20 @@
  trkPrivate			: "Private",
  dontSet			: "Don't set",
  webBadSessionError		: "Plugin will not work. Webserver user must have execute access to the rtorrent session directory",
- webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory"
- };
+ webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory",
+ Developers			: "Developers",
+ Check_new_version		: "Check new version",
+ here				: "here",
+ Num_No 			: "No.", // This means "Number". To be used as header for number count, e.g.: throttle/ratio plugin
+ This_screen			: "This screen",
+ About_program			: "About ruTorrent",
+ Toggle_menu			: "Toggle menu",
+ Toggle_details 		: "Toggle details",
+ Toggle_categories		: "Toggle categories",
+ Delete_current_torrents	: "Delete current torrent(s)",
+ Select_all			: "Select all",
+ Deselect_all			: "Deselect all",
+ showSpeedInTitle		: "Show speed in the title",
+ badTempPath 			: "Webserver user doesn't have read/write/execute access to the tmp directory. ruTorrent will not work.",
+ badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work."
+};

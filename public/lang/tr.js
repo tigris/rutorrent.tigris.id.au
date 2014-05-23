@@ -1,32 +1,11 @@
 ﻿/*
- * WebUI - The WEB interface for uTorrent - http://www.utorrent.com
- * NO COPYCATS of language update
+ * Turkish language file.
  *
- * == BEGIN LICENSE ==
- *
- * Licensed under the terms of any of the following licenses at your
- * choice:
- *
- *  - GNU General Public License Version 2 or later (the "GPL")
- *    http://www.gnu.org/licenses/gpl.html
- *
- *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
- *    http://www.gnu.org/licenses/lgpl.html
- *
- *  - Mozilla Public License Version 1.1 or later (the "MPL")
- *    http://www.mozilla.org/MPL/MPL-1.1.html
- *
- * == END LICENSE ==
- *
- * File Name: tr.js
- * 	Turkish language file.
- *
- * File Author:
- * 		Turgay Yıldıran (votkalivirgul@gmail)
+ * Author: Turgay Yıldıran (votkalivirgul@gmail)
  */
 
- var theUILang =
- {
+var theUILang =
+{
  kbs				: "kB/s",
  General			: "Genel",
  Downloads			: "İndirilenler",
@@ -55,8 +34,8 @@
  Ip_report_track		: "İzleyiciye bildirilecek IP/Sunucu adı",
  Disabled			: "Devre dışı",
  Enabled			: "Etkin",
- uTorrent_settings		: "rTorrent Ayarları",
- Doesnt_support			: "ruTorrent tarayıcınızı desteklemiyor.",
+ ruTorrent_settings		: "Ayarları",
+ Doesnt_support 		: "ruTorrent tarayıcınızı desteklemiyor.",
  Name				: "Dosya İsmi",
  Status 			: "Durum",
  Size				: "Boyut",
@@ -117,7 +96,6 @@
  Bandwidth_sett 		: "Bandgenişliği Özellikleri",
  Number_ul_slots		: "Gönderme yuva sayısı",
  Peer_ex			: "Eş Değişimi",
- About				: "Hakkında",
  Enter_label_prom		: "Seçtiğiniz torrentler için yeni bir etiket giriniz",
  Remove_torrents		: "Torrent(ler)i Kaldır",
  Rem_torrents_prompt		: "Torrent(ler)i kaldırmak istediğinizden emin misiniz?",
@@ -164,13 +142,12 @@
  Number_Peers_For_Seeds_max	: "En fazla ortak sayısı",
  Enable_port_open		: "Dinleme Portunu açın",
  dht_port			: "UDP portunu DHT için kullanın",
- Ather_Limiting 		: "Diğer sınırlandırmalar",
+ Other_Limiting 		: "Diğer sınırlandırmalar",
  Number_dl_slots		: "İndirme yuva sayısı",
  Glob_max_memory		: "En fazla hafıza kullanımı",
  Glob_max_files 		: "En fazla açık dosya sayısı", 
  Glob_max_http			: "En fazla açık http bağlantı sayısı",
- Glob_max_sockets		: "En fazla açık socket sayısı",
- Ather_sett			: "Diğer",
+ Other_sett			: "Diğer",
  Directory_For_Dl		: "Yüklemeler için varsayılan klasör",
  Check_hash			: "Yüklemeden sonra dosya doğrulaması yap",
  Hash				: "Doğrulama",
@@ -274,5 +251,20 @@
  trkPrivate			: "Private",
  dontSet			: "Don't set",
  webBadSessionError		: "Plugin will not work. Webserver user must have execute access to the rtorrent session directory",
- webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory"
- };
+ webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory",
+ Developers			: "Developers",
+ Check_new_version		: "Check new version",
+ here				: "here",
+ Num_No 			: "No.", // This means "Number". To be used as header for number count, e.g.: throttle/ratio plugin
+ This_screen			: "This screen",
+ About_program			: "About ruTorrent",
+ Toggle_menu			: "Toggle menu",
+ Toggle_details 		: "Toggle details",
+ Toggle_categories		: "Toggle categories",
+ Delete_current_torrents	: "Delete current torrent(s)",
+ Select_all			: "Select all",
+ Deselect_all			: "Deselect all",
+ showSpeedInTitle		: "Show speed in the title",
+ badTempPath 			: "Webserver user doesn't have read/write/execute access to the tmp directory. ruTorrent will not work.",
+ badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work."
+};

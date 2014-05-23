@@ -1,4 +1,11 @@
-﻿
+﻿/*
+ * English language file.
+ *
+ * Initial Author: Artem Lopata (mod-s@yandex.ru)
+ *
+ * Author: 
+ */
+
 var theUILang =
 {
  kbs				: "kB/s",
@@ -29,7 +36,7 @@ var theUILang =
  Ip_report_track		: "IP/Hostname to report to tracker",
  Disabled			: "Disabled",
  Enabled			: "Enabled",
- uTorrent_settings		: "rTorrent Settings",
+ ruTorrent_settings		: "Settings",
  Doesnt_support 		: "ruTorrent does not support your browser.",
  Name				: "Name",
  Status 			: "Status",
@@ -75,7 +82,7 @@ var theUILang =
  Low_priority			: "Low",
  Dont_download			: "Don't Download",
  Files				: "Files",
- Logger 			: "Logger",
+ Logger 			: "Log",
  s				: "s", // part of "KB/s"
  bytes				: "bytes",
  KB				: "KB",
@@ -91,7 +98,6 @@ var theUILang =
  Bandwidth_sett 		: "Bandwidth Settings",
  Number_ul_slots		: "Number of upload slots",
  Peer_ex			: "Peer Exchange",
- About				: "About",
  Enter_label_prom		: "Enter the new label for the selected torrents",
  Remove_torrents		: "Remove Torrent(s)",
  Rem_torrents_prompt		: "Do you really want to remove the selected torrent(s)?",
@@ -138,13 +144,12 @@ var theUILang =
  Number_Peers_For_Seeds_max	: "Maximum number of peers for seeding",
  Enable_port_open		: "Open listening port",
  dht_port			: "UDP port to use for DHT",
- Ather_Limiting 		: "Other limitations",
+ Other_Limiting 		: "Other Limitations",
  Number_dl_slots		: "Number of download slots",
  Glob_max_memory		: "Maximum memory usage",
  Glob_max_files 		: "Maximum number of open files",
  Glob_max_http			: "Maximum number of open http connections",
- Glob_max_sockets		: "Maximum number of open sockets",
- Ather_sett			: "Other",
+ Other_sett			: "Other",
  Directory_For_Dl		: "Default directory for downloads",
  Check_hash			: "Check hash after download",
  Hash				: "Hash",
@@ -248,5 +253,20 @@ var theUILang =
  trkPrivate			: "Private",
  dontSet			: "Don't set",
  webBadSessionError		: "Plugin will not work. Webserver user must have execute access to the rtorrent session directory",
- webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory"
- };
+ webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory",
+ Developers			: "Developers",
+ Check_new_version		: "Check new version",
+ here				: "here",
+ Num_No 			: "No.", // This means "Number". To be used as header for number count, e.g.: throttle/ratio plugin
+ This_screen			: "This screen",
+ About_program			: "About ruTorrent",
+ Toggle_menu			: "Toggle menu",
+ Toggle_details 		: "Toggle details",
+ Toggle_categories		: "Toggle categories",
+ Delete_current_torrents	: "Delete current torrent(s)",
+ Select_all			: "Select all",
+ Deselect_all			: "Deselect all",
+ showSpeedInTitle		: "Show speed in the title",
+ badTempPath 			: "Webserver user doesn't have read/write/execute access to the tmp directory. ruTorrent will not work.",
+ badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work."
+};

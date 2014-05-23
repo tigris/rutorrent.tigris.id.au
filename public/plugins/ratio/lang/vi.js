@@ -1,4 +1,10 @@
-﻿
+﻿/*
+ * PLUGIN RATIO
+ *
+ * Vietnamese language file.
+ *
+ * Author: Ta Xuan Truong (truongtx8 AT gmail DOT com)
+ */
 
  theUILang.ratios		= "Các nhóm tỉ lệ";
  theUILang.ratio		= "Nhóm tỉ Lệ";
@@ -15,5 +21,6 @@
  theUILang.ratioEraseData	= "Xóa dữ liệu";
  theUILang.maxTime		= "T.Gian";
  theUILang.ratioDefault 	= "Nhóm tỉ lệ mặc định";
+ theUILang.setThrottleTo	= "Đặt nhóm tỉ lệ thành";
 
 thePlugins.get("ratio").langLoaded();

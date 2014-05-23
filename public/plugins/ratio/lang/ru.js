@@ -1,4 +1,10 @@
-﻿
+﻿/*
+ * PLUGIN RATIO
+ *
+ * Russian language file.
+ *
+ * Author: 
+ */
 
  theUILang.ratios		= "Группы ratio";
  theUILang.ratio		= "ГруппаRatio";
@@ -15,5 +21,6 @@
  theUILang.ratioEraseData	= "Удалить данные";
  theUILang.maxTime		= "Время";
  theUILang.ratioDefault 	= "Группа ratio по умолчанию";
+ theUILang.setThrottleTo	= "Установить канал";
 
 thePlugins.get("ratio").langLoaded();

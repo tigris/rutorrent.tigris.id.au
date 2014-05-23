@@ -1,33 +1,13 @@
 ﻿/*
- * WebUI - The WEB interface for uTorrent - http://www.utorrent.com
- * NO COPYCATS of language update
+ * French language file.
  *
- * == BEGIN LICENSE ==
+ * Initial Authors: Platoon21 (charlesprost@gmail.com) and Zempashi
  *
- * Licensed under the terms of any of the following licenses at your
- * choice:
- *
- *  - GNU General Public License Version 2 or later (the "GPL")
- *    http://www.gnu.org/licenses/gpl.html
- *
- *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
- *    http://www.gnu.org/licenses/lgpl.html
- *
- *  - Mozilla Public License Version 1.1 or later (the "MPL")
- *    http://www.mozilla.org/MPL/MPL-1.1.html
- *
- * == END LICENSE ==
- *
- * File Name: fr.js
- * 	French language file.
- *
- * File Author:
- * 	  Platoon21 (charlesprost@gmail.com) and Zempashi
- *    Nicobubulle (nicobubulle@gmail.com) for ruTorrent
+ * Author: Nicobubulle (nicobubulle@gmail.com) for ruTorrent
  */
 
- var theUILang =
- {
+var theUILang =
+{
  kbs				: "ko/s",
  General			: "Général",
  Downloads			: "Téléchargement",
@@ -56,7 +36,7 @@
  Ip_report_track		: "IP/Nom d'hôte à rapporter au Tracker",
  Disabled			: "Désactivé",
  Enabled			: "Activé",
- uTorrent_settings		: "Options de rTorrent",
+ ruTorrent_settings		: "Options",
  Doesnt_support 		: "ruTorrent ne supporte pas votre navigateur.",
  Name				: "Nom",
  Status 			: "Statut",
@@ -118,7 +98,6 @@
  Bandwidth_sett 		: "Paramètres de la bande passante",
  Number_ul_slots		: "Nombre de slots d'envoi",
  Peer_ex			: "Échange P2P",
- About				: "À propos de",
  Enter_label_prom		: "Entrer la nouvelle étiquette pour les torrents sélectionnés",
  Remove_torrents		: "Effacer le(s) torrent(s)",
  Rem_torrents_prompt		: "Voulez-vous vraiment effacer le(s) torrent(s) sélectionné(s) ?",
@@ -165,13 +144,12 @@
  Number_Peers_For_Seeds_max	: "Nombre maximum de sources",
  Enable_port_open		: "Ouvrir le port d'écoute",
  dht_port			: "Utiliser le port UDP pour DHT",
- Ather_Limiting 		: "Autres limitations",
+ Other_Limiting 		: "Autres limitations",
  Number_dl_slots		: "Nombre de slots de téléchargement",
  Glob_max_memory		: "Utilisation maximale de la mémoire",
  Glob_max_files 		: "Nombre maximum de fichiers ouverts",
  Glob_max_http			: "Nombre maximum de connexions HTTP ouvertes",
- Glob_max_sockets		: "Nombre maximum de sockets ouverts",
- Ather_sett			: "Autre",
+ Other_sett			: "Autre",
  Directory_For_Dl		: "Répertoire par défaut pour les téléchargements",
  Check_hash			: "Vérifier le Hash après le téléchargement",
  Hash				: "Hash",
@@ -274,6 +252,21 @@
  phpExtensionNotFoundError	: "Le plug-in ne fonctionnera pas. L'extension PHP doit être installée",
  trkPrivate			: "Privé",
  dontSet			: "Sans",
- webBadSessionError		: "Plugin will not work. Webserver user must have execute access to the rtorrent session directory",
- webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory"
- };
+ webBadSessionError		: "Le plug-in ne fonctionnera pas. Le serveur web n'a pas la permission de lister le répertoire de session de rtorrent.",
+ webBadSessionWarning		: "Certaines fonctionnalités ne seront pas disponibles. Le serveur web n'a pas la permission de lister le répertoire de session de rtorrent.",
+ Developers			: "Developers",
+ Check_new_version		: "Check new version",
+ here				: "here",
+ Num_No 			: "No.", // This means "Number". To be used as header for number count, e.g.: throttle/ratio plugin
+ This_screen			: "This screen",
+ About_program			: "À propos du programme",
+ Toggle_menu			: "Toggle menu",
+ Toggle_details 		: "Toggle details",
+ Toggle_categories		: "Toggle categories",
+ Delete_current_torrents	: "Supprimer le(s) torrent(s) actuel(s)",
+ Select_all			: "Sélectionner tout",
+ Deselect_all			: "Désélectionner tout",
+ showSpeedInTitle		: "Vitesse de transfert dans la barre de titre",
+ badTempPath 			: "Webserver user doesn't have read/write/execute access to the tmp directory. ruTorrent will not work.",
+ badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work."
+};

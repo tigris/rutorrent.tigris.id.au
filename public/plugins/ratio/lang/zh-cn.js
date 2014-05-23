@@ -1,4 +1,10 @@
-﻿
+﻿/*
+ * PLUGIN RATIO
+ *
+ * Chinese Simplified language file.
+ *
+ * Author: 
+ */
 
  theUILang.ratios		= "分享率设置";
  theUILang.ratio		= "分享率设置";
@@ -15,5 +21,6 @@
  theUILang.ratioEraseData	= "Remove data";
  theUILang.maxTime		= "Time";
  theUILang.ratioDefault 	= "Default ratio group";
+ theUILang.setThrottleTo	= "Set channel to";
 
 thePlugins.get("ratio").langLoaded();

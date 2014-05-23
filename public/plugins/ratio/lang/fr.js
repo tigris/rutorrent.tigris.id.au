@@ -1,11 +1,9 @@
 ﻿/*
  * PLUGIN RATIO
  *
- * File Name: fr.js
- * 	French language file.
+ * French language file.
  *
- * File Author:
- *    Nicobubulle (nicobubulle@gmail.com)
+ * Author: Nicobubulle (nicobubulle@gmail.com)
  */
 
  theUILang.ratios		= "Ratios";
@@ -23,5 +21,6 @@
  theUILang.ratioEraseData	= "Supprime les données";
  theUILang.maxTime		= "Temps";
  theUILang.ratioDefault 	= "Groupe de ratio par défaut";
+ theUILang.setThrottleTo	= "Appliquer la vitesse";
 
 thePlugins.get("ratio").langLoaded();

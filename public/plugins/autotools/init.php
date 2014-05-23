@@ -18,8 +18,8 @@ if($at->setHandlers())
 			else
 			{
 				$session = rTorrentSettings::get()->session;
-				if( !strlen($session) || !is_executable(addslash(rTorrentSettings::get()->session)))
-					$jResult .= "plugin.disable(); log('".$plugin["name"].": '+theUILang.webBadSessionWarning+' (".$session.").');";
+				if( !strlen($session) || !@file_exists(addslash(rTorrentSettings::get()->session).'.') )
+					$jResult .= "plugin.disable(); noty('".$plugin["name"].": '+theUILang.webBadSessionWarning+' (".$session.").','error');";
 			}
 		}
 		if( $at->enable_watch )
@@ -34,6 +34,4 @@ if($at->setHandlers())
 	$theSettings->registerPlugin($plugin["name"],$pInfo["perms"]);
 }
 else
-        $jResult .= "plugin.disable(); log('autotools: '+theUILang.pluginCantStart);";
-
-?>
+        $jResult .= "plugin.disable(); noty('autotools: '+theUILang.pluginCantStart,'error');";

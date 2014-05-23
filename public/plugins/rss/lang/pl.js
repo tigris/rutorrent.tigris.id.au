@@ -1,4 +1,10 @@
-﻿
+﻿/*
+ * PLUGIN RSS
+ *
+ * Polish language file.
+ *
+ * Author: Dare (piczok@gmail.com)
+ */
 
  theUILang.addRSS			= "Dodaj podajnik RSS ";
  theUILang.feedURL			= "Adres URL podajnika";
@@ -65,5 +71,8 @@
  theUILang.rssDeleteGroupPrompt 	= "Czy na pewno chcesz usunąć zawartość wybranej grupy?";
  theUILang.rssDeleteGroupContentsPrompt = "Czy na pewno chcesz usunąć wybraną grupę wraz z zawartością?";
  theUILang.rssAllFiters 		= "Wszystkie filtry";
+ theUILang.rssUpdateInterval 		= "Update interval";
+ theUILang.Directories			= "Directories";
+ theUILang.Labels			= "Labels";
 
 thePlugins.get("rss").langLoaded();

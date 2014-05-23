@@ -1,7 +1,7 @@
 /*
  *      Speed graph.
  *
- *	$Id: graph.js 1681 2011-05-03 15:43:36Z novik65 $
+ *	$Id: graph.js 2162 2012-09-08 14:31:59Z serge.6401 $
  */
 
 function clearElement(target)

@@ -158,7 +158,7 @@ rPlugin.prototype.remove = function()
 rPlugin.prototype.showError = function(err) 
 {
 	if( this.allStuffLoaded )
-		log( eval(err) );
+		noty( eval(err), "error" );
 	else
 		setTimeout( 'thePlugins.get("'+this.name+'").showError("' + err + '")', 1000 );
 }
@@ -166,7 +166,7 @@ rPlugin.prototype.showError = function(err)
 rPlugin.prototype.langLoaded = function() 
 {
 	try {
-	if($type(this.onLangLoaded)=="function")
+	if(($type(this.onLangLoaded)=="function") && this.enabled)
 		this.onLangLoaded();
 	} catch(e) {}			// konqueror hack
 	this.markLoaded();

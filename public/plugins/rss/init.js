@@ -3,6 +3,32 @@ if(browser.isIE && browser.versionMajor < 8)
 	plugin.loadCSS("ie");
 plugin.loadLang();
 
+if(plugin.canChangeOptions())
+{
+	plugin.addAndShowSettings = theWebUI.addAndShowSettings;
+	theWebUI.addAndShowSettings = function( arg )
+	{
+        	if(plugin.enabled)
+	        {
+		        $('#rss_interval').val(theWebUI.updateRSSInterval/60000);
+		}
+		plugin.addAndShowSettings.call(theWebUI,arg);
+	}
+
+	theWebUI.rssWasChanged = function()
+	{
+		return(	$('#rss_interval').val()!=theWebUI.updateRSSInterval/60000 );
+	}
+
+	plugin.setSettings = theWebUI.setSettings;
+	theWebUI.setSettings = function()
+	{
+		plugin.setSettings.call(this);
+		if( plugin.enabled && this.rssWasChanged() )
+			theWebUI.RSSSetInterval( $('#rss_interval').val() );
+	}
+}
+
 plugin.switchLabel = theWebUI.switchLabel;
 theWebUI.switchLabel = function(el)
 {
@@ -171,10 +197,17 @@ theWebUI.showRSSTimer = function( tm )
 
 theWebUI.getRSSIntervals = function( d )
 {
+	if(theWebUI.updateRSSTimer) 
+		window.clearTimeout(theWebUI.updateRSSTimer);
         theWebUI.loadRSS();
 	theWebUI.updateRSSInterval = d.interval*60000;	
 	theWebUI.updateRSSTimer = window.setTimeout("theWebUI.updateRSS()", d.next*1000);
 	theWebUI.showRSSTimer(d.next);
+}
+
+theWebUI.RSSSetInterval = function( interval )
+{
+	this.request("?action=setinterval&s="+interval,[this.getRSSIntervals, this]);
 }
 
 theWebUI.RSSMarkState = function( state )
@@ -709,7 +742,7 @@ theWebUI.showErrors = function(d)
 		s += eval(d.errors[i].desc);
 		if(d.errors[i].prm)
 			s = s + " ("+d.errors[i].prm+")";
-		log(s,true);
+		noty(s,"error",true);
 	}
 }
 
@@ -799,12 +832,12 @@ theWebUI.storeFilterParams = function()
 		this.filters[no].exclude = $('#FLT_exclude').val();
 		this.filters[no].dir = $('#FLTdir_edit').val();
 
-		this.filters[no].add_path = $('#FLTnot_add_path').attr("checked") ? 0 : 1;
-		this.filters[no].start = $('#FLTtorrents_start_stopped').attr("checked") ? 0 : 1;
+		this.filters[no].add_path = $('#FLTnot_add_path').prop("checked") ? 0 : 1;
+		this.filters[no].start = $('#FLTtorrents_start_stopped').prop("checked") ? 0 : 1;
 		this.filters[no].label = $('#FLT_label').val();
-		this.filters[no].chktitle = $('#FLTchktitle').attr("checked") ? 1 : 0;
-		this.filters[no].chkdesc = $('#FLTchkdesc').attr("checked") ? 1 : 0;
-		this.filters[no].chklink = $('#FLTchklink').attr("checked") ? 1 : 0;
+		this.filters[no].chktitle = $('#FLTchktitle').prop("checked") ? 1 : 0;
+		this.filters[no].chkdesc = $('#FLTchkdesc').prop("checked") ? 1 : 0;
+		this.filters[no].chklink = $('#FLTchklink').prop("checked") ? 1 : 0;
 		this.filters[no].hash = $('#FLT_rss').val();
 		this.filters[no].interval = $('#FLT_interval').val();
 		this.filters[no].throttle = $('#FLT_throttle').val();
@@ -984,11 +1017,36 @@ theWebUI.showFilterResults = function( d )
 	var table = this.getTable("rss");
 	for(var k in table.rowSel)
 		table.rowSel[k] = false;
-	this.getTable("trt").selCount = d.list.length;
-	for(var i = 0; i<d.list.length; i++)
-		table.rowSel[d.list[i]] = true;
+	this.getTable("trt").selCount = d.count;
+	var labels = [];
+	var dirs = [];
+	for(var i in d.list)
+	{
+		table.rowSel[i] = true;
+		if(d.list[i].dir.length)
+		{
+			if(dirs.length<3)
+				dirs.push(d.list[i].dir);
+			else
+			if(dirs.length==3)
+				dirs.push('...');
+		}
+		if(d.list[i].label.length)
+		{
+			if(labels.length<3)
+				labels.push(d.list[i].label);
+			else
+			if(labels.length==3)
+				labels.push('...');
+		}			
+	}
 	table.refreshSelection();
-	alert(theUILang.foundedByFilter+" : "+d.list.length);
+	var s = theUILang.foundedByFilter+" : "+d.count;
+	if(labels.length)
+		s+=('\n'+theUILang.Labels+" : "+labels.join(", "));
+	if(dirs.length)
+		s+=('\n'+theUILang.Directories+" : "+dirs.join(", "));
+	alert(s);
 }
 
 theWebUI.setFilters = function()
@@ -1057,6 +1115,14 @@ rTorrentStub.prototype.getrssdetails = function()
 	this.cache = true;
 }
 
+rTorrentStub.prototype.setinterval = function()
+{
+	this.content = "mode=setinterval&interval="+this.ss[0];
+        this.contentType = "application/x-www-form-urlencoded";
+	this.mountPoint = "plugins/rss/action.php";
+	this.dataType = "json";
+}
+
 rTorrentStub.prototype.getrssdetailsResponse = function(xml)
 {
 	var datas = xml.getElementsByTagName('data');
@@ -1079,7 +1145,7 @@ rTorrentStub.prototype.setfilters = function()
 	for(var i=0; i<theWebUI.filters.length; i++)
 	{
 		var flt = theWebUI.filters[i];
-		var enabled = $("#_fe"+i).attr("checked") ? 1 : 0;
+		var enabled = $("#_fe"+i).prop("checked") ? 1 : 0;
 		var name = $("#_fn"+i).val();
 		this.content = this.content+"&name="+encodeURIComponent(name)+"&pattern="+encodeURIComponent(flt.pattern)+"&enabled="+enabled+
 			"&chktitle="+flt.chktitle+
@@ -1103,6 +1169,7 @@ rTorrentStub.prototype.checkfilter = function()
 	var no = theWebUI.storeFilterParams();
 	var flt = theWebUI.filters[no];
 	this.content = "mode=checkfilter&pattern="+encodeURIComponent(flt.pattern)+"&exclude="+encodeURIComponent(flt.exclude)+
+		"&label="+encodeURIComponent(flt.label)+"&directory="+encodeURIComponent(flt.dir)+
 		"&chktitle="+flt.chktitle+"&chklink="+flt.chklink+"&chkdesc="+flt.chkdesc;
 	if(flt.hash.length)
 		this.content = this.content+"&rss="+flt.hash;
@@ -1123,7 +1190,7 @@ rTorrentStub.prototype.addrssgroup = function()
 {
 	this.content = "mode=addgroup&label="+encodeURIComponent( $('#rssGroupLabel').val() )+"&hash="+$("#rssGroupHash").val();
 	for(var lbl in theWebUI.rssLabels)
-		if($('#grp_'+lbl).attr('checked'))
+		if($('#grp_'+lbl).prop('checked'))
 			this.content += ('&rss='+lbl);
 	this.contentType = "application/x-www-form-urlencoded";
 	this.mountPoint = "plugins/rss/action.php";
@@ -1151,9 +1218,9 @@ rTorrentStub.prototype.loadrss = function()
 rTorrentStub.prototype.loadrsstorrents = function()
 {
 	this.content = "mode=loadtorrents";
-	if($("#RSStorrents_start_stopped").attr("checked"))
+	if($("#RSStorrents_start_stopped").prop("checked"))
 		this.content = this.content + '&torrents_start_stopped=1';
-	if($("#RSSnot_add_path").attr("checked"))
+	if($("#RSSnot_add_path").prop("checked"))
 		this.content = this.content + '&not_add_path=1';
 	var dir = $.trim($("#RSSdir_edit").val());
 	if(dir.length)
@@ -1380,6 +1447,14 @@ plugin.onLangLoaded = function()
 	$("#prss").append( $("<span></span>").attr("id", "rsstimer") );
 	$("#_rssAll_").mouseclick( theWebUI.rssLabelContextMenu );
 
+	this.attachPageToOptions( $("<div>").attr("id","st_rss").html(
+		"<fieldset>"+
+			"<legend>"+theUILang.rssFeeds+"</legend>"+
+			"<label for='rss_interval'>"+ theUILang.rssUpdateInterval + ' (' + $.trim(theUILang.time_m) +")</label>"+
+			"<input type='text' maxlength=4 id='rss_interval' class='TextboxShort'/>"+
+		"</fieldset>"
+		)[0], theUILang.rssFeeds );
+	
 	theDialogManager.make( "dlgAddRSS", theUILang.addRSS,
 		"<div class='content'>"+
 			"<label>"+theUILang.feedURL+": </label>"+
@@ -1469,13 +1544,13 @@ plugin.onLangLoaded = function()
 
 	if(thePlugins.isInstalled("_getdir"))
 	{
-		$('#RSSdir_edit').after($("<input type=button>").addClass("Button").width(30).attr("id","RSSBtn").focus( function() { this.blur(); } ));
+		$('#RSSdir_edit').after($("<input type=button>").addClass("Button").attr("id","RSSBtn").focus( function() { this.blur(); } ));
 		var btn = new theWebUI.rDirBrowser( 'dlgLoadTorrents', 'RSSdir_edit', 'RSSBtn' );
 		theDialogManager.setHandler('dlgLoadTorrents','afterHide',function()
 		{
 			btn.hide();
 		});
-		$('#FLTdir_edit').after($("<input type=button>").addClass("Button").width(30).attr("id","FLTBtn").focus( function() { this.blur(); } ));
+		$('#FLTdir_edit').after($("<input type=button>").addClass("Button").attr("id","FLTBtn").focus( function() { this.blur(); } ));
 		plugin.editFilersBtn = new theWebUI.rDirBrowser( 'dlgEditFilters', 'FLTdir_edit', 'FLTBtn' );
 	}
 
@@ -1500,4 +1575,5 @@ plugin.onRemove = function()
 	theDialogManager.hide("dlgLoadTorrents");
 	theDialogManager.hide("dlgEditFilters");
 	this.removeButtonFromToolbar("rss");
+	plugin.removePageFromOptions("st_rss");
 }

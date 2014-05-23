@@ -1,32 +1,11 @@
 ﻿/*
- * WebUI - The WEB interface for uTorrent - http://www.utorrent.com
- * NO COPYCATS of language update
+ * Chinese Traditional language file.
  *
- * == BEGIN LICENSE ==
- *
- * Licensed under the terms of any of the following licenses at your
- * choice:
- *
- *  - GNU General Public License Version 2 or later (the "GPL")
- *    http://www.gnu.org/licenses/gpl.html
- *
- *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
- *    http://www.gnu.org/licenses/lgpl.html
- *
- *  - Mozilla Public License Version 1.1 or later (the "MPL")
- *    http://www.mozilla.org/MPL/MPL-1.1.html
- *
- * == END LICENSE ==
- *
- * File Name: zh-tw.js
- * 	Chinese Traditional language file.
- *
- * File Author:
- * 		Eyes Blue (kingofeyesblue@yahoo.com.tw)
+ * Author: Eyes Blue (kingofeyesblue@yahoo.com.tw)
  */
 
- var theUILang =
- {
+var theUILang =
+{
  kbs				: "kB/s",
  General			: "一般",
  Downloads			: "下載",
@@ -55,7 +34,7 @@
  Ip_report_track		: "提供給 Tracker 的本機 IP 地址/主機名稱",
  Disabled			: "禁用",
  Enabled			: "啟用",
- uTorrent_settings		: "rTorrent 設定",
+ ruTorrent_settings		: "設定",
  Doesnt_support 		: "這個 ruTorrent 不支援您使用的瀏覽器",
  Name				: "名稱",
  Status 			: "狀態",
@@ -117,7 +96,6 @@
  Bandwidth_sett 		: "頻寬設定",
  Number_ul_slots		: "上傳通道數",
  Peer_ex			: "用戶資料交換",
- About				: "關於",
  Enter_label_prom		: "為選擇的 Torrent 輸入新的標籤",
  Remove_torrents		: "移除 Torrent(s)",
  Rem_torrents_prompt		: "您確定要移除選擇的 Torrent 嗎?",
@@ -164,13 +142,12 @@
  Number_Peers_For_Seeds_max	: "作種時與其他使用者連線的最大數量",
  Enable_port_open		: "監聽連接埠",
  dht_port			: "DHT 使用的 UDP 連接埠",
- Ather_Limiting 		: "其他限制",
+ Other_Limiting 		: "其他限制",
  Number_dl_slots		: "最大下載連線數量",
  Glob_max_memory		: "整體最大記憶體可用量",
  Glob_max_files 		: "整體最大可開啟的檔案數量",
  Glob_max_http			: "整體最大 HTTP 連線數量",
- Glob_max_sockets		: "整體最大可開啟的 socket 數量",
- Ather_sett			: "其他設定",
+ Other_sett			: "其他設定",
  Directory_For_Dl		: "預設下載目錄",
  Check_hash			: "下載完成後使用 Hash 完整驗證所有檔案",
  Hash				: "Hash",
@@ -274,5 +251,20 @@
  trkPrivate			: "Private",
  dontSet			: "Don't set",
  webBadSessionError		: "Plugin will not work. Webserver user must have execute access to the rtorrent session directory",
- webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory"
- };
+ webBadSessionWarning		: "Some functionality will be unavailable. Webserver user must have execute access to the rtorrent session directory",
+ Developers			: "Developers",
+ Check_new_version		: "Check new version",
+ here				: "here",
+ Num_No 			: "No.", // This means "Number". To be used as header for number count, e.g.: throttle/ratio plugin
+ This_screen			: "This screen",
+ About_program			: "About ruTorrent",
+ Toggle_menu			: "Toggle menu",
+ Toggle_details 		: "Toggle details",
+ Toggle_categories		: "Toggle categories",
+ Delete_current_torrents	: "Delete current torrent(s)",
+ Select_all			: "Select all",
+ Deselect_all			: "Deselect all",
+ showSpeedInTitle		: "Show speed in the title",
+ badTempPath 			: "Webserver user doesn't have read/write/execute access to the tmp directory. ruTorrent will not work.",
+ badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work."
+};
