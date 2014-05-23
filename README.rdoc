@@ -89,6 +89,7 @@ instead) then you can just sudo apt-get install rtorrent and be done with it.
     mkdir -p /home/danial/.rtorrent/session
     mkdir -p /home/danial/.rtorrent/socket
     mkdir -p /home/danial/.rtorrent/watch
+    mkdir -p /home/danial/.rtorrent/dl
     mkdir -p /home/danial/torrents
 
 * Starting rTorrent. Add the following line to /etc/rc.local and run it as root
