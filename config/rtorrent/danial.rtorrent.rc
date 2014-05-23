@@ -32,7 +32,7 @@ file.prioritize_toc.last.set = {*.zip}
 
 # SYSTEM #
 encoding.add = UTF-8
-directory.default.set = /home/danial/torrents
+directory.default.set = /home/danial/.rtorrent/dl
 session.path.set = /home/danial/.rtorrent/session
 execute = {sh,-c,/usr/bin/php /srv/rutorrent.tigris.id.au/php/initplugins.php danial &}
 schedule = chmod,0,0,"execute=chmod,777,/home/danial/.rtorrent/socket/rpc.socket"
