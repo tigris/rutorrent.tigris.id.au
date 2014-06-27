@@ -22,12 +22,12 @@ we use instead of the scgi webserver module)
 If you want the geoip plugin to work, you need the following as well.
 
 * Install geoip packages
-  sudo apt-get install geoip-database libgeoip1 php5-geoip
+    sudo apt-get install geoip-database libgeoip1 php5-geoip
 
 * Install custom geoip city database
-  wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
-  gunzip GeoLiteCity.dat.gz
-  sudo mv GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
+    wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+    gunzip GeoLiteCity.dat.gz
+    sudo mv GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
 
 === rTorrent
 
