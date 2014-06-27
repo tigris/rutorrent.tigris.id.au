@@ -33,7 +33,7 @@ restart_daemons() {
     sleep 5
     rm -f /home/danial/.rtorrent/socket/rpc.socket
     sleep 2
-    /usr/bin/screen -fa -d -m -S rtorrent /usr/bin/rtorrent
+    /usr/bin/screen -fa -d -m -S rtorrent /usr/local/bin/rtorrent
 
     daemons="$daemons rtorrent"
   fi
