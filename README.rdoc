@@ -97,6 +97,12 @@ instead) then you can just sudo apt-get install rtorrent and be done with it.
     rm -f /home/danial/.rtorrent/socket/rpc.socket
     su - danial -c '/usr/bin/screen -fa -d -m -S rtorrent /usr/local/bin/rtorrent'
 
+=== Auto Deploy
+
+* Setup crontab
+    sudo cp config/cron/* /etc/cron.d
+    sudo chown root.root /etc/cron.d/*
+
 == Troubleshooting
 
 If at any point rtorrent won't load (e.g. rutorrent shows errors about
