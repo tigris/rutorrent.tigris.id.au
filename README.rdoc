@@ -17,50 +17,22 @@ packages so we can compile the json module (required by the HTTPRPC plugin which
 we use instead of the scgi webserver module)
 
 * Install php
-  sudo apt-get install php5-cgi php5-cli php5-fpm
+    sudo apt-get install -y php5-cgi php5-cli php5-fpm
 
 If you want the geoip plugin to work, you need the following as well.
 
 * Install geoip packages
-  sudo apt-get install geoip-database libgeoip1 php5-geoip
+    sudo apt-get install -y geoip-database libgeoip1 php5-geoip
 
 * Install custom geoip city database
-  wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
-  gunzip GeoLiteCity.dat.gz
-  sudo mv GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
+    wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+    gunzip GeoLiteCity.dat.gz
+    sudo mv GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
 
 === rTorrent
 
-The ubuntu version of rtorrent is not compiled with a new enough version of
-xmlrpc-c so we need to compile manually if we want rtorrent to be able to
-display info greater than 2GB (e.g. upload/download/torrent size info).
-
-If you are happy to live with the 2GB issue (it just displays negative numbers
-instead) then you can just sudo apt-get install rtorrent and be done with it.
-
-* Install subversion (it's the only way to get the required version of xmlrpc-c)
-    sudo apt-get install subversion
-
-* Install xmlrpc-c (you can apt-get remove --purge subversion after this if you want)
-    svn co http://xmlrpc-c.svn.sourceforge.net/svnroot/xmlrpc-c/advanced xmlrpc-c
-    cd xmlrpc-c
-    ./configure
-    make
-    sudo make install
-
-* Install rtorrent (note: the "unstable" version of rtorrent is not supported by rutorrent)
-    wget http://libtorrent.rakshasa.no/downloads/libtorrent-0.12.9.tar.gz
-    wget http://libtorrent.rakshasa.no/downloads/rtorrent-0.8.9.tar.gz
-    tar zxf libtorrent-0.13.2.tar.gz
-    tar zxf rtorrent-0.9.2.tar.gz
-    cd libtorrent-0.12.9
-    ./configure
-    make
-    sudo make install
-    cd ../rtorrent-0.8.9/
-    ./configure --with-xmlrpc-c=/usr/local/bin/xmlrpc-c-config
-    make
-    sudo make install
+* Install rtorrent
+    sudo apt-get install -y rtorrent
 
 === Website
 
