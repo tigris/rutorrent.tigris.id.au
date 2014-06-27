@@ -44,6 +44,7 @@ so I find it best to just compile this from source.
     make
     sudo make install
     cd ..
+    rm -rf xmlrpc-c
 
 * Bleh, dependencies!
     sudo apt-get install -y pkg-config libssl-dev libncurses5-dev libcurl4-gnutls-dev
