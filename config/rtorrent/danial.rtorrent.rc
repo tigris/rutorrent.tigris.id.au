@@ -38,3 +38,4 @@ session.path.set = /home/danial/.rtorrent/session
 execute = {sh,-c,/usr/bin/php /srv/rutorrent.tigris.id.au/php/initplugins.php danial &}
 schedule = chmod,0,0,"execute=chmod,777,/home/danial/.rtorrent/socket/rpc.socket"
 schedule = watch_directory,10,10,load=/home/danial/.rtorrent/watch/*.torrent
+
