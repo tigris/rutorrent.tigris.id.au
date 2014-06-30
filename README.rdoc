@@ -10,6 +10,12 @@ www.tigris.id.au repo.
 
 == System setup notes
 
+=== General
+
+* Check the output of `ulimit -Sn` as a normal user. If it's 1024 or lower, you
+  probably want to update `/etc/security/limits.conf` to increase that file
+  limit.
+
 === PHP
 
 We need php for the actual rutorrent web app. We also need to install the dev
