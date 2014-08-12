@@ -16,14 +16,14 @@ www.tigris.id.au repo.
   probably want to update `/etc/security/limits.conf` to increase that file
   limit.
 
-=== PHP
+=== PHP and NGinx
 
 We need php for the actual rutorrent web app. We also need to install the dev
 packages so we can compile the json module (required by the HTTPRPC plugin which
 we use instead of the scgi webserver module)
 
-* Install php
-  sudo apt-get install php5-cgi php5-cli php5-fpm
+* Install php and nginx
+  sudo apt-get install php5-cgi php5-cli php5-fpm nginx
 
 If you want the geoip plugin to work, you need the following as well.
 
