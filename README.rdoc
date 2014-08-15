@@ -108,6 +108,8 @@ so I find it best to just compile this from source.
 
 * Starting rTorrent. Add the following line to /etc/rc.local and run it as root
   if you want to start rtorrent right now.
+
+    rm -f /home/danial/.rtorrent/session/rtorrent.lock
     rm -f /home/danial/.rtorrent/socket/rpc.socket
     su - danial -c '/usr/bin/screen -fa -d -m -S rtorrent /usr/local/bin/rtorrent'
 
