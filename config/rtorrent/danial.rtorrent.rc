@@ -9,7 +9,7 @@ trackers.numwant.set = -1
 
 # MEMORY #
 pieces.hash.on_completion.set = yes
-pieces.memory.max.set = 2147483648
+pieces.memory.max.set = 3221225472
 pieces.preload.type.set = 1
 
 # NETWORKING #
@@ -23,7 +23,7 @@ pieces.sync.always_safe.set = yes
 network.receive_buffer.size.set = 1048576
 network.send_buffer.size.set = 131072
 network.max_open_sockets.set = 1024
-network.max_open_files.set = 2048
+network.max_open_files.set = 3072
 network.http.ssl_verify_peer.set = no
 
 # FILES #
