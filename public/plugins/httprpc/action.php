@@ -60,7 +60,7 @@ function makeMulticall($cmds,$hash,$add,$prefix)
 	$cmd->addParameters( array_map("getCmd", $cmds) );
 	foreach( $add as $prm )
 		$cmd->addParameter($prm);
-	$cnt = count($cmd->params)-2;
+	$cnt = count($cmds)+count($add);
 	$req = new rXMLRPCRequest($cmd);
 	if($req->success())
 	{
@@ -100,15 +100,24 @@ switch($mode)
 		$cmd->addParameters( array_map("getCmd", $cmds) );
 		foreach( $add as $prm )
 			$cmd->addParameter($prm);
-		$cnt = count($cmd->params)-1;
+		$cnt = count($cmds)+count($add);
 		$req = new rXMLRPCRequest($cmd);
 		if($req->success())
 		{
 			$theCache = new rpcCache();
 			$dTorrents = array();
 			$torrents = array();
-			for($i = 0; $i<count($req->val); $i+=$cnt)
-				$torrents[$req->val[$i]] = array_slice($req->val, $i+1, $cnt-1);
+			foreach($req->val as $index=>$value) 
+			{
+				if($index % $cnt == 0) 
+				{
+					$current_index = $value;
+					$torrents[$current_index] = array();
+				} 
+				else
+					$torrents[$current_index][] = $value;
+			}
+
 			$theCache->calcDifference( $cid, $torrents, $dTorrents );
 			$result = array( "t"=>$torrents, "cid"=>$cid );
 			if(count($dTorrents))
@@ -128,7 +137,7 @@ switch($mode)
 		$result = makeMulticall(array(
 			"p.get_id=", "p.get_address=", "p.get_client_version=", "p.is_incoming=", "p.is_encrypted=",
 			"p.is_snubbed=", "p.get_completed_percent=", "p.get_down_total=", "p.get_up_total=", "p.get_down_rate=",
-			"p.get_up_rate=", "p.get_id_html="
+			"p.get_up_rate=", "p.get_id_html=", "p.get_peer_rate=", "p.get_peer_total=", "p.get_port="
 			),$hash[0],$add,'p');
 		break;
 	}
@@ -280,14 +289,44 @@ switch($mode)
 		        "t.get_url=", "t.get_type=", "t.is_enabled=", "t.get_group=", "t.get_scrape_complete=", 
 			"t.get_scrape_incomplete=", "t.get_scrape_downloaded="
 		        );
-		$result = array();		
-		foreach($hash as $ndx=>$h)
+		$result = array();
+		if(empty($hash))
 		{
-			$ret = makeMulticall($cmds,$h,$add,'t');
-			if($ret===false)
-				$result[] = array();
-			else
-				$result[] = $ret;
+			$prm = getCmd("cat").'="$'.getCmd("t.multicall=").getCmd("d.get_hash=").",";
+			foreach( $cmds as $tcmd )
+				$prm.=getCmd($tcmd).','.getCmd("cat=#").',';
+			foreach( $add as $tcmd )
+				$prm.=getCmd($tcmd).','.getCmd("cat=#").',';
+			$prm = substr($prm, 0, -1).'"';
+			$cnt = count($cmds)+count($add);
+			$req = new rXMLRPCRequest();
+			$req->addCommand( new rXMLRPCCommand( "d.multicall", array
+			( 
+				"main",
+				getCmd("d.get_hash="),
+				$prm
+			) ) );						
+	       		if($req->success())
+			{
+				for( $i = 0; $i< count($req->val); $i+=2 )
+				{
+					$tracker = explode( '#', $req->val[$i+1] );
+					if(!empty($tracker))
+						unset( $tracker[ count($tracker)-1 ] );
+					$result[ $req->val[$i] ] = array_chunk( $tracker, $cnt );
+				}
+			}									
+		}
+		else
+		{
+			foreach($hash as $ndx=>$h)
+			{
+				$ret = makeMulticall($cmds,$h,$add,'t');
+				if($ret===false)
+					$result[$h] = array();				
+				else
+					$result[$h] = $ret;
+			}
 		}
 		break;
 	}
@@ -298,14 +337,21 @@ switch($mode)
 		{
 			if($ss[$ndx][0]=='n')
 				$v = floatval($v);
+			if( ($ss[$ndx]=="sdirectory") && !rTorrentSettings::get()->correctDirectory($v) )
+				continue;
 			if($ss[$ndx]=="ndht")
 				$cmd = new rXMLRPCCommand('dht',(($v==0) ? "disable" : "auto"));
 			else
 				$cmd = new rXMLRPCCommand('set_'.substr($ss[$ndx],1),$v);
 			$req->addCommand($cmd);
 		}
-		if($req->success())
-	        	$result = $req->val;
+		if($req->getCommandsCount())
+		{
+			if($req->success())
+		        	$result = $req->val;
+        	}
+        	else
+	        	$result = array();
 		break;
 	}
 	case "setprops":	/**/
@@ -371,7 +417,7 @@ switch($mode)
                 foreach($vs as $v)
 		{
 			$req->addCommand( new rXMLRPCCommand("p.banned.set", array($hash[0].":p".$v,1)) );
-			$req->addCommand( new rXMLRPCCommand("p.disconnect_delayed", $hash[0].":p".$v) );
+			$req->addCommand( new rXMLRPCCommand("p.disconnect", $hash[0].":p".$v) );
 		}
 		if($req->success())
 	        	$result = $req->val;

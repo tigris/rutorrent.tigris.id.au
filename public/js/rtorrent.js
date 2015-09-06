@@ -1,7 +1,6 @@
 /*
  *      Link to rTorrent.
  *
- *	$Id: rtorrent.js 2308 2013-04-23 07:14:03Z novik65 $
  */
 
 var dStatus = { started : 1, paused : 2, checking : 4, hashing : 8, error : 16 };
@@ -47,7 +46,7 @@ var theRequestManager =
 		[ 
 			"p.get_id=", "p.get_address=", "p.get_client_version=", "p.is_incoming=", "p.is_encrypted=",
 			"p.is_snubbed=", "p.get_completed_percent=", "p.get_down_total=", "p.get_up_total=", "p.get_down_rate=",
-			"p.get_up_rate=", "p.get_id_html="
+			"p.get_up_rate=", "p.get_id_html=", "p.get_peer_rate=", "p.get_peer_total=", "p.get_port="
 		],
 		handlers: []
 	},
@@ -114,9 +113,38 @@ var theRequestManager =
 				cmd = cmd.substr(0,cmd.length-1);
 				add = '=';
 			}
-			return(this.aliases[cmd] ? this.aliases[cmd]+add : cmd+add);
+			return(this.aliases[cmd] ? this.aliases[cmd].name+add : cmd+add);
 		}			
 		return( this.map(this[cmd].commands[no]) );
+	},
+	patchCommand: function( cmd, name )
+	{
+		if(this.aliases[name] && this.aliases[name].prm)
+			cmd.addParameter("string","");
+	},
+	patchRequest: function( commands )
+	{
+		for( var i in commands )
+		{
+			var cmd = commands[i];
+			var prefix = '';
+			if(cmd.command.indexOf('t.') === 0)
+				prefix = ':t';
+			else
+			if(cmd.command.indexOf('p.') === 0)
+				prefix = ':p';
+			else
+			if(cmd.command.indexOf('f.') === 0)
+				prefix = ':f';
+			if(prefix && 
+				(cmd.params.length>1) && 
+				(cmd.command.indexOf('.multicall')<0) &&
+				(cmd.params[0].value.indexOf(':') < 0))
+			{
+				cmd.params[0].value = cmd.params[0].value+prefix+cmd.params[1].value;
+				cmd.params.splice( 1, 1 );
+			}
+		}
 	}
 };
 
@@ -126,6 +154,7 @@ function rXMLRPCCommand( cmd )
 {
 	this.command = theRequestManager.map(cmd);
 	this.params = new Array();
+	theRequestManager.patchCommand( this, cmd );
 }
 
 rXMLRPCCommand.prototype.addParameter = function(aType,aValue)
@@ -570,7 +599,7 @@ rTorrentStub.prototype.ban = function()
 		cmd.addParameter("string",this.hashes[0]+":p"+this.vs[i]);
                 cmd.addParameter("i4",1);
 		this.commands.push( cmd );
-		cmd = new rXMLRPCCommand("p.disconnect_delayed");
+		cmd = new rXMLRPCCommand("p.disconnect");
 		cmd.addParameter("string",this.hashes[0]+":p"+this.vs[i]);
 		this.commands.push( cmd );
 	}
@@ -594,8 +623,23 @@ rTorrentStub.prototype.addpeer = function()
 	this.commands.push( cmd );
 }
 
+rTorrentStub.prototype.createqueued = function()
+{
+	for(var i=0; i<this.hashes.length; i++)
+	{
+		var cmd = new rXMLRPCCommand("f.multicall");
+		cmd.addParameter("string",this.hashes[i]);
+		cmd.addParameter("string","");
+		cmd.addParameter("string",theRequestManager.map("f.set_create_queued=")+'0');
+		cmd.addParameter("string",theRequestManager.map("f.set_resize_queued=")+'0');
+		this.commands.push( cmd );
+	}
+
+}
+
 rTorrentStub.prototype.makeMultiCall = function()
 {
+	theRequestManager.patchRequest( this.commands );
 	this.content = '<?xml version="1.0" encoding="UTF-8"?><methodCall><methodName>';
 	if(this.commands.length==1)
 	{
@@ -850,6 +894,9 @@ rTorrentStub.prototype.getpeersResponse = function(xml)
 		peer.uploaded = this.getValue(values,8);	//	p.get_up_total
 		peer.dl = this.getValue(values,9);		//	p.get_down_rate
 		peer.ul = this.getValue(values,10);		//	p.get_up_rate
+		peer.peerdl = this.getValue(values,12);		//	p.get_peer_rate
+		peer.peerdownloaded = this.getValue(values,13);	//	p.get_peer_total
+		peer.port = this.getValue(values,14);		//	p.get_port
 		var id = this.getValue(values,0);
 		$.each( theRequestManager.prs.handlers, function(i,handler)
 		{
@@ -1080,8 +1127,10 @@ function Ajax(URI, isASync, onComplete, onTimeout, onError, reqTimeout)
 			if(($type(onError) == "function"))
 			{
 			        var status = "Status unavailable";
-			        var response = "Responce unavailable";
-				try { status = XMLHttpRequest.status; response = XMLHttpRequest.responseText; } catch(e) {};
+			        var response = "Response unavailable";
+				try { status = XMLHttpRequest.status; response = XMLHttpRequest.responseText; } catch(e) {};				
+				if( stub.dataType=="script" )
+					response = errorThrown;
 				onError(status+" ["+textStatus+","+stub.action+"]",response);
 			}
 		},
@@ -1115,17 +1164,22 @@ function Ajax(URI, isASync, onComplete, onTimeout, onError, reqTimeout)
 
 $(document).ready(function() 
 {
-	$('#ind').ajaxStart( function()
+	var timer = null;
+
+	$(document).ajaxStart( function()
 	{
-		this.timer = window.setTimeout("$('#ind').css( { visibility: 'visible' } )", 500);
+		timer = window.setTimeout( function()
+		{
+			$('#ind').css( { visibility: 'visible' } )
+		}, 500);
 	});
-	$('#ind').ajaxStop( function()
+	$(document).ajaxStop( function()
 	{
-	        if(this.timer)
+	        if(timer)
         	{
-        		window.clearTimeout(this.timer);
-	        	this.timer = null;
+        		window.clearTimeout(timer);
+	        	timer = null;
 		}
-		$(this).css( { visibility: "hidden" } );
+		$('#ind').css( { visibility: "hidden" } );
 	});
 });

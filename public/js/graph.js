@@ -1,7 +1,6 @@
 /*
  *      Speed graph.
  *
- *	$Id: graph.js 2162 2012-09-08 14:31:59Z serge.6401 $
  */
 
 function clearElement(target)
@@ -147,8 +146,8 @@ rSpeedGraph.prototype.draw = function()
 				}).appendTo("body").fadeIn(200);
 			}
 
-			self.owner.unbind("plothover"); 
-			self.owner.bind("plothover", 
+			self.owner.off("plothover"); 
+			self.owner.on("plothover", 
 				function (event, pos, item) 
 				{ 
 					if(item)

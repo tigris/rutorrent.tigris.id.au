@@ -23,7 +23,7 @@ rLoadGraph.prototype.draw = function( percent )
 		{
 			clearCanvas( self.owner.get(0) );
 			self.owner.empty();
-
+			
 			$.plot(self.owner, [ self.load.data ],
 			{ 
 				legend: 
@@ -43,29 +43,21 @@ rLoadGraph.prototype.draw = function( percent )
 				points: { lineWidth: 0, radius: 0 },
 				grid:
 				{
-					borderWidth: 0,
-					labelMargin: 0
+					show: false
 				},
 				xaxis: 
 				{ 
 					max: (self.seconds-self.startSeconds>=self.maxSeconds) ? null : self.maxSeconds+self.startSeconds,
-					labelHeight: 0,
-					labelWidth: 0,
-					autoscaleMargin: 0,
 					noTicks: true
 			 	},
 				shadowSize: 0,
 			  	yaxis: 
 			  	{ 
 			  		min: 0,
-//			  		max: 100,
-					labelHeight: 0,
-					labelWidth: 0,
-					autoscaleMargin: 0,
 					noTicks: true
 		  		}
 			});
-			self.owner.append( $("<div>").attr("id","meter-cpu-text").css({top: 0}).text(percent+'%') ).attr("title", percent+'%');
+			self.owner.append( $("<div>").attr("id","meter-cpu-text").css({top: 0}).text(percent+'%') ).prop("title", percent+'%');
 		}
 	}
 	);

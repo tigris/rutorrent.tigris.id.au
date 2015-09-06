@@ -20,7 +20,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *	$Id: stable.js 2311 2013-06-03 13:26:19Z novik65 $
 */
 
 var TYPE_STRING = 0;
@@ -98,8 +97,8 @@ dxSTable.prototype.setPaletteByURL = function(url)
 
 dxSTable.prototype.bindKeys = function()
 {
-	$(document).unbind( (browser.isOpera && browser.versionMinor<9.8) ? "keypress" : "keydown", this.keyEvents );
-	$(document).bind( (browser.isOpera && browser.versionMinor<9.8) ? "keypress" : "keydown", this, this.keyEvents );
+	$(document).off( (browser.isOpera && browser.versionMinor<9.8) ? "keypress" : "keydown", this.keyEvents );
+	$(document).on( (browser.isOpera && browser.versionMinor<9.8) ? "keypress" : "keydown", this, this.keyEvents );
 }
 
 dxSTable.prototype.create = function(ele, styles, aName)
@@ -152,7 +151,7 @@ dxSTable.prototype.create = function(ele, styles, aName)
 		this.colsdata[i].width = iv(this.colsdata[i].width);
 		this.ids[i] = styles[i].id;
 
-		td = $("<td>").bind( "mousemove touchstart", function(e) 
+		td = $("<td>").on( "mousemove touchstart", function(e) 
 		{
 			if(self.isResizing) 
 				return;
@@ -194,10 +193,10 @@ dxSTable.prototype.create = function(ele, styles, aName)
 		this.colMove.init(td.get(0), preventSort, null, moveColumn);
 		td.mouseclick( 	function(e) 
 		{ 
-			self.onRightClick(e) 
+			self.onRightClick(e);
 		}).mouseup( function(e) 
 		{ 
-			self.Sort(e); 
+			self.Sort(e);
 		});
 		if(!$.support.touchable)
 			td.mousedown( function(e) { self.bindKeys(); });
@@ -359,7 +358,7 @@ dxSTable.prototype.calcSize = function()
 				{
 					continue;
 				}
-				if(browser.isAppleWebKit || browser.isKonqueror)
+				if((browser.isChrome && (browser.versionMajor<537)) || browser.isKonqueror || browser.isSafari)
 					_9a+=4;
 				if(_9a>8)
 					this.tHeadCols[i].style.width = (_9a - 4) + "px";
@@ -579,8 +578,8 @@ dxSTable.ColumnMove.prototype =
 		o.lastMouseX = e.clientX;
 		o.style.visibility = "visible";
 		var self = this;
-		$(document).bind("mousemove",self,self.drag);
-		$(document).bind("mouseup touchend",self,self.end);
+		$(document).on("mousemove",self,self.drag);
+		$(document).on("mouseup touchend",self,self.end);
 		this.rx = $(this.parent.dHead).offset().left;
 		this.obj.style.cursor = "move";
 		return(false);
@@ -638,8 +637,8 @@ dxSTable.ColumnMove.prototype =
 		self.indexnew =- 1;
 		self.parent.isMoving = false;
 		self.parent.cancelSort = false;
-		$(document).unbind("mousemove",self.drag);
-		$(document).unbind("mouseup",self.end);
+		$(document).off("mousemove",self.drag);
+		$(document).off("mouseup touchend",self.end);
 		return(false);
 	}
 }
@@ -852,7 +851,7 @@ dxSTable.prototype.assignEvents = function()
 	this.scOdd = null;
 	this.isScrolling = false;
 
-	$(this.dBody).bind( "scroll",
+	$(this.dBody).on( "scroll",
 		function(e) 
 		{
 			self.dHead.scrollLeft = self.dBody.scrollLeft;
@@ -882,21 +881,19 @@ dxSTable.prototype.assignEvents = function()
 			if(self.isResizing)
 			      self.colDragEnd(e);
 			else
-			if((self.hotCell >- 1) &&!(self.isMoving)) 
+			if((self.hotCell >- 1) && !self.isMoving) 
 			{
 				self.cancelSort = true;
 				self.cancelMove = true;
-                                $(document).bind("mousemove",self,self.colDrag);
-                                $(document).bind("mouseup touchend",self,self.colDragEnd);
+                                $(document).on("mousemove",self,self.colDrag);
+                                $(document).on("mouseup touchend",self,self.colDragEnd);
 				self.rowCover.style.display = "block";
 				return(false);
          		}
       		};
-	this.tHead.onmouseout = function(e) { this.isOutside = true;  };
-	this.tHead.onmouseover = function(e) { this.isOutside = false; };
 	this.tHead.onmouseup = function(e) 
 		{
-			if((self.hotCell >- 1) &&!(self.isMoving)) 
+			if((self.hotCell >- 1) && !self.isMoving)
 			{
 				self.cancelSort = false;
 				self.cancelMove = false;
@@ -950,21 +947,18 @@ dxSTable.prototype.colDrag = function(e)
 dxSTable.prototype.colDragEnd = function(e) 
 {
         var self = e.data;
+	$(document).off("mousemove",self.colDrag);
+	$(document).off("mouseup touchend",self.colDragEnd);
 	self.rowCover.style.display = "none";
-	$(document).unbind("mousemove",self.colDrag);
-	$(document).unbind("mouseup",self.colDragEnd);
 	self.isResizing = false;
 	self.colReszObj.style.left = 0;
 	self.colReszObj.style.height = 0;
 	self.colReszObj.style.visibility = "hidden";
 	self.resizeColumn();
-	if(self.tHead.isOutside || $.support.touchable) 
-	{
-		self.cancelSort = false;
-		self.cancelMove = false;
-	}
+	self.cancelSort = false;
+	self.cancelMove = false;
 	document.body.style.cursor = "default";
-	return(false);
+	return(false);	
 }
 
 dxSTable.prototype.scrollPos = function()
@@ -1049,7 +1043,7 @@ dxSTable.prototype.refreshRows = function( height, fromScroll )
 		obj = $$(id);
 		if(!r.enabled) 
 		{
-			if(obj != null) 
+			if( (obj != null) && (obj.parentNode == tb) )
 			{
 				tb.removeChild(obj);
 			}
@@ -1060,7 +1054,7 @@ dxSTable.prototype.refreshRows = function( height, fromScroll )
 		{
 			if(!$type(tb.rows[c])) 
 			{
-				if(obj != null) 
+				if( (obj != null) && (obj.parentNode == tb) )
 				{
 					tb.removeChild(obj);
             			}
@@ -1074,7 +1068,7 @@ dxSTable.prototype.refreshRows = function( height, fromScroll )
 			{
 				if(tb.rows[c].id != id) 
 				{
-					if(obj != null) 
+					if( (obj != null) && (obj.parentNode == tb) )
 					{
 						tb.removeChild(obj);
                				}
@@ -1089,7 +1083,7 @@ dxSTable.prototype.refreshRows = function( height, fromScroll )
       		}
 		else 
 		{
-			if(obj != null) 
+			if( (obj != null) && (obj.parentNode == tb) )
 			{
 				tb.removeChild(obj);
 			}
@@ -1350,8 +1344,7 @@ dxSTable.prototype.removeRow = function(sId)
 	try 
 	{
 		var obj = this.tBody.tb.removeChild($$(sId));
-		$(obj).unbind();
-		delete obj;
+		$(obj).off();
 	} catch(ex) {}
 	delete this.rowSel[sId];
 	delete this.rowdata[sId];
@@ -1376,8 +1369,7 @@ dxSTable.prototype.clearRows = function()
 		while(tb.firstChild) 
 		{ 
 			var obj = tb.removeChild(tb.firstChild); 
-			$(obj).unbind();
-			delete obj; 
+			$(obj).off();
 		}
 		this.rows = 0;
 		this.viewRows = 0;
@@ -1621,36 +1613,40 @@ dxSTable.prototype.setValueById = function(row, id, val)
 
 dxSTable.prototype.setValue = function(row, col, val)
 {
-	if(col>=0)
+	if((col>=0) && this.rowdata[row])
 	{
 		this.rowdata[row].data[col] = val;
 		var r = $$(row);
-		if(r == null)
-			return(false);
 		var rawvalue = val;
-		arr = {};
+		var arr = [];
 		arr[col] = val;
 		val = this.format(this,arr)[col];
 
 		if(this.rowdata[row].fmtdata[col] != val)
 		{
 			this.rowdata[row].fmtdata[col] = val;
-        		var c = this.getColOrder(col);
-			var td = r.cells[c];
-
-			if(this.colsdata[c].type==TYPE_PROGRESS)
-			{
-				$(td).attr("rawvalue",rawvalue);
-				td.lastChild.style.width = iv(val)+"%";
-				td.lastChild.style.backgroundColor = (new RGBackground()).setGradient(this.prgStartColor,this.prgEndColor,parseFloat(val)).getColor();
-				if(!iv(val))
-					$(td.lastChild).css({visibility: "hidden"});
-				else
-					$(td.lastChild).css({visibility: "visible"});
-				td.firstChild.innerHTML = escapeHTML(val);
-			}
-			else
-				td.lastChild.innerHTML = escapeHTML(val);
+        		if(r)
+        		{
+	        		var c = this.getColOrder(col);
+				var td = r.cells[c];
+			
+			        if(td)
+			        {
+					if(this.colsdata[c].type==TYPE_PROGRESS)
+					{
+						$(td).attr("rawvalue",rawvalue);
+						td.lastChild.style.width = iv(val)+"%";
+						td.lastChild.style.backgroundColor = (new RGBackground()).setGradient(this.prgStartColor,this.prgEndColor,parseFloat(val)).getColor();
+						if(!iv(val))
+							$(td.lastChild).css({visibility: "hidden"});
+						else
+							$(td.lastChild).css({visibility: "visible"});
+						td.firstChild.innerHTML = escapeHTML(val);
+					}
+					else
+						td.lastChild.innerHTML = escapeHTML(val);
+				}
+			}					
 			return(true);
 		}
 	}

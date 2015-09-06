@@ -2,6 +2,7 @@
 require_once( dirname(__FILE__)."/../../php/xmlrpc.php" );
 require_once( dirname(__FILE__)."/../../php/cache.php");
 require_once( dirname(__FILE__)."/../../php/settings.php");
+require_once( dirname(__FILE__).'/../_task/task.php' );
 eval( getPluginConf( 'unpack' ) );
 
 class rUnpack
@@ -47,7 +48,11 @@ class rUnpack
 					$this->addName = $parts[1];
 				else
 				if( $parts[0] == "unpack_filter" )
+				{
 					$this->filter = trim(rawurldecode($parts[1]));
+					if(@preg_match($this->filter, null) === false)
+						$this->filter = "/.*/";					
+				}
 				else
 				if( $parts[0] == "unpack_path" )
 				{
@@ -64,9 +69,13 @@ class rUnpack
 		return("theWebUI.unpackData = { enabled: ".$this->enabled.", path : '".addslashes( $this->path ).
 			"', filter : '".addslashes( $this->filter )."', addLabel: ".$this->addLabel.", addName: ".$this->addName." };\n");
 	}
-	public function startSilentTask($basename,$label,$name)
+	public function startSilentTask($basename,$downloadname,$label,$name,$hash)
 	{
 		global $rootPath;
+		global $cleanupAutoTasks;
+		global $deleteAutoArchives;
+		global $unpackToTemp;
+		global $unpack_debug_enabled;
 		if(rTorrentSettings::get()->isPluginRegistered('quotaspace'))
 		{
 			require_once( dirname(__FILE__)."/../quotaspace/rquota.php" );
@@ -77,71 +86,295 @@ class rUnpack
 
 		$pathToUnrar = getExternal("unrar");
 		$pathToUnzip = getExternal("unzip");
+		$zipPresent = false;
+		$rarPresent = false;		
 		$outPath = $this->path;
 		
 		if(($outPath!='') && !rTorrentSettings::get()->correctDirectory($outPath))	
 			$outPath = '';
 		
-		$arh = $pathToUnrar;
 		if(is_dir($basename))
 		{
 			$postfix = "_dir";
-			$mode = ((USE_UNRAR && USE_UNZIP) ? "all" : (USE_UNZIP ? "zip" : "rar"));
 			if($outPath=='')
 				$outPath = $basename;
 			$basename = addslash($basename);
+			
+			$filesToDelete = "";
+			$downloadname = addslash($downloadname);
+			$Directory = new RecursiveDirectoryIterator($basename);
+			$Iterator = new RecursiveIteratorIterator($Directory);
+			$rarRegex = new RegexIterator($Iterator, '/.*\.(rar|r\d\d|\d\d\d)$/si');
+			$zipRegex = new RegexIterator($Iterator, '/.*\.zip$/si');
+			
+			if(USE_UNRAR && (sizeof(iterator_to_array($rarRegex)) > 0))
+			{
+				$rarPresent = true;
+				if($deleteAutoArchives)
+				{
+					if($downloadname === $basename)
+					{
+						if( $unpack_debug_enabled ) 
+							toLog("Unpack: No move operation enabled. Not deleting files.");
+					}
+					else if (!file_exists($downloadname))
+					{
+						if( $unpack_debug_enabled ) 
+							toLog("Unpack: Move operation enabled. Not deleting files.");
+					}
+					else
+					{
+						foreach ($rarRegex as $fileName)
+						{
+							$filePath = $fileName->getPathname();
+							if (is_link($filePath))
+							{
+								if( $unpack_debug_enabled ) 
+									toLog("Unpack: SoftLink operation enabled. Deleting " . $filePath);
+								$filesToDelete .= $filePath . ";";
+							}
+							else 
+							{
+								$stat = LFS::stat($filePath);
+								if($stat)
+								{
+									if($stat['nlink'] > 1)
+									{
+								    		if( $unpack_debug_enabled ) 
+								    			toLog("Unpack: HardLink operation enabled. Deleting " . $filePath);
+								    		$filesToDelete .= $filePath . ";";
+								    	}
+    								    	else
+								    	{
+										if( $unpack_debug_enabled ) 
+											toLog("Unpack: Copy operation enabled. Deleting " . $filePath);
+									    	$filesToDelete .= $filePath . ";";
+									}
+								}
+							}    
+						}
+					}
+				}
+			}
+			if(USE_UNZIP && (sizeof(iterator_to_array($zipRegex)) > 0))
+			{
+				$zipPresent = true;
+				if($deleteAutoArchives)
+				{
+					if($downloadname === $basename)
+					{
+						if( $unpack_debug_enabled ) 
+							toLog("Unpack: No move operation enabled. Not deleting files.");
+					}
+					else if (!file_exists($downloadname))
+					{
+						if( $unpack_debug_enabled ) 
+							toLog("Unpack: Move operation enabled. Not deleting files.");
+					}
+					else
+					{
+						foreach ($zipRegex as $fileName)
+						{
+							$filePath = $fileName->getPathname();
+							if (is_link($filePath))
+							{
+								if( $unpack_debug_enabled ) 
+									toLog("Unpack: SoftLink operation enabled. Deleting " . $filePath);
+								$filesToDelete .= $filePath . ";";
+							}
+							else 
+							{ 
+								$stat = LFS::stat($filePath);
+								if($stat)
+								{
+									if($stat['nlink'] > 1)
+									{
+										if( $unpack_debug_enabled ) 
+											toLog("Unpack: HardLink operation enabled. Deleting " . $filePath);
+										$filesToDelete .= $filePath . ";";
+								    	}
+									else
+									{
+										if( $unpack_debug_enabled ) 
+											toLog("Unpack: Copy operation enabled. Deleting " . $filePath);
+										$filesToDelete .= $filePath . ";";
+									}
+								}									
+							}
+						}
+					}
+				}
+			}
+			$mode = (($rarPresent && $zipPresent) ? "all" : ($zipPresent ? "zip" : ($rarPresent ? "rar" : null)));
 		}
 		else
 		{
 			$postfix = "_file";
 			if(USE_UNRAR && (preg_match("'.*\.(rar|r\d\d|\d\d\d)$'si", $basename)==1))
+			{
 				$rarPresent = true;
+				if($deleteAutoArchives)
+				{
+					if($downloadname === $basename)
+					{
+						if( $unpack_debug_enabled ) 
+							toLog("Unpack: No move operation enabled. Not deleting files.");
+					}
+					else if (!file_exists($downloadname))
+					{
+						if( $unpack_debug_enabled ) 
+							toLog("Unpack: Move operation enabled. Not deleting files.");
+					}
+					else
+					{
+						if (is_link($basename))
+						{
+							if( $unpack_debug_enabled ) 
+								toLog("Unpack: SoftLink operation enabled. Deleting " . $basename);
+							$filesToDelete .= $basename;
+						}
+						else 
+						{
+							$stat = LFS::stat($basename);
+							if($stat)
+							{
+								if($stat['nlink'] > 1)
+								{
+									if( $unpack_debug_enabled ) 
+										toLog("Unpack: HardLink operation enabled. Deleting " . $basename);
+									$filesToDelete .= $basename;
+								}
+								else
+								{
+									if( $unpack_debug_enabled ) 
+										toLog("Unpack: Copy operation enabled. Deleting " . $basename);
+									$filesToDelete .= $basename;
+								}
+							}								
+						}							
+					}
+				}
+			}
 			else
 			if(USE_UNZIP && (preg_match("'.*\.zip$'si", $basename)==1))
+			{
 				$zipPresent = true;
+				if($deleteAutoArchives)
+				{
+					if($downloadname === $basename)
+					{
+						if( $unpack_debug_enabled ) 
+							toLog("Unpack: No move operation enabled. Not deleting files.");
+					}
+					else if(!file_exists($downloadname))
+					{
+						if( $unpack_debug_enabled ) 
+							toLog("Unpack: Move operation enabled. Not deleting files.");
+					}
+					else
+					{
+						if(is_link($basename))
+						{
+							if( $unpack_debug_enabled ) 
+								toLog("Unpack: SoftLink operation enabled. Deleting " . $basename);
+							$filesToDelete .= $basename;
+						}
+						else 
+						{
+							$stat = LFS::stat($basename);
+							if($stat)
+							{
+								if($stat['nlink'] > 1)
+								{
+									if( $unpack_debug_enabled ) 
+										toLog("Unpack: HardLink operation enabled. Deleting " . $basename);
+									$filesToDelete .= $basename;
+								}
+								else
+								{
+									if( $unpack_debug_enabled ) 
+										toLog("Unpack: Copy operation enabled. Deleting " . $basename);
+									$filesToDelete .= $basename;
+								}
+							}
+						}
+					}
+				}
+			}
 			if($outPath=='')
 				$outPath = dirname($basename);
 			$mode = ($zipPresent ? 'zip' : ($rarPresent ? 'rar' : null));
-		        $pathToUnzip = "";
 		}
 		if($mode)
 		{
+			$arh = (($mode == "zip") ? $pathToUnzip : $pathToUnrar);
 			$outPath = addslash($outPath);
         		if($this->addLabel && ($label!=''))
         			$outPath.=addslash($label);
 	        	if($this->addName && ($name!=''))
 				$outPath.=addslash($name);
-			exec( 'sh -c "'.escapeshellarg($rootPath.'/plugins/unpack/un'.$mode.$postfix.'.sh')." ".
+				if($unpackToTemp)
+				{
+					$randTempDirectory = addslash(uniqid(getTempDirectory()."archive-"));
+					if( $unpack_debug_enabled ) 
+						toLog("Unpack: Unpack to temp enabled. Unpacking to " . $randTempDirectory);
+				}
+				else
+				{
+					$randTempDirectory = "";
+				}
+	        	$commands[] = escapeshellarg($rootPath.'/plugins/unpack/un'.$mode.$postfix.'.sh')." ".
 				escapeshellarg($arh)." ".
 				escapeshellarg($basename)." ".
 				escapeshellarg($outPath)." ".
-				"/dev/null ".
-				"/dev/null ".
-				escapeshellarg($pathToUnzip).' " > /dev/null 2>&1 &' );
+				escapeshellarg($pathToUnzip)." ".
+				escapeshellarg($filesToDelete)." ".
+				escapeshellarg($randTempDirectory);
+			if($cleanupAutoTasks)
+				$commands[] = 'rm -r "${dir}"';	
+			$task = new rTask( array
+			( 
+				'arg'=>call_user_func('end',explode('/',delslash($basename))),
+				'requester'=>'unpack',
+				'name'=>'unpack', 
+				'hash'=>$hash, 
+				'dir'=>$outPath, 
+				'mode'=>null, 
+				'no'=>null
+			) );
+			$ret = $task->start($commands, 0);
 		}
 	}
-	static protected function formatPath( $taskNo )
-	{
-		return(getTempDirectory().'rutorrent-unpck-'.getUser().$taskNo."." );
-	}
 
-	public function startTask( $hash, $outPath, $mode = null, $fileno = null, $all = false )
+	public function startTask( $hash, $outPath, $mode, $fileno )
 	{
 		global $rootPath;
-		$ret = false;
+		$ret = array( "no"=>-1, "pid"=>0, "status"=>255, "log"=>array(), "errors"=>array("Unknown error.") );
 
 		if(rTorrentSettings::get()->isPluginRegistered('quotaspace'))
 		{
 			require_once( dirname(__FILE__)."/../quotaspace/rquota.php" );
 			$qt = rQuota::load();
 			if(!$qt->check())
-				return(false);
+			{
+				$ret["errors"] = array("Quota limitation was reached. Unpack failed.");
+				return($ret);
+			}
 		}
 
+		$taskArgs = array
+		( 
+			'requester'=>'unpack',
+			'name'=>'unpack', 
+			'hash'=>$hash, 
+			'dir'=>$outPath, 
+			'mode'=>$mode, 
+			'no'=>$fileno
+		);
 		if(($outPath!='') && !rTorrentSettings::get()->correctDirectory($outPath))	
 			$outPath = '';
 
-		if(!is_null($fileno) && !is_null($mode))
+		if(!empty($mode))
 	        {
 			$req = new rXMLRPCRequest( 
 				new rXMLRPCCommand( "f.get_frozen_path", array($hash,intval($fileno)) ));
@@ -161,27 +394,15 @@ class rUnpack
 				if($outPath=='')
 					$outPath = dirname($filename);
 
-				if(LFS::is_file($filename) && ($outPath!=''))
-				{
-				        $taskNo = time();
-				        $dir = self::formatPath($taskNo);
-				        $pathToUnrar = getExternal('unrar');
-					$pathToUnzip = getExternal('unzip');
-					$arh = (($mode == "zip") ? $pathToUnzip : $pathToUnrar);
-					$c = new rXMLRPCCommand( "execute", array(
-				                "sh", "-c",
-					        escapeshellarg($rootPath.'/plugins/unpack/un'.$mode.'_file.sh')." ".
-						escapeshellarg($arh)." ".
-						escapeshellarg($filename)." ".
-						escapeshellarg(addslash($outPath))." ".
-						escapeshellarg($dir."log")." ".
-						escapeshellarg($dir."status")." &"));
-					if($all)
-						$c->addParameter("-v");
-					$req = new rXMLRPCRequest( $c );
-					if($req->success())
-						$ret = array( "no"=>$taskNo, "name"=>$filename, "out"=>$outPath );
-				}
+				$commands = array();
+				$arh = getExternal( ($mode == "zip") ? 'unzip' : 'unrar' );
+				$commands[] = escapeshellarg($rootPath.'/plugins/unpack/un'.$mode.'_file.sh')." ".
+					escapeshellarg($arh)." ".
+					escapeshellarg($filename)." ".
+					escapeshellarg(addslash($outPath));
+				$taskArgs['arg'] = call_user_func('end',explode('/',$filename));
+				$task = new rTask( $taskArgs );
+				$ret = $task->start($commands, 0);
 			}
 		}
 		else
@@ -222,8 +443,6 @@ class rUnpack
 					$mode = ($rarPresent && $zipPresent) ? 'all' : ($rarPresent ? 'rar' : ($zipPresent ? 'zip' : null));
 					if($mode)
 					{
-					        $taskNo = time();
-					        $dir = self::formatPath($taskNo);
 						$pathToUnrar = getExternal("unrar");
 						$pathToUnzip = getExternal("unzip");
 						$arh = (($mode == "zip") ? $pathToUnzip : $pathToUnrar);
@@ -246,50 +465,18 @@ class rUnpack
 				        		$outPath.=addslash($label);
 				        	if($this->addName && ($tname!=''))
 				        		$outPath.=addslash($tname);
-						$req = new rXMLRPCRequest(new rXMLRPCCommand( "execute", array(
-					                "sh", "-c",
-						        escapeshellarg($rootPath.'/plugins/unpack/un'.$mode.$postfix.'.sh')." ".
+
+				        	$commands[] = escapeshellarg($rootPath.'/plugins/unpack/un'.$mode.$postfix.'.sh')." ".
 							escapeshellarg($arh)." ".
 							escapeshellarg($basename)." ".
 							escapeshellarg($outPath)." ".
-							escapeshellarg($dir."log")." ".
-							escapeshellarg($dir."status")." ".
-							escapeshellarg($pathToUnzip)." &")));
-						if($req->success())
-							$ret = array( "no"=>$taskNo, "name"=>$basename, "out"=>$outPath );
+							escapeshellarg($pathToUnzip);
+						$taskArgs['arg'] = call_user_func('end',explode('/',delslash($basename)));
+						$task = new rTask( $taskArgs );
+						$ret = $task->start($commands, 0);	
 					}
-					else
-						$ret = array( "no"=>0, "name"=>$basename, "out"=>"" );
 				}
 			}
-		}
-		return($ret);
-	}
-	static public function checkTask( $taskNo )
-	{
-		$ret = false;
-		$dir = self::formatPath($taskNo);
-		$logPath = $dir."log";
-		$statusPath = $dir."status";
-		if(is_file($statusPath) && is_readable($statusPath))
-		{
-			$status = @file_get_contents($statusPath);
-			if($status===false)
-				$status = -1;
-			else
-				$status = trim($status);
-			if(preg_match('/^\d*$/',$status)!=1)
-				$status = -1;
-			$errors = @file($logPath);
-			if($errors===false)
-				$errors=array();
-			else
-				$errors = array_map('trim', $errors);
-			$ret = array( "no"=>$taskNo, "status"=>$status, "errors"=>$errors );
-			$req = new rXMLRPCRequest( array(
-				new rXMLRPCCommand( "execute", array("rm",$statusPath) ),
-				new rXMLRPCCommand( "execute", array("rm",$logPath) ) ));
-			$req->run();
 		}
 		return($ret);
 	}
@@ -301,7 +488,7 @@ class rUnpack
 		{
 			$cmd =  rTorrentSettings::get()->getOnFinishedCommand( array('unpack'.getUser(), 
 					getCmd('execute').'={'.getPHP().','.$rootPath.'/plugins/unpack/update.php,$'.getCmd('d.get_directory').'=,$'.getCmd('d.get_base_filename').'=,$'.getCmd('d.is_multi_file').
-					'=,$'.getCmd('d.get_custom1').'=,$'.getCmd('d.get_name').'=,'.getUser().'}'));
+					'=,$'.getCmd('d.get_custom1').'=,$'.getCmd('d.get_name').'=,$'.getCmd('d.get_hash').'=,$'.getCmd('d.get_custom').'=x-dest,'.getUser().'}'));
 		}
 		else
 			$cmd = rTorrentSettings::get()->getOnFinishedCommand(array('unpack'.getUser(), getCmd('cat=')));

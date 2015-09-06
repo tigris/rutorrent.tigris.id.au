@@ -10,6 +10,21 @@ $btn_id = "'".$_REQUEST['btn']."'";
 $edit_id = "'".$_REQUEST['edit']."'";
 $frame_id = "'".$_REQUEST['frame']."'";
 
+function compareEntries( $a, $b )
+{
+	if($a=='/.')
+		return( -1 );
+	if($b=='/.')
+		return( 1 );
+	if($a=='/..')
+		return( -1 );
+	if($b=='/..')
+		return( 1 );
+	return( function_exists("mb_strtolower") ? 
+		strcmp(mb_strtolower($a), mb_strtolower($b)) :
+		strcmp(strtolower($a), strtolower($b)) );
+}
+
 if(isset($_REQUEST['dir']) && strlen($_REQUEST['dir']))
 {
 	$dir = rawurldecode($_REQUEST['dir']);
@@ -57,7 +72,7 @@ if($dh)
 			(strpos(addslash($path),$topDirectory)===0) &&
 			( $theSettings->uid<0 || isUserHavePermission($theSettings->uid,$theSettings->gid,$path,0x0005))
 			)
-			$dirs['/'.$file] = $path;
+			$dirs['/'.$file] = addslash($path);
 		else
 		{
 			if(LFS::is_file($path)
@@ -67,8 +82,8 @@ if($dh)
 		}
         }
         closedir($dh);
-	ksort($files,SORT_STRING);
-	ksort($dirs,SORT_STRING);
+        uksort($files,"compareEntries");
+        uksort($dirs,"compareEntries");
 	$files = array_merge($dirs,$files);
 }
 ?>
@@ -102,6 +117,23 @@ function bin2hex(s)
 
 var doc = null;
 
+function keyHandler(e)
+{
+	e = e || window.event;
+	var charCode = (e.which == null) ? e.keyCode : ((e.which!=0 && e.charCode!=0) ? e.which : 0);
+	if(charCode>=32)
+	{
+		var elements = document.getElementsByName('i'+e.charCode);
+		if( elements.length )
+		{
+			var el = elements[0];
+			menuClick(el);
+			!el.scrollIntoView || el.scrollIntoView(false);
+			e.preventDefault ? e.preventDefault() : (e.returnValue = false);
+		}			
+	}
+}
+
 function init()
 {
 	doc = window.frameElement.ownerDocument;
@@ -116,6 +148,7 @@ function init()
 	{
 		var _timer=setInterval(function(){ scrollBy(1,1); clearInterval(_timer); },10);
 	}
+	window.onkeypress = keyHandler;	
 }
 
 selected = null;
@@ -166,12 +199,29 @@ function menuDblClickAndExit(obj)
 
 <table class='rmenuobj' cellpadding=0 cellspacing=0 width=100%>
 <?php
+function ordutf8($s, $offset) 
+{
+	if(function_exists("mb_convert_encoding"))
+	{
+		list(, $ret) = unpack('N', mb_convert_encoding(mb_strtolower(mb_substr($s,$offset,1)), 'UCS-4BE', 'UTF-8'));
+	}
+	else
+	{
+		$ret = ord( strtolower($s[$offset]) );
+	}
+	return($ret);
+}
+
 foreach($files as $key=>$data)
 {
+	$chr = ordutf8($key,0);
 	if(($key=='/.') || ($key[0]!='/'))
-		echo "<tr><td code='".rawurlencode($data)."' id='".bin2hex($key)."' class='rmenuitem' nowrap onclick='menuClick(this); return false;' ondblclick='menuDblClickAndExit(this); return false;'>";
+		echo "<tr><td code='".rawurlencode($data)."' id='".bin2hex($key)."' name='i".$chr."' class='rmenuitem' nowrap onclick='menuClick(this); return false;' ondblclick='menuDblClickAndExit(this); return false;'>";
 	else
-		echo "<tr><td code='".rawurlencode($data)."' id='".bin2hex($key)."' class='rmenuitem' nowrap onclick='menuClick(this); return false;' ondblclick='menuDblClick(this); return false;'>";
+	{
+		$chr = ordutf8($key,1);
+		echo "<tr><td code='".rawurlencode($data)."' id='".bin2hex($key)."' name='i".$chr."' class='rmenuitem' nowrap onclick='menuClick(this); return false;' ondblclick='menuDblClick(this); return false;'>";
+	}		
 	echo "&nbsp;&nbsp;";
 	echo $key;
 	echo "</td></tr>";

@@ -9,6 +9,21 @@ $btn_id = "'".$_REQUEST['btn']."'";
 $edit_id = "'".$_REQUEST['edit']."'";
 $frame_id = "'".$_REQUEST['frame']."'";
 
+function compareEntries( $a, $b )
+{
+	if($a=='.')
+		return( -1 );
+	if($b=='.')
+		return( 1 );
+	if($a=='..')
+		return( -1 );
+	if($b=='..')
+		return( 1 );
+	return( function_exists("mb_strtolower") ? 
+		strcmp(mb_strtolower($a), mb_strtolower($b)) :
+		strcmp(strtolower($a), strtolower($b)) );
+}
+
 if(isset($_REQUEST['dir']) && strlen($_REQUEST['dir']))
 {
 	$dir = rawurldecode($_REQUEST['dir']);
@@ -46,11 +61,11 @@ if($dh)
 			( $theSettings->uid<0 || isUserHavePermission($theSettings->uid,$theSettings->gid,$path,0x0007))
 			)
 		{
-			$files[$file." "] = $path;
+			$files[$file." "] = addslash($path);
 		}
         }
         closedir($dh);
-	ksort($files,SORT_STRING);
+	uksort($files,"compareEntries");
 }
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -73,6 +88,22 @@ document.onselectstart = function() { return false; };
 
 var ownerDocument = window.frameElement.ownerDocument;
 
+function keyHandler(e)
+{
+	e = e || window.event;
+	var charCode = (e.which == null) ? e.keyCode : ((e.which!=0 && e.charCode!=0) ? e.which : 0);
+	if(charCode>=32)
+	{
+		var el = document.getElementById('i'+e.charCode);
+		if( el )
+		{
+			menuClick(el);
+			!el.scrollIntoView || el.scrollIntoView(false);
+			e.preventDefault ? e.preventDefault() : (e.returnValue = false);
+		}			
+	}
+}
+
 function init()
 {
 	menuClick(document.getElementById('root'));
@@ -80,6 +111,7 @@ function init()
 	{
 		var _timer=setInterval(function(){ scrollBy(1,1); clearInterval(_timer); },10);
 	}
+	window.onkeypress = keyHandler;
 }
 
 selected = null;
@@ -130,13 +162,27 @@ function menuDblClickAndExit(obj)
 
 <table class='rmenuobj' cellpadding=0 cellspacing=0 width=100%>
 <?php
+function ordutf8($s) 
+{
+	if(function_exists("mb_convert_encoding"))
+	{
+		list(, $ret) = unpack('N', mb_convert_encoding(mb_strtolower($s), 'UCS-4BE', 'UTF-8'));
+	}
+	else
+	{
+		$ret = ord( strtolower($s) );
+	}
+	return($ret);
+}
+
 foreach($files as $key=>$data)
 {
 	$key = trim($key);
+	$chr = ordutf8($key);
 	if($key==='.')
 		echo "<tr><td code='".rawurlencode($data)."' id='root' class='rmenuitemselected' nowrap onclick='menuClick(this); return false;' ondblclick='menuDblClickAndExit(this); return false;'>";
 	else
-		echo "<tr><td code='".rawurlencode($data)."' class='rmenuitem' nowrap onclick='menuClick(this); return false;' ondblclick='menuDblClick(this); return false;'>";
+		echo "<tr><td code='".rawurlencode($data)."' class='rmenuitem' id='i".$chr."' nowrap onclick='menuClick(this); return false;' ondblclick='menuDblClick(this); return false;'>";
 	echo "&nbsp;&nbsp;";
 	echo $key;
 	echo "</td></tr>";

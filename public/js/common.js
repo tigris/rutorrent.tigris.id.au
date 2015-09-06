@@ -1,7 +1,6 @@
 /*
  *      Misc objects.
  *
- *	$Id: common.js 2388 2013-10-14 12:39:24Z novik65 $
  */
 
 function $$(id)
@@ -17,16 +16,17 @@ function $type(obj)
 function browserDetect()
 {
 	var ua = navigator.userAgent.toLowerCase();
+	this.isiOS =  /(iPad|iPhone|iPod)/.test(navigator.userAgent);
 	this.isGecko = (ua.indexOf("gecko") !=- 1 && ua.indexOf("safari") ==- 1);
 	this.isAppleWebKit = (ua.indexOf("webkit") !=- 1);
 	this.isKonqueror = (ua.indexOf("konqueror") !=- 1);
-	this.isSafari = (ua.indexOf("safari") !=- 1);
 	this.isOpera = (ua.indexOf("opera") !=- 1);
 	this.isIE = (ua.indexOf("msie") !=- 1 && !this.isOpera && (ua.indexOf("webtv") ==- 1));
 	this.isMozilla = (this.isGecko && ua.indexOf("gecko/") + 14 == ua.length);
 	this.isFirefox = (ua.indexOf("firefox/") !=- 1);
 	this.isChrome = (ua.indexOf("chrome/") !=- 1);
 	this.isMidori = (ua.indexOf("midori/") !=- 1);
+	this.isSafari = (ua.indexOf("safari") !=- 1) && !this.isChrome;
 	this.versionMinor = parseFloat(navigator.appVersion);
 	if(this.isGecko && !this.isMozilla && !this.isKonqueror)
 		this.versionMinor = parseFloat(ua.substring(ua.indexOf("/", ua.indexOf("gecko/") + 6) + 1));
@@ -40,7 +40,7 @@ function browserDetect()
 	if(this.isKonqueror)
 		this.versionMinor = parseFloat(ua.substring(ua.indexOf("konqueror/") + 10));
 	else
-	if(this.isSafari)
+	if(this.isSafari || this.isChrome)
 		this.versionMinor = parseFloat(ua.substring(ua.lastIndexOf("safari/") + 7));
 	else
 	if(this.isOpera)
@@ -157,7 +157,7 @@ $.fn.extend(
 	        	{
 				if(contextMenuPresent)
 				{
-					$(this).bind( "contextmenu", function(e)
+					$(this).on( "contextmenu", function(e)
 					{
 						e.which = 3;
 						e.button = 2;
@@ -214,18 +214,18 @@ $.fn.extend(
 			else
 			{
 				if(contextMenuPresent)
-					$(this).unbind( "contextmenu" );
+					$(this).off( "contextmenu" );
 				else
 				if(browser.isOpera)
-					$(this).unbind( "mouseup" );
-				$(this).unbind( "mousedown" );
+					$(this).off( "mouseup" );
+				$(this).off( "mousedown" );
 			}
 		}));            	
 	},
 
 	enableSysMenu: function()
 	{
-		return(this.bind("contextmenu",function(e) { e.stopImmediatePropagation(); }).
+		return(this.on("contextmenu",function(e) { e.stopImmediatePropagation(); }).
 			bind("selectstart",function(e) { e.stopImmediatePropagation(); return(true); }));
 	},
 
@@ -299,7 +299,7 @@ function askYesNo( title, content, funcYesName )
 {
 	$("#yesnoDlg-header").html(title);
 	$("#yesnoDlg-content").html(content);
-	$("#yesnoOK").unbind('click');
+	$("#yesnoOK").off('click');
 	$("#yesnoOK").click( function() { eval(funcYesName); theDialogManager.hide("yesnoDlg"); return(false); });
 	theDialogManager.show("yesnoDlg");
 }
@@ -490,7 +490,7 @@ var theConverter =
 			m = (m < 10) ? ("0" + m) : m;
 			s = (s < 10) ? ("0" + s) : s;
 			var tm = h+":"+m+":"+s+am;
-			var dt = '';
+			dt = '';
 			if(!timeOnly)
 			{
 				switch(iv(theWebUI.settings["webui.dateformat"]))
@@ -669,15 +669,17 @@ var theFormatter =
 			else
    			switch(table.getIdByCol(i)) 
    			{
-      				case 'done' : 
+      				case 'done' :
       					arr[i] = arr[i]+"%";
 	      				break;
 				case 'downloaded' :
 				case 'uploaded' :
+        			case 'peerdownloaded' :
       					arr[i] = theConverter.bytes(arr[i]);
       					break;
-	      			case 'dl' : 
-      				case 'ul' : 
+	      			case 'dl' :
+      				case 'ul' :
+        			case 'peerdl' :
 					arr[i] = theConverter.speed(arr[i]);
       					break;
 	      		}
@@ -1106,7 +1108,7 @@ var theBTClientVersion =
 	{
 		"AR" : "Ares", "AT" : "Artemis", "AV" : "Avicora",
 		"BG" : "BTGetit", "BM" : "BitMagnet", "BP" : "BitTorrent Pro (Azureus + Spyware)",
-		"BX" : "BittorrentX", "bk" : "BitKitten (libtorrent)", "BS" : "BTSlave",
+		"bk" : "BitKitten (libtorrent)", "BS" : "BTSlave",
 		"BW" : "BitWombat", "BX" : "BittorrentX", "EB" : "EBit",
 		"DE" : "Deluge", "DP" : "Propogate Data Client", "FC" : "FileCroc",
 		"FT" : "FoxTorrent/RedSwoosh", "GR" : "GetRight", "HN" : "Hydranode",
@@ -1120,25 +1122,27 @@ var theBTClientVersion =
 		"WY" : "Wyzo", "XL" : "Xunlei",
 		"XT" : "XanTorrent", "ZT" : "Zip Torrent", 
 		'GS' : "GSTorrent", 'KG' : "KGet", 'ST' : "SymTorrent", 
-		'BE' : "BitTorrent SDK"
+		'BE' : "BitTorrent SDK", "TB" : "Torch"
 	 },
 	azLikeClients3:
 	{
 	        "AG" : "Ares", "A~" : "Ares", "ES" : "Electric Sheep",
         	"HL" : "Halite", "LT" : "libtorrent (Rasterbar)", "lt" : "libTorrent (Rakshasa)",
 	        "MP" : "MooPolice", "TT" : "TuoTu", "qB" : "qBittorrent",
-       		'MG' : "MediaGet"	// ? -MG1Cr0-
+       		'MG' : "MediaGet",	// ? -MG1Cr0-
+       		"IL" : "iLivid" 
 	},
 	azLikeClients2x2:
 	{
-	        "AX" : "BitPump", "BC" : "BitComet", "CD" : "Enhanced CTorrent"
+	        "AX" : "BitPump", "BC" : "BitComet", "CD" : "Enhanced CTorrent", "FX" : "Freebox BitTorrent"
 	},
 	azLikeClientsSpec:
 	{
-		'UM' : "uTorrent for Mac", 'UT' : "uTorrent", 'TR' : "Transmission",
+		'UM' : "uTorrent for Mac", 'UT' : "uTorrent", 'BT' : "BitTorrent", 'TR' : "Transmission",
 		'AZ' : "Azureus", 'KT' : "KTorrent", "BF" : "BitFlu",
 	        'LW' : "LimeWire", "BB" : "BitBuddy", "BR" : "BitRocket",
-		"CT" : "CTorrent", 'XX' : "Xtorrent", 'LP' : "Lphant"
+		"CT" : "CTorrent", 'XX' : "Xtorrent", 'LP' : "Lphant",
+		"SK" : "Spark"
 	},
 	shLikeClients:
 	{
@@ -1182,6 +1186,7 @@ var theBTClientVersion =
 					case 'LW':
 						ret = cli;
 						break;
+					case 'BT':
 					case 'UT':
 					case 'UM':
 						ret = cli+" "+str.charAt(3)+"."+str.charAt(4)+"."+str.charAt(5)+getMnemonicEnd(str.charAt(6));
@@ -1410,7 +1415,6 @@ function getCSSRule( selectorText )
 
 	var selectorText1 = selectorText.toLowerCase();
 	var selectorText2 = selectorText1.replace('.','\\.');
-	var ret = null;
 	for( var j=document.styleSheets.length-1; j>=0; j-- )
 	{
 		var rules = getRulesArray(j);
@@ -1420,14 +1424,11 @@ function getCSSRule( selectorText )
 			{
 				var lo = rules[i].selectorText.toLowerCase();
 				if((lo==selectorText1) || (lo==selectorText2))
-				{
-					ret = rules[i];
-					break;
-				}			
+					return(rules[i]);
 			}
 		}
 	}
-	return(ret);
+	return(null);
 }
 
 function RGBackground( selector )
@@ -1567,3 +1568,16 @@ function json_encode(obj)
 	return("null");
 }
 
+function strip_tags(input, allowed) 
+{
+	allowed = (((allowed || '') + '')
+      		.toLowerCase()
+		.match(/<[a-z][a-z0-9]*>/g) || [])
+		.join('');
+	var tags = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi,
+		commentsAndPhpTags = /<!--[\s\S]*?-->|<\?(?:php)?[\s\S]*?\?>/gi;
+	return input.replace(commentsAndPhpTags, '').replace(tags, function($0, $1) 
+	{
+		return allowed.indexOf('<' + $1.toLowerCase() + '>') > -1 ? $0 : '';
+    	});
+}

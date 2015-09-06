@@ -2,6 +2,21 @@
 require_once( '../../php/util.php' );
 require_once( '../../php/settings.php' );
 
+function compareEntries( $a, $b )
+{
+	if($a=='.')
+		return( -1 );
+	if($b=='.')
+		return( 1 );
+	if($a=='..')
+		return( -1 );
+	if($b=='..')
+		return( 1 );
+	return( function_exists("mb_strtolower") ? 
+		strcmp(mb_strtolower($a), mb_strtolower($b)) :
+		strcmp(strtolower($a), strtolower($b)) );
+}
+
 if(isset($_REQUEST['mode']))
 {
 	$output = array();
@@ -20,6 +35,7 @@ if(isset($_REQUEST['mode']))
 					$labels[$val] = true;
 			}
 			$output["labels"] = array_keys($labels);
+			natcasesort($output["labels"]);
 		}
 	}
 	if(in_array("dirlist",$modes))
@@ -66,7 +82,7 @@ if(isset($_REQUEST['mode']))
 				}
 			}
 		        closedir($dh);
-			sort($files,SORT_STRING);
+			usort($files,"compareEntries");
 			$output["basedir"] = fullpath($dir);
 			$output["dirlist"] = $files;
 		}

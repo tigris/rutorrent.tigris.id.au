@@ -285,12 +285,26 @@ class Snoopy
 		return($ret);
 	}
 
+	function get_header( $name )
+	{
+		foreach( $this->headers as $i=>$header )
+			if(preg_match_all("/^$name:\s*(.*)/i",$header,$matches))
+				return( $matches[1][0] );
+		return(false);
+	}	
+
 	function get_filename()
 	{
-		foreach( $this->headers as $i=>$header)
+		foreach( $this->headers as $i=>$header )
 			if(preg_match_all("/^Content-Disposition:.*(\s|;)filename=\"(.*)\.torrent\"/i",$header,$matches) && (count($matches)>2))
 				return( str_replace( '/', '_', $matches[2][0].".torrent" ) );
 		return(false);	
+	}
+
+	function get_modified()
+	{
+		$value = $this->get_header( 'Last-Modified' );
+		return( $value ? strtotime($value) : false );
 	}
 
 	function _httprequest($url,$fp,$URI,$http_method,$content_type="",$body="")
@@ -496,16 +510,17 @@ class Snoopy
 			$this->error = "Error: cURL could not retrieve the document, error $return.";
 		else
 		{
-			$results = file_get_contents($contfile);
+			$results = @file_get_contents($contfile);
 			$result_headers = file($headerfile);
 			foreach($result_headers as $header)
 			{
 				// if a header begins with Location: or URI:, set the redirect
-				if(preg_match("/^(Location: |URI: |Refresh :)/i",$header))
+				if(preg_match("/^(Location:|URI:|Refresh:)/i",$header))
 				{
 					// get URL portion of the redirect
 					if(!preg_match("/^(Location: |URI:)(.*)/i",chop($header),$matches))
 						preg_match("/(^Refresh:\s+\d+\s*;\s*url\s*=\s*)(.*)/i",chop($header),$matches);
+
 					// look for :// in the Location header to see if hostname is included
 					if(!preg_match("|\:\/\/|",$matches[2]))
 					{
@@ -531,7 +546,6 @@ class Snoopy
 					$is_gzipped = true;
 				$this->headers[] = $header;
 			}
-
 			// gunzip
 			if ( $is_gzipped ) 
 			{
@@ -557,8 +571,8 @@ class Snoopy
 
 			$this->results = $results;
 		}
-		unlink($headerfile);
-		unlink($contfile);
+		@unlink($headerfile);
+		@unlink($contfile);
 		return(!$return);
 	}
 

@@ -24,5 +24,6 @@
  theUILang.torrentSave			= "Αποθήκευση";
  theUILang.torrentKill			= "Τερματισμός";
  theUILang.torrentKilled		= "Η λειτουργία τερματίστηκε.";
+ theUILang.recentTrackers		= "Πρόσφατοι trackers"; 
 
 thePlugins.get("create").langLoaded();

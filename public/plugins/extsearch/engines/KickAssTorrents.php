@@ -24,8 +24,8 @@ class KickAssTorrentsEngine extends commonEngine
 			$cli = $this->fetch( $url.'/usearch/'.$what.$cat.'/'.$pg.'/?field=seeders&sorder=desc' );
 			if( ($cli==false) || (strpos($cli->results, "<h2>Nothing found!</h2>")!==false) )
 				break;
-			$res = preg_match_all('`href="magnet:(?P<link>.*)".*<div class="torrentname">.*'.
-				'<a href="(?P<desc>.*)" class=".*bold">(?P<name>.*)</a>.*'.
+			$res = preg_match_all('`href="magnet:(?P<link>.*)".*<div class="torrentname">.*<div class="markeredBlock.*'.
+				'<a href="(?P<desc>.*)" class="cellMainLink">(?P<name>.*)</a>.*'.
 				'<span id="cat_\d+">(?P<cat>.*)</span>.*'.
 				'<td class="nobr.*">(?P<size>.*)</td>.*'.
 				'<td.*>.*</td>.*'.

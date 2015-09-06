@@ -155,6 +155,8 @@ var theUILang =
  EnableTracker			: "啟用",
  ClientVersion			: "Client",
  Flags				: "Flags",
+ PeerDL				: "Peer DL",
+ PeerDownloaded			: "Peer Downloaded",
  ReqTimeout			: "判定逾時",
  GetTrackerMessage		: "從tracker接收使用者資訊",
  Help				: "Help",
@@ -266,5 +268,8 @@ var theUILang =
  Deselect_all			: "Deselect all",
  showSpeedInTitle		: "Show speed in the title",
  badTempPath 			: "Webserver user doesn't have read/write/execute access to the tmp directory. ruTorrent will not work.",
- badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work."
+ badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work.",
+ doRandomizeHash		: "Randomize info hashes for cross-seeding",
+ Recreate_files			: "Queue files recreation",
+ Address			: "Address"
 };

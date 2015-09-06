@@ -1,7 +1,6 @@
 /*
  *      Common UI objects.
  *
- *	$Id: objects.js 2293 2013-04-15 09:40:12Z novik65 $
  */
 
 // Drag & Drop object 
@@ -29,8 +28,8 @@ function DnD( id, options )
 		this.options.maskId = 'dragmask';
 	this.detachedMask = (this.options.maskId!=id);
 	this.mask = $('#'+this.options.maskId);
-	header.unbind( "mousedown" );
-	header.bind( "mousedown", this, this.start );
+	header.off( "mousedown" );
+	header.on( "mousedown", this, this.start );
 }
 
 DnD.prototype.start = function( e )
@@ -47,8 +46,8 @@ DnD.prototype.start = function( e )
 			self.mask.show();
 		}
 		self.delta = { x: e.clientX-offs.left, y: e.clientY-offs.top };
-		$(document).bind("mousemove",self,self.run); 
-		$(document).bind("mouseup",self,self.finish);
+		$(document).on("mousemove",self,self.run); 
+		$(document).on("mouseup",self,self.finish);
 	}	
 	return(false);
 }
@@ -74,8 +73,8 @@ DnD.prototype.finish = function( e )
 		self.mask.hide();
 		self.obj.css( { left: offs.left, top: offs.top } );
 	}
-	$(document).unbind("mousemove",self.run); 
-	$(document).unbind("mouseup",self.finish);
+	$(document).off("mousemove",self.run); 
+	$(document).off("mouseup",self.finish);
 	return(false);
 }
 

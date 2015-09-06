@@ -10,7 +10,7 @@
 
  theUILang.autotools			= "Automatiseringsverktyg";
  theUILang.autotoolsEnableLabel 	= "Aktivera \"Automatisk etikett\"-funktion, Mall:";
- theUILang.autotoolsEnableMove		= "Aktivera \"Flytta automatiskt\"-funktion";
+ theUILang.autotoolsEnableMove		= "Enable \"AutoMove\" if torrent's label matches filter";
  theUILang.autotoolsPathToFinished	= "Sökväg till färdiga nedladdningar";
  theUILang.autotoolsEnableWatch 	= "Aktivera \"Automatisk övervakning\"-funktion";
  theUILang.autotoolsPathToWatch 	= "Sökväg till övervakad mapp";
@@ -22,5 +22,7 @@
  theUILang.autotoolsFileOpHardLink 	= "Hård länk";
  theUILang.autotoolsFileOpCopy		= "Kopiera";
  theUILang.autotoolsFileOpSoftLink	= "Mjuk länk";
+ theUILang.autotoolsAddLabel		= "Add torrent's label to path";
+ theUILang.autotoolsAddName		= "Add torrent's name to path";  
 
 thePlugins.get("autotools").langLoaded();

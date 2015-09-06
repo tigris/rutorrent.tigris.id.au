@@ -1,9 +1,48 @@
 plugin.loadLang();
-
 plugin.mark = 0;
 plugin.hstTimeout = null;
 
 plugin.actionNames = ['', '', '', ''];
+
+plugin.showNotification = function(item)
+{
+	if(plugin.allStuffLoaded)
+	{
+		var notification = notify.createNotification( plugin.actionNames[item.action], { body: item.name, icon: { x16: 'images/favicon.ico', x32: 'images/favicon-32x32.png' } } );
+		setTimeout(function () 
+		{
+               		notification.close();
+                }, theWebUI.history.closeinterval*1000);
+	}	                
+}
+
+plugin.isNotificationsSupported = function()
+{
+	return( (plugin.allStuffLoaded && !notify.isSupported) ? false : notify.permissionLevel() );
+}
+
+plugin.rebuildNotificationsPage = function()
+{
+	if(plugin.allStuffLoaded)
+	{
+		var state = plugin.isNotificationsSupported();
+		$('#notifTip').text(theUILang.notifTip[state ]);
+		switch(state)
+		{
+			case notify.PERMISSION_DENIED:
+			case false: 
+			{
+				$('#notifPerms, #notifParam').hide();
+				break;
+			}
+			case notify.PERMISSION_GRANTED: 
+			{
+				$('#notifPerms').hide();
+				break;
+			}
+		}
+	}		
+}
 
 if(plugin.canChangeOptions())
 {
@@ -207,24 +246,6 @@ if(plugin.canChangeTabs())
 		}
 	}
 
-	plugin.showNotification = function(item)
-	{
-		var popup = window.webkitNotifications.createNotification('favicon.ico', plugin.actionNames[item.action], item.name);
-		popup.show();
-		if(theWebUI.history.autoclose)
-			window.setTimeout( function() 
-			{
-				popup.cancel();
-			}, theWebUI.history.closeinterval*1000 );
-	}
-
-	plugin.notificationStatus = { notSupported: 0, enabled: 1, disabled: 2, blocked: 3 };
-
-	plugin.isNotificationsSupported = function()
-	{
-		return(window.webkitNotifications ? (window.webkitNotifications.checkPermission()+1) : plugin.notificationStatus.notSupported);
-	}
-
 	plugin.onGetHistory = function(d)
 	{
 		var updated = false;
@@ -254,7 +275,7 @@ if(plugin.canChangeTabs())
 				updated = true;
 				if( item.action_time > plugin.mark )
 					plugin.mark = item.action_time;
-				if(!d.mode && (plugin.isNotificationsSupported()==plugin.notificationStatus.enabled))
+				if(!d.mode && plugin.allStuffLoaded && (plugin.isNotificationsSupported()===notify.PERMISSION_GRANTED))
 				{
 	                        	plugin.showNotification(item);
 				}
@@ -266,7 +287,7 @@ if(plugin.canChangeTabs())
 			if(table.sIndex !=- 1)
 				table.Sort();
 		}
-		if((theWebUI.activeView=='history') || (plugin.isNotificationsSupported()==plugin.notificationStatus.enabled))
+		if((theWebUI.activeView=='history') || (plugin.allStuffLoaded && (plugin.isNotificationsSupported()===notify.PERMISSION_GRANTED)))
 			plugin.hstTimeout = window.setTimeout(plugin.historyRefresh,theWebUI.settings["webui.update_interval"]);
 		else
         		if(plugin.hstTimeout)
@@ -327,72 +348,62 @@ if(plugin.canChangeTabs())
 	}
 }       
 
-plugin.rebuildNotificationsPage = function()
-{
-	var state = plugin.isNotificationsSupported();
-	$('#notifTip').text(theUILang.notifTip[state]);
-	switch(state)
-	{
-		case plugin.notificationStatus.blocked:
-		case plugin.notificationStatus.notSupported: 
-		{
-			$('#notifPerms, #notifParam').hide();
-			break;
-		}
-		case plugin.notificationStatus.enabled: 
-		{
-			$('#notifPerms').hide();
-			break;
-		}
-	}
-}
-
 plugin.onLangLoaded = function()
 {
-	this.attachPageToOptions( $("<div>").attr("id","st_history").html(
-		"<div class='checkbox'>" +
-			"<label for='history_limit'>"+ theUILang.historyLimit +"</label>"+
-			"<input type='text' maxlength=4 id='history_limit' class='TextboxShort'/>"+
-		"</div>" +
-		"<fieldset>"+
-			"<legend>"+theUILang.historyLog+"</legend>"+
-			"<div class='checkbox'>" +
-				"<input type='checkbox' id='history_addition'/>"+
-				"<label for='history_addition'>"+ theUILang.historyAddition +"</label>"+
-			"</div>" +
-			"<div class='checkbox'>" +
-				"<input type='checkbox' id='history_deletion'/>"+
-				"<label for='history_deletion'>"+ theUILang.historyDeletion +"</label>"+
-			"</div>" +
-			"<div class='checkbox'>" +
-				"<input type='checkbox' id='history_finish'/>"+
-				"<label for='history_finish'>"+ theUILang.historyFinish +"</label>"+
-			"</div>" +
-		"</fieldset>"+
-		"<fieldset>"+
-			"<legend>"+theUILang.historyNotification+"</legend>"+
-			"<div id='notifTip'>" +
-			"</div>" +
-			"<input type='button' value='"+theUILang.enableNotifications+"' id='notifPerms'/>"+
-			"<div id='notifParam'>" +
-				"<input type='checkbox' id='not_autoclose' onchange=\"linked(this, 0, ['not_closeinterval']);\" />"+
-				"<label for='not_autoclose'>"+ theUILang.notifAutoClose +" </label>" +
-				"<input type='text' id='not_closeinterval' class='TextboxShort' maxlength='3'/>" + theUILang.s +
-			"</div>" +
-		"</fieldset>"
-		)[0], theUILang.history );
-	$('#notifPerms').click( function()
+	injectScript(plugin.path+"/desktop-notify.js",function()
 	{
-		window.webkitNotifications.requestPermission(function() 
-		{ 
-			plugin.rebuildNotificationsPage();
-			plugin.historyRefresh();
+		plugin.attachPageToOptions( $("<div>").attr("id","st_history").html(
+			"<div class='checkbox'>" +
+				"<label for='history_limit'>"+ theUILang.historyLimit +"</label>"+
+				"<input type='text' maxlength=4 id='history_limit' class='TextboxShort'/>"+
+			"</div>" +
+			"<fieldset>"+
+				"<legend>"+theUILang.historyLog+"</legend>"+
+				"<div class='checkbox'>" +
+					"<input type='checkbox' id='history_addition'/>"+
+					"<label for='history_addition'>"+ theUILang.historyAddition +"</label>"+
+				"</div>" +
+				"<div class='checkbox'>" +
+					"<input type='checkbox' id='history_deletion'/>"+
+					"<label for='history_deletion'>"+ theUILang.historyDeletion +"</label>"+
+				"</div>" +
+				"<div class='checkbox'>" +
+					"<input type='checkbox' id='history_finish'/>"+
+					"<label for='history_finish'>"+ theUILang.historyFinish +"</label>"+
+				"</div>" +
+			"</fieldset>"+
+			"<fieldset>"+
+				"<legend>"+theUILang.historyNotification+"</legend>"+
+				"<div id='notifTip'>" +
+				"</div>" +
+				"<input type='button' value='"+theUILang.enableNotifications+"' id='notifPerms'/>"+
+				"<div id='notifParam'>" +
+					"<input type='checkbox' id='not_autoclose' onchange=\"linked(this, 0, ['not_closeinterval']);\" />"+
+					"<label for='not_autoclose'>"+ theUILang.notifAutoClose +" </label>" +
+					"<input type='text' id='not_closeinterval' class='TextboxShort' maxlength='3'/>" + theUILang.s +
+				"</div>" +
+			"</fieldset>"
+			)[0], theUILang.history );
+		$('#notifPerms').click( function()
+		{
+			notify.requestPermission(function() 
+			{ 
+				plugin.rebuildNotificationsPage();
+				plugin.historyRefresh();
+			});
 		});
-	});
-	plugin.actionNames = ['', theUILang.Added, theUILang.Finished, theUILang.Deleted];
+		plugin.actionNames = ['', theUILang.Added, theUILang.Finished, theUILang.Deleted];
+		plugin.markLoaded();
+	});		
 }
 
 plugin.onRemove = function()
 {
 	plugin.removePageFromOptions("st_history");
+}
+
+plugin.langLoaded = function() 
+{
+	if(plugin.enabled)
+		plugin.onLangLoaded();
 }

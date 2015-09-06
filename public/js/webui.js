@@ -1,12 +1,11 @@
 /*
  *      Main object.
  *
- *	$Id: webui.js 2404 2013-10-16 11:05:49Z novik65 $
  */
 
 var theWebUI = 
 {
-        version: "3.6 (svn $Rev: 2404 $)",
+        version: "3.7",
 	tables:
 	{
 		trt: 
@@ -14,19 +13,19 @@ var theWebUI =
 			obj: new dxSTable(),
 			columns:
 			[
-				{ text: theUILang.Name, 			width: "200px", id: "name",		type: TYPE_STRING }, 
+				{ text: theUILang.Name, 		width: "200px", id: "name",		type: TYPE_STRING }, 
 		      		{ text: theUILang.Status, 		width: "100px",	id: "status",		type: TYPE_STRING },
-		   		{ text: theUILang.Size, 			width: "60px",	id: "size", 		type: TYPE_NUMBER },
-	   			{ text: theUILang.Done, 			width: "100px",	id: "done",		type: TYPE_PROGRESS },
+		   		{ text: theUILang.Size, 		width: "60px",	id: "size", 		type: TYPE_NUMBER },
+	   			{ text: theUILang.Done, 		width: "100px",	id: "done",		type: TYPE_PROGRESS },
 				{ text: theUILang.Downloaded, 		width: "100px",	id: "downloaded",	type: TYPE_NUMBER },
 				{ text: theUILang.Uploaded, 		width: "100px",	id: "uploaded",		type: TYPE_NUMBER },
-				{ text: theUILang.Ratio, 			width: "60px",	id: "ratio",		type: TYPE_NUMBER },
+				{ text: theUILang.Ratio, 		width: "60px",	id: "ratio",		type: TYPE_NUMBER },
 				{ text: theUILang.DL, 			width: "60px", 	id: "dl",		type: TYPE_NUMBER },
 				{ text: theUILang.UL, 			width: "60px", 	id: "ul",		type: TYPE_NUMBER },
 				{ text: theUILang.ETA, 			width: "60px", 	id: "eta",		type: TYPE_NUMBER },
-				{ text: theUILang.Label, 			width: "60px", 	id: "label",		type: TYPE_STRING },
-				{ text: theUILang.Peers, 			width: "60px", 	id: "peers",		type: TYPE_NUMBER },
-				{ text: theUILang.Seeds, 			width: "60px", 	id: "seeds",		type: TYPE_NUMBER },
+				{ text: theUILang.Label, 		width: "60px", 	id: "label",		type: TYPE_STRING },
+				{ text: theUILang.Peers, 		width: "60px", 	id: "peers",		type: TYPE_NUMBER },
+				{ text: theUILang.Seeds, 		width: "60px", 	id: "seeds",		type: TYPE_NUMBER },
 				{ text: theUILang.Priority, 		width: "80px", 	id: "priority",		type: TYPE_NUMBER },
 				{ text: theUILang.Created_on,		width: "100px", id: "created",		type: TYPE_NUMBER },
 				{ text: theUILang.Remaining, 		width: "90px", 	id: "remaining",	type: TYPE_NUMBER }
@@ -42,9 +41,9 @@ var theWebUI =
 			obj: new dxSTable(),
 			columns:
 			[
-				{ text: theUILang.Name, 			width: "200px",	id: "name",		type: TYPE_STRING },
-				{ text: theUILang.Size, 			width: "60px", 	id: "size",		type: TYPE_NUMBER,	"align" : ALIGN_RIGHT},
-				{ text: theUILang.Done, 			width: "100px", 	id: "done",		type: TYPE_NUMBER },
+				{ text: theUILang.Name, 		width: "200px",	id: "name",		type: TYPE_STRING },
+				{ text: theUILang.Size, 		width: "60px", 	id: "size",		type: TYPE_NUMBER,	"align" : ALIGN_RIGHT},
+				{ text: theUILang.Done, 		width: "100px", id: "done",		type: TYPE_NUMBER },
 				{ text: "%", 				width: "100px",	id: "percent",		type: TYPE_PROGRESS },
 				{ text: theUILang.Priority, 		width: "80px", 	id: "priority",		type: TYPE_NUMBER }
 			],
@@ -92,14 +91,16 @@ var theWebUI =
 			obj: new dxSTable(),
 			columns:
 			[
-				{ text: "IP", 			width: "100px", id: "name",		type: TYPE_STRING },
-				{ text: theUILang.ClientVersion,		width: "120px", id: "version",		type: TYPE_STRING },
-				{ text: theUILang.Flags, 			width: "60px", 	id: "flags",		type: TYPE_STRING, 	"align" : ALIGN_RIGHT},
-				{ text: theUILang.Done, 			width: "100px", 	id: "done",		type: TYPE_PROGRESS },
+				{ text: theUILang.Address,		width: "100px", id: "name",		type: TYPE_STRING },
+				{ text: theUILang.ClientVersion,	width: "120px", id: "version",		type: TYPE_STRING },
+				{ text: theUILang.Flags, 		width: "60px", 	id: "flags",		type: TYPE_STRING, 	"align" : ALIGN_RIGHT},
+				{ text: theUILang.Done, 		width: "100px", id: "done",		type: TYPE_PROGRESS },
 				{ text: theUILang.Downloaded, 		width: "100px", id: "downloaded",	type: TYPE_NUMBER },
 				{ text: theUILang.Uploaded, 		width: "100px", id: "uploaded",		type: TYPE_NUMBER },
 				{ text: theUILang.DL, 			width: "60px", 	id: "dl",		type: TYPE_NUMBER },
-				{ text: theUILang.UL, 			width: "60px", 	id: "ul",		type: TYPE_NUMBER }
+				{ text: theUILang.UL, 			width: "60px", 	id: "ul",		type: TYPE_NUMBER },
+                                { text: theUILang.PeerDL, 		width: "60px", 	id: "peerdl",		type: TYPE_NUMBER },
+                                { text: theUILang.PeerDownloaded, 	width: "100px", id: "peerdownloaded",	type: TYPE_NUMBER }
 			],
 			container:	"PeerList",
 			format:		theFormatter.peers,
@@ -116,12 +117,12 @@ var theWebUI =
 			obj: new dxSTable(),
 			columns:
 			[
-				{ text: theUILang.plgName,			width: "150px", id: "name",		type: TYPE_STRING },
-				{ text: theUILang.plgVersion,			width: "60px",	id: "version",		type: TYPE_NUMBER },
-				{ text: theUILang.plgStatus, 			width: "80px", 	id: "status",		type: TYPE_STRING, 	"align" : ALIGN_RIGHT},
-				{ text: theUILang.plgLaunch,			width: "80px", 	id: "launch",		type: TYPE_STRING, 	"align" : ALIGN_RIGHT},
-				{ text: theUILang.plgAuthor,			width: "80px", 	id: "author",		type: TYPE_STRING },
-				{ text: theUILang.plgDescr,			width: "500px",	id: "descr",		type: TYPE_STRING }
+				{ text: theUILang.plgName,		width: "150px", id: "name",		type: TYPE_STRING },
+				{ text: theUILang.plgVersion,		width: "60px",	id: "version",		type: TYPE_NUMBER },
+				{ text: theUILang.plgStatus, 		width: "80px", 	id: "status",		type: TYPE_STRING, 	"align" : ALIGN_RIGHT},
+				{ text: theUILang.plgLaunch,		width: "80px", 	id: "launch",		type: TYPE_STRING, 	"align" : ALIGN_RIGHT},
+				{ text: theUILang.plgAuthor,		width: "80px", 	id: "author",		type: TYPE_STRING },
+				{ text: theUILang.plgDescr,		width: "500px",	id: "descr",		type: TYPE_STRING }
 			],
 			container:	"PluginList",
 			format:		theFormatter.plugins,
@@ -228,9 +229,9 @@ var theWebUI =
 	{
 		window.onresize = theWebUI.resize;
 		window.onorientationchange = theWebUI.resize;
-		$(document).bind("dragstart",function(e) { return(false); } );
-		$(document).bind("selectstart",function(e) { return(e.fromTextCtrl); });
-		$(document).bind("contextmenu",function(e)
+		$(document).on("dragstart",function(e) { return(false); } );
+		$(document).on("selectstart",function(e) { return(e.fromTextCtrl); });
+		$(document).on("contextmenu",function(e)
 		{
 			if(e.fromTextCtrl)
 				theContextMenu.hide();
@@ -593,7 +594,7 @@ var theWebUI =
 			{
 				o = $(o);
 				if(o.is("input:checkbox"))
-					o.attr('checked',(v!=0));
+					o.prop('checked',(v!=0));
 				else
 				{
 					switch(i)
@@ -607,8 +608,7 @@ var theWebUI =
 					}
 					o.val(v);
 				}
-      				if($type(o.attr("onchange"))=="function")
-        	 			o.get(0).onchange.apply(o.get(0));
+				o.change();
 			}
 		});
 		if($type(this.settings["webui.search"]))
@@ -803,6 +803,7 @@ var theWebUI =
    		$.extend(this.peers,data);
    		$.each(data,function(id,peer)
 		{
+			peer.name = peer.name+':'+peer.port
 			if(!$type(table.rowdata[id])) 
 				table.addRowById(peer, id, peer.icon, peer.attr);
         		else 
@@ -900,6 +901,8 @@ var theWebUI =
 	trkIsPrivate: function(url)
 	{
 		return(
+			(/(http|https|udp):\/\/(?:[0-9]{1,3}\.){3}[0-9]{1,3}((:(\d){2,5})|).*\/an.*\?.+=.+/i).test(url) ||
+			(/(http|https|udp):\/\/(?:[0-9]{1,3}\.){3}[0-9]{1,3}((:(\d){2,5})|)\/.*[0-9a-z]{8,32}\/an/i).test(url) ||
 			(/(http|https|udp):\/\/[a-z0-9-\.]+\.[a-z]{2,4}((:(\d){2,5})|).*\/an.*\?.+=.+/i).test(url) ||
 			(/(http|https|udp):\/\/[a-z0-9-\.]+\.[a-z]{2,4}((:(\d){2,5})|)\/.*[0-9a-z]{8,32}\/an/i).test(url) ? 1 : 0 );
 	},
@@ -1333,6 +1336,7 @@ var theWebUI =
 				(this.torrents[id].private==0) && (theWebUI.systemInfo.rTorrent.iVersion>=0x804)) ? 
 				"theDialogManager.show('padd')"	: null]);
 		}
+		theContextMenu.add([theUILang.Recreate_files, this.isTorrentCommandEnabled("recreate",id) ? "theWebUI.recreate()" : null]);
 		if(theWebUI.systemInfo.rTorrent.iVersion>=0x809)
 			theContextMenu.add([theUILang.updateTracker, this.isTorrentCommandEnabled("updateTracker",id) ? "theWebUI.updateTracker()" : null]);
    		theContextMenu.add([CMENU_SEP]);
@@ -1489,6 +1493,11 @@ var theWebUI =
 	recheck: function()
 	{	
 		this.perform("recheck");
+   	},
+
+   	recreate: function()
+	{	
+		this.perform("createqueued");
    	},
 
 	getTorrents: function(qs)
@@ -1753,7 +1762,7 @@ var theWebUI =
 		if(counter.text()!=teg.cnt)
 		{
 			counter.text(teg.cnt);
-			$("#"+id).attr("title",teg.val+" ("+teg.cnt+")");
+			$("#"+id).prop("title",teg.val+" ("+teg.cnt+")");
 		}
 	},
 
@@ -1990,7 +1999,7 @@ var theWebUI =
 			if(counter.text()!=teg.cnt)
 			{
 				counter.text(teg.cnt);
-				$("#"+id).attr("title",teg.val+" ("+teg.cnt+")");
+				$("#"+id).prop("title",teg.val+" ("+teg.cnt+")");
 			}
 		}
 	},
@@ -2063,26 +2072,26 @@ var theWebUI =
    		$("#prop-tracker_numwant").val( props.tracker_numwant );
    		if(props.pex ==- 1) 
 		{
-   		        $("#prop-pex").attr("checked",false).attr("disabled",true);
+   		        $("#prop-pex").prop("checked",false).prop("disabled",true);
 			$("#lbl_prop-pex").addClass("disabled");
 		}
    		else 
    		{
-   			$("#prop-pex").attr("checked",(props.pex==1)).attr("disabled",false).removeClass("disabled");
+   			$("#prop-pex").prop("checked",(props.pex==1)).prop("disabled",false).removeClass("disabled");
 			$("#lbl_prop-pex").removeClass("disabled");
 		}
 		o = $$("prop-superseed");
 		if(this.torrents[this.pID].done==1000)
 		{
-		        $("#prop-superseed").attr("disabled",false);
+		        $("#prop-superseed").prop("disabled",false);
       			$("#lbl_prop-superseed").removeClass("disabled");
 		}
 		else
 		{
-		        $("#prop-superseed").attr("disabled",true);
+		        $("#prop-superseed").prop("disabled",true);
       			$("#lbl_prop-superseed").addClass("disabled");
      		}
-     		$("#prop-superseed").attr("checked",(props.superseed==1));
+     		$("#prop-superseed").prop("checked",(props.superseed==1));
    		theDialogManager.show("dlgProps");
    	},
 
@@ -2173,7 +2182,7 @@ var theWebUI =
 					url = prefix+"<a href='"+url+"' target=_blank>"+url+"</a>"+postfix;
 				}
 			}
-			$("#cmt").html(url);
+			$("#cmt").html( strip_tags(url,'<a><b><strong>') );
 			$("#dsk").text((d.free_diskspace=='0') ? '' : theConverter.bytes(d.free_diskspace,2));
 	   		this.updatePeers();
 		}

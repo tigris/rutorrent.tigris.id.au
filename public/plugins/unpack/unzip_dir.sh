@@ -3,8 +3,8 @@
 # $1 - unzip
 # $2 - input directory with tail slash
 # $3 - output directory with tail slash
-# $4 - log file name
-# $5 - status file name
+# $5 - archive files to delete
+# $6 - unpack temp dir
 
 ret=0
 
@@ -13,7 +13,7 @@ process_directory()
         for fn in "$2"*.zip ; do
         	if [ -f "${fn}" ] && [ -r "${fn}" ] ; then
 	        	mkdir -p "$3"
-			"$1" -o "${fn}" -d "$3" > /dev/null 2>> "$4"
+			"$1" -o "${fn}" -d "$3"
 			last=$?
 			[ $last -gt 1 ] && ret=$last
 		fi
@@ -21,7 +21,7 @@ process_directory()
 	for fn in "$2"* ; do
 		if [ -d "${fn}" ] && [ ! -L "${fn}" ] ; then
 			name=$(basename "${fn}")
-			process_directory "$1" "${fn}/" "$3${name}/" "$4" 
+			process_directory "$1" "${fn}/" "$3${name}/"
 			last=$?
 			[ $last -gt 1 ] && ret=$last
 		fi
@@ -29,15 +29,32 @@ process_directory()
 	return $ret
 }
 
-process_directory "$1" "$2" "$3" "$4"
-ret=$?
-
-chmod a+r "$4"
-
-if [ "x$5" != "xdummy" ] ; then
-	echo $ret > "$5"
-	chmod a+r "$5"
-	exit 0
+if [ "$6" != '' ] ; then
+	mkdir -p "$6"
+	process_directory "$1" "$2" "$6"
+	ret=$?
 else
-	exit $ret
+	process_directory "$1" "$2" "$3"
+	ret=$?
 fi
+
+ret=$?
+[ $ret -le 1 ] && echo 'All OK'
+if [ $ret -le 1 ] && [ "$5" != '' ] ; then
+	OIFS=$IFS
+	IFS=';'
+	for file in "$5"
+	do
+		rm $file
+	done
+	IFS=$OIFS
+fi
+
+if [ "$6" != '' ] ; then
+	mkdir -p "$3"
+	mv "$6"* "$3"
+	rm -r "$6"
+fi
+
+
+exit $ret

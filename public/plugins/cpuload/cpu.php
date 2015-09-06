@@ -1,7 +1,7 @@
 <?php
 
 require_once( dirname(__FILE__)."/../../php/cache.php" );
-eval(getPluginConf('cpu'));
+eval(getPluginConf('cpuload'));
 
 class rCPU
 {
@@ -10,11 +10,11 @@ class rCPU
 
 	static public function load()
 	{
-		global $processorsCount;		
+		global $processorsCount;
+		$cpu = new rCPU();
                 if(is_null($processorsCount))
 		{
 			$cache = new rCache();
-			$cpu = new rCPU();
 			if(!$cache->get($cpu))
 				$cpu->obtain();
 		}

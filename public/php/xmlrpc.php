@@ -8,7 +8,7 @@ class rXMLRPCParam
 	public $type;
 	public $value;
 
-	public function rXMLRPCParam( $aType, $aValue )
+	public function __construct( $aType, $aValue )
 	{
 		$this->type = $aType;
 		if(($this->type=="i8") || ($this->type=="i4"))
@@ -23,10 +23,11 @@ class rXMLRPCCommand
 	public $command;
 	public $params;
 
-	public function rXMLRPCCommand( $cmd, $args = null )
+	public function __construct( $cmd, $args = null )
 	{
 		$this->command = getCmd($cmd);
 		$this->params = array();
+		rTorrentSettings::get()->patchDeprecatedCommand($this,$cmd);
 		if($args!==null) 
 		{
 		        if(is_array($args))
@@ -58,9 +59,9 @@ class rXMLRPCCommand
 
 	static protected function getPrmType( $prm )
 	{
-		if(is_int($prm))
+		if(is_int($prm) && ($prm>=XMLRPC_MIN_I4) && ($prm<=XMLRPC_MAX_I4))
 			return('i4');
-		if(is_double($prm))
+		if(is_float($prm))
 			return('i8');
 		return('string');
 	}
@@ -77,7 +78,7 @@ class rXMLRPCRequest
 	public $parseByTypes = false;
 	public $important = true;
 
-	public function rXMLRPCRequest( $cmds = null )
+	public function __construct( $cmds = null )
 	{
 		if($cmds)
 		{
@@ -128,6 +129,7 @@ class rXMLRPCRequest
 
 	protected function makeCall()
 	{
+	        rTorrentSettings::get()->patchDeprecatedRequest($this->commands);
 		$this->fault = false;
 		$this->content = "";
 		$cnt = count($this->commands);

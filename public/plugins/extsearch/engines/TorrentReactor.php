@@ -26,7 +26,7 @@ class TorrentReactorEngine extends commonEngine
 			if($cli==false)
 				break;
 			$res = preg_match_all('`<td class="title"><a href="(?P<desc>[^"]*)">(?P<name>.*)</a>.*'.
-				'class="btn-sprited btn-down" href="(?P<link>[^"]*)".*'.
+				'<a title="Download torrent".*url=(?P<link>[^"]*)".*'.
 				'<td class="size">(?P<size>.*)</td>'.
 				'<td class="seeders">(?P<seeds>.*)</td>'.
 				'<td class="leechers">(?P<leech>.*)</td>'.
@@ -36,7 +36,8 @@ class TorrentReactorEngine extends commonEngine
 			{
 				for($i=0; $i<$res; $i++)
 				{
-					$link = self::removeTags($matches["link"][$i]);
+					$link = urldecode($matches["link"][$i]);
+					
 					if(!array_key_exists($link,$ret))
 					{
 						$item = $this->getNewEntry();

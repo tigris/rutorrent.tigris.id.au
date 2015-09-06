@@ -155,6 +155,8 @@ var theUILang =
  EnableTracker			: "Bật",
  ClientVersion			: "Chương trình",
  Flags				: "Cờ",
+ PeerDL				: "Peer DL",
+ PeerDownloaded			: "Peer Downloaded",
  ReqTimeout			: "Thời gian chờ",
  GetTrackerMessage		: "Nhận thông điệp từ Máy theo dõi",
  Help				: "Giúp đỡ",
@@ -266,5 +268,8 @@ var theUILang =
  Deselect_all			: "Bỏ chọn tất cả",
  showSpeedInTitle		: "Hiển thị tốc độ ở tiêu đề",
  badTempPath 			: "Webserver user doesn't have read/write/execute access to the tmp directory. ruTorrent will not work.",
- badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work."
+ badTempPath2			: "rTorrent user must have read/execute access to the tmp directory. ruTorrent will not work.",
+ doRandomizeHash		: "Randomize info hashes for cross-seeding",
+ Recreate_files			: "Queue files recreation",
+ Address			: "Address"
 };

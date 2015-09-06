@@ -231,6 +231,8 @@ rTorrentStub.prototype.setlabel = function()
 plugin.origtrkall = rTorrentStub.prototype.getalltrackers;
 rTorrentStub.prototype.getalltrackers = function()
 {
+	if( this.hashes.length > 50 )
+		this.hashes = [];
 	this.getCommon("trkall");
 	if(plugin.enabled)
 		for(var i=theRequestManager.trk.count; i<theRequestManager.trk.commands.length; i++)
@@ -459,11 +461,15 @@ rTorrentStub.prototype.getpeersResponse = function(values)
 				peer.flags+='S';
 				peer.snubbed = 1;
 			}
-			peer.done = iv(data[6]);	//	get_completed_percent
-			peer.downloaded = iv(data[7]);	//	p.get_down_total
-			peer.uploaded = iv(data[8]);	//	p.get_up_total
-			peer.dl = iv(data[9]);		//	p.get_down_rate
-			peer.ul = iv(data[10]);		//	p.get_up_rate
+			peer.done = iv(data[6]);		//	get_completed_percent
+			peer.downloaded = iv(data[7]);		//	p.get_down_total
+			peer.uploaded = iv(data[8]);		//	p.get_up_total
+			peer.dl = iv(data[9]);			//	p.get_down_rate
+			peer.ul = iv(data[10]);			//	p.get_up_rate
+			peer.peerdl = iv(data[12]);		//	p.get_peer_rate
+			peer.peerdownloaded = iv(data[13]);	//	p.get_peer_total			
+			peer.port = iv(data[14]);		//	p.get_port
+
 			var id = data[0];
 
 			$.each( theRequestManager.prs.handlers, function(i,handler)
@@ -519,12 +525,10 @@ rTorrentStub.prototype.getalltrackersResponse = function(values)
         if(this.dataType == "json")
         {
 		var ret = {};
-		for( var i=0; i<this.hashes.length; i++)
+		for( var hash in values )
 		{
-			var hash = this.hashes[i];
 			ret[hash] = [];
-			var torrent = values[i];
-
+			var torrent = values[hash];
 			for(var j=0; j<torrent.length; j++)
 			{
 				var data = torrent[j];
@@ -536,16 +540,16 @@ rTorrentStub.prototype.getalltrackersResponse = function(values)
 				trk.seeds = data[4];
 				trk.peers = data[5];
 				trk.downloaded = data[6];
-
+			
 				$.each( theRequestManager.trk.handlers, function(i,handler)
 				{
-	        		        if(handler)
+        			        if(handler)
 						handler.response( hash, trk, (handler.ndx===null) ? null : data[handler.ndx] );
 				});
-
+	
 				ret[hash].push(trk);
 			}
-		}
+		}		
 		return(ret);
 	}
 	return(plugin.origgetalltrackersResponse.call(this,values));

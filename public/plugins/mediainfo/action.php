@@ -1,7 +1,19 @@
 <?php
 
-require_once( '../_task/task.php' );
+require_once( dirname(__FILE__).'/../_task/task.php' );
 eval( getPluginConf( 'mediainfo' ) );
+
+class mediainfoSettings
+{
+	public $hash = "mediainfo.dat";
+	public $data = array();
+	static public function load()
+	{
+		$cache = new rCache();
+		$rt = new mediainfoSettings();
+		return( $cache->get($rt) ? $rt : null );
+	}
+}
 
 $ret = array( "status"=>255, "errors"=>array("Can't retrieve information") );
 
@@ -29,8 +41,24 @@ if(isset($_REQUEST['hash']) &&
 				if($filename!=='')
 				{
 					$commands = array();
-					$commands[] = getExternal("mediainfo")." ".escapeshellarg($filename);
-					$ret = rTask::start($commands,0);
+					$flags = '';
+					$st = mediainfoSettings::load();
+					$task = new rTask( array
+					( 
+						'arg'=>call_user_func('end',explode('/',$filename)),					
+						'requester'=>'mediainfo',
+						'name'=>'mediainfo', 
+						'hash'=>$_REQUEST['hash'], 
+						'no'=>$_REQUEST['no'] 
+					) );					
+					if($st && !empty($st->data["mediainfousetemplate"]))
+					{
+						$randName = $task->makeDirectory()."/opts";
+						file_put_contents( $randName, $st->data["mediainfotemplate"] );
+						$flags = "--Inform=file://".escapeshellarg($randName);
+					}
+					$commands[] = getExternal("mediainfo")." ".$flags." ".escapeshellarg($filename);
+					$ret = $task->start($commands, rTask::FLG_WAIT);
 				}
 			}
 			break;

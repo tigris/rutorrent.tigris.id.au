@@ -169,10 +169,10 @@ function findRemoteEXE( $exe, $err, &$remoteRequests )
 	{
 		$path=realpath(dirname('.'));
 		global $pathToExternals;
-		$add = '';
+		$cmd = array( "sh", addslash($path)."test.sh", $exe, $st );
 		if(isset($pathToExternals[$exe]) && !empty($pathToExternals[$exe]))
-			$add = " ".escapeshellarg($pathToExternals[$exe]);
-		$req = new rXMLRPCRequest(new rXMLRPCCommand("execute", array( "sh", "-c", escapeshellarg(addslash($path)."test.sh")." ".$exe." ".escapeshellarg($st).$add)));
+			$cmd[] = $pathToExternals[$exe];
+		$req = new rXMLRPCRequest(new rXMLRPCCommand("execute", $cmd));
 		$req->run();
 		$remoteRequests[$exe] = array( "path"=>$st, "err"=>array() );
 	}
@@ -223,7 +223,9 @@ if($handle = opendir('../plugins'))
 {
 	ignore_user_abort(true);
 	set_time_limit(0);
-	makeDirectory(getTempDirectory());
+	$tmp = getTempDirectory();
+	if($tmp!='/tmp/')
+		makeDirectory($tmp);
 
 	if(!@file_exists($tempDirectory.'/.') || !is_readable($tempDirectory) || !is_writable($tempDirectory))
 		$jResult.="noty(theUILang.badTempPath+' (".$tempDirectory.")','error');";	
@@ -248,8 +250,6 @@ if($handle = opendir('../plugins'))
 				$jResult.="noty(theUILang.idNotFound,'error');";
 			$jResult.="theWebUI.systemInfo.rTorrent = { started: true, iVersion : ".$theSettings->iVersion.", version : '".
 				$theSettings->version."', libVersion : '".$theSettings->libVersion."', apiVersion : ".$theSettings->apiVersion." };\n";
-			if($theSettings->mostOfMethodsRenamed)
-				$jResult.="theWebUI.systemInfo.rTorrent.newMethodsSet = true;\n";
 	        	if($do_diagnostic)
 	        	{
 	        	        $up = getUploadsPath();

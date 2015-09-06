@@ -1,6 +1,7 @@
 plugin.loadMainCSS();
 
-theWebUI.trackersLabels = new Object();
+theWebUI.trackersLabels = {};
+plugin.injectedStyles = {};
 
 plugin.config = theWebUI.config;
 theWebUI.config = function(data)
@@ -13,8 +14,11 @@ theWebUI.config = function(data)
 		{
 			var domain = theWebUI.getTrackerName( tracker.name );
 			tracker.icon = "trk"+domain.replace(/\./g, "_");
-			if(!getCSSRule("."+tracker.icon))
-				injectCSSText( "."+tracker.icon+" {background-image: url(./plugins/tracklabels/action.php?tracker="+domain+"); background-repeat: no-repeat}\n" );
+			if(!plugin.injectedStyles[tracker.icon])
+			{
+				plugin.injectedStyles[tracker.icon] = true;
+				injectCSSText( "."+tracker.icon+" {background-image: url(./plugins/tracklabels/action.php?tracker="+domain+"); background-repeat: no-repeat; background-size: 16px 16px; }\n" );
+			}
 		});
 	}
 }
@@ -186,7 +190,11 @@ theWebUI.rebuildTrackersLabels = function()
 			}
 		}
 		if(plugin.canChangeColumns())
-			table.Sort();
+		{
+			table.refreshRows();
+			if(table.sIndex !=- 1)
+				table.Sort();		
+		}
 		var ul = $("#torrl");
 
 		var keys = new Array();
@@ -244,7 +252,7 @@ plugin.onRemove = function()
 		theWebUI.getTable("trt").removeColumnById("tracker");
 		if(thePlugins.isInstalled("rss"))
 			theWebUI.getTable("rss").removeColumnById("tracker");
-		theRequestManager.removeRequest(plugin.reqId);
+		theRequestManager.removeRequest('trk',plugin.reqId);
 	}
 }
 
