@@ -1,21 +1,21 @@
 ﻿/*
  * PLUGIN XMPP
  *
- * English language file.
+ * German language file.
  *
- * Author: 
+ * Author: Dario Rugani (kontakt@rugani.de)
  */
 
- var s_PluginFail			= "Plugin will not work.";
+ var s_PluginFail			= "Plugin wird nicht funktionieren.";
 
- theUILang.xmpp				= "XMPP";
+ theUILang.xmpp 			= "XMPP";
  theUILang.xmppJabberJID 		= "JID:";
- theUILang.xmppJabberFor 		= "Recipient:";
- theUILang.xmppMessage			= "Message:";
- theUILang.xmppJabberPasswd		= "Password:";
- theUILang.xmppAdvancedSettings		= "Advanced:";
+ theUILang.xmppJabberFor 		= "Empfänger:";
+ theUILang.xmppMessage			= "Nachricht:";
+ theUILang.xmppJabberPasswd		= "Passwort:";
+ theUILang.xmppAdvancedSettings		= "Erweitert:";
  theUILang.xmppJabberHost		= "Host:";
  theUILang.xmppJabberPort		= "Port";
- theUILang.xmppUseEncryption		= "Use encryption";
+ theUILang.xmppUseEncryption		= "Verschlüsselung nutzen";
 
 thePlugins.get("xmpp").langLoaded();

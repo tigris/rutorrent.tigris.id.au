@@ -5,7 +5,7 @@
 
 var theWebUI = 
 {
-        version: "3.7",
+        version: "3.8",
 	tables:
 	{
 		trt: 
@@ -28,7 +28,8 @@ var theWebUI =
 				{ text: theUILang.Seeds, 		width: "60px", 	id: "seeds",		type: TYPE_NUMBER },
 				{ text: theUILang.Priority, 		width: "80px", 	id: "priority",		type: TYPE_NUMBER },
 				{ text: theUILang.Created_on,		width: "100px", id: "created",		type: TYPE_NUMBER },
-				{ text: theUILang.Remaining, 		width: "90px", 	id: "remaining",	type: TYPE_NUMBER }
+				{ text: theUILang.Remaining, 		width: "90px", 	id: "remaining",	type: TYPE_NUMBER },
+				{ text: theUILang.Save_path,		width: "200px", id: "save_path",	type: TYPE_STRING }
 			],
 			container:	"List",
 			format:		theFormatter.torrents,
@@ -153,7 +154,9 @@ var theWebUI =
 		"webui.timeformat":		0,
 		"webui.dateformat":		0,
 		"webui.speedintitle":		0,
-		"webui.log_autoswitch":		1
+		"webui.log_autoswitch":		1,
+		"webui.show_labelsize":		1,
+		"webui.register_magnet":	0
 	},
 	showFlags: 0,
 	total:
@@ -214,15 +217,7 @@ var theWebUI =
 		{
 			this.catchErrors(false);
 			this.getPlugins();
-   			this.getUISettings();
-			if(!this.configured)
-				this.config({});
-		        this.catchErrors(true);
-			this.assignEvents();
-			this.resize();
-			this.update();
 		}
-		return(this.configured);
 	},
 
 	assignEvents: function()
@@ -313,7 +308,11 @@ var theWebUI =
 
 	getPlugins: function()
 	{
-		this.request("?action=getplugins", null, false);
+		this.request("?action=getplugins", [this.getUISettings, this]);
+	},
+
+	getUISettings: function()
+	{
 		if(thePlugins.isInstalled("_getdir"))
 		{
 			$('#dir_edit').after($("<input type=button>").addClass("Button").attr("id","dir_btn").focus( function() { this.blur(); } ));
@@ -326,11 +325,16 @@ var theWebUI =
 		correctContent();
 		this.updateServerTime();
 		window.setInterval( this.updateServerTime, 1000 );
+		this.request("?action=getuisettings", [this.initFinish, this]);
 	},
 
-	getUISettings: function()
+	initFinish: function(data)
 	{
-		this.request("?action=getuisettings", [this.config, this], false);
+		this.config(data);
+	        this.catchErrors(true);
+		this.assignEvents();
+		this.resize();
+		this.update();		
 	},
 
 	config: function(data)
@@ -447,7 +451,28 @@ var theWebUI =
 		{
 			theWebUI.showPanel(this,!theWebUI.settings["webui.closed_panels"][this.id]);
 		});
+
+		this.registerMagnetHandler();
 		this.configured = true;
+	},
+
+	registerMagnetHandler: function()
+	{
+		if(typeof navigator.registerProtocolHandler == 'function')
+		{
+			var url = window.location.href.substr(0,window.location.href.lastIndexOf("/")) + "/php/addtorrent.php?url=%s";
+			if( ((typeof navigator.isProtocolHandlerRegistered != 'function') ||
+				!navigator.isProtocolHandlerRegistered('magnet', url)) &&
+				theWebUI.settings["webui.register_magnet"])
+			{
+				navigator.registerProtocolHandler("magnet", url, "RuTorrent");
+			}
+		}
+		else
+		{
+			$($$('webui.register_magnet')).attr('disabled',true);
+			$($$('lbl_webui.register_magnet')).addClass('disabled');
+		}
 	},
 
 	setStatusUpdate: function()
@@ -672,6 +697,11 @@ var theWebUI =
 							case "webui.lang":
 							{
 								SetActiveLanguage(nv);
+								reply = theWebUI.reload;
+								break;
+							}
+							case "webui.register_magnet":
+							{
 								reply = theWebUI.reload;
 								break;
 							}
@@ -901,10 +931,10 @@ var theWebUI =
 	trkIsPrivate: function(url)
 	{
 		return(
-			(/(http|https|udp):\/\/(?:[0-9]{1,3}\.){3}[0-9]{1,3}((:(\d){2,5})|).*\/an.*\?.+=.+/i).test(url) ||
+			(/(http|https|udp):\/\/(?:[0-9]{1,3}\.){3}[0-9]{1,3}((:(\d){2,5})|).*(\/a.*(\?.+=.+|\/.+)|\?.+=.+)/i).test(url) ||
 			(/(http|https|udp):\/\/(?:[0-9]{1,3}\.){3}[0-9]{1,3}((:(\d){2,5})|)\/.*[0-9a-z]{8,32}\/an/i).test(url) ||
-			(/(http|https|udp):\/\/[a-z0-9-\.]+\.[a-z]{2,4}((:(\d){2,5})|).*\/an.*\?.+=.+/i).test(url) ||
-			(/(http|https|udp):\/\/[a-z0-9-\.]+\.[a-z]{2,4}((:(\d){2,5})|)\/.*[0-9a-z]{8,32}\/an/i).test(url) ? 1 : 0 );
+			(/(http|https|udp):\/\/[a-z0-9-\.]+\.[a-z]{2,253}((:(\d){2,5})|).*(\/a.*(\?.+=.+|\/.+)|\?.+=.+)/i).test(url) ||
+			(/(http|https|udp):\/\/[a-z0-9-\.]+\.[a-z]{2,253}((:(\d){2,5})|)\/.*[0-9a-z]{8,32}\/an/i).test(url) ? 1 : 0 );
 	},
 
    	trkSelect: function(e, id) 
@@ -1401,7 +1431,12 @@ var theWebUI =
 		}
    	},
 
-	isTorrentCommandEnabled: function(act,hash) 
+	/**
+	 * @param {string} act
+	 * @param {string} hash
+	 * @returns {boolean}
+	 */
+	isTorrentCommandEnabled: function(act,hash)
 	{
 		var ret = true;
    		var status = this.torrents[hash].state;
@@ -1531,14 +1566,38 @@ var theWebUI =
 	{
 	},
 
-	addTorrents: function(data) 
+	/**
+	 * @typedef {Object} WebUITorrent
+	 * @property {string} name
+	 * @property {string} label
+	 * @property {number} dl
+	 * @property {number} ul
+	 * @property {StatusIcon} status
+	 * @property {StatusMask} state
+	 * @property {number} done - number between 0..1000
+	 * @property {number} size
+	 * @property {boolean} _updated
+	 */
+
+	/**
+	 * @param {Object} data
+	 * @param {Array.<WebUITorrent>} data.torrents
+	 * @param {Object.<string, number>} data.labels
+	 * @param {Object.<string, number>} data.labels_size
+	 */
+	addTorrents: function(data)
 	{
 		theWebUI.systemInfo.rTorrent.started = true;
    		var table = this.getTable("trt");
    		var tul = 0;
 		var tdl = 0;
 		var tArray = [];
-		$.each(data.torrents,function(hash,torrent)
+		$.each(data.torrents,
+		/**
+		 * @param {string} hash - torrent hash
+		 * @param {WebUITorrent} torrent
+		 */
+		function(hash,torrent)
 		{
 			tdl += iv(torrent.dl);
 			tul += iv(torrent.ul);
@@ -1617,7 +1676,7 @@ var theWebUI =
 			}
 		});
 		this.getAllTrackers(tArray);
-		this.loadLabels(data.labels);
+		this.loadLabels(data.labels, data.labels_size);
 		this.updateLabels(wasRemoved);
 		this.loadTorrents();
 		this.getTotal();
@@ -1659,7 +1718,17 @@ var theWebUI =
 	        $.extend(this.total,d);
 	},
 
-	getStatusIcon: function(torrent) 
+	/**
+	 * @typedef {array.<string>} StatusIcon
+	 * first element: icon name
+	 * second element: localized status
+	 */
+
+	/**
+	 * @param {WebUITorrent} torrent
+	 * @returns {StatusIcon}
+	 */
+	getStatusIcon: function(torrent)
 	{
 		var state = torrent.state;
 		var completed = torrent.done;
@@ -1766,6 +1835,9 @@ var theWebUI =
 		}
 	},
 
+	/**
+	 * @param {WebUITorrent} torrent
+	 */
 	updateTegs: function(torrent)
 	{
 	        var str = torrent.name.toLowerCase();
@@ -1831,26 +1903,32 @@ var theWebUI =
 		return(false);
 	},
 
-	loadLabels: function(d) 
+	/**
+	 *
+	 * @param {Object.<string, number>} c - <label_name, count>
+	 * @param {Object.<string, number>} s - labels size
+	 */
+	loadLabels: function(c, s)
 	{
 		var p = $("#lbll");
 		var temp = new Array();
 		var keys = new Array();
-		for(var lbl in d)
+		for(var lbl in c)
 			keys.push(lbl);
 		keys.sort();
 
 		for(var i=0; i<keys.length; i++) 
 		{
 			var lbl = keys[i];
-			this.labels["-_-_-" + lbl + "-_-_-"] = d[lbl];
+			var lblSize = this.settings["webui.show_labelsize"] ? " ; " + theConverter.bytes(s[lbl], 2) : "";
+			this.labels["-_-_-" + lbl + "-_-_-"] = c[lbl] + lblSize;
 			this.cLabels[lbl] = 1;
 			temp["-_-_-" + lbl + "-_-_-"] = true;
 			if(!$$("-_-_-" + lbl + "-_-_-")) 
 			{
 				p.append( $("<LI>").
 					attr("id","-_-_-" + lbl + "-_-_-").
-					html(escapeHTML(lbl) + "&nbsp;(<span id=\"-_-_-" + lbl + "-_-_-c\">" + d[lbl] + "</span>)").
+					html(escapeHTML(lbl) + "&nbsp;(<span id=\"-_-_-" + lbl + "-_-_-c\">" + c[lbl] + lblSize + "</span>)").
 					mouseclick(theWebUI.labelContextMenu).addClass("cat") );
 			}
 		}
@@ -1874,6 +1952,11 @@ var theWebUI =
 		}
    	},
 
+	/**
+	 *
+	 * @param {string} id - torrent hash
+	 * @param {WebUITorrent} torrent
+	 */
 	getLabels : function(id, torrent)
 	{
 		if(!$type(this.labels[id]))
@@ -1936,6 +2019,10 @@ var theWebUI =
 		return(lbl);
 	},
 
+	/**
+	 *
+	 * @param {string} lbl - label
+	 */
 	setLabel: function(lbl) 
 	{
 		var req = '';
@@ -2160,7 +2247,7 @@ var theWebUI =
 			$("#pe").text(d.peers_actual + " " + theUILang.of + " " + d.peers_all + " " + theUILang.connected);
 			$("#et").text(theConverter.time(Math.floor((new Date().getTime()-theWebUI.deltaTime)/1000-iv(d.state_changed)),true));
 			$("#wa").text(theConverter.bytes(d.skip_total,2));
-	        	$("#bf").text(d.base_path);
+	        	$("#bf").text(d.save_path);
 	        	$("#co").text(theConverter.date(iv(d.created)+theWebUI.deltaTime/1000));
 			$("#tu").text(	$type(this.trackers[this.dID]) && $type(this.trackers[this.dID][d.tracker_focus]) ? this.trackers[this.dID][d.tracker_focus].name : '');
 	        	$("#hs").text(this.dID.substring(0,40));
@@ -2214,10 +2301,10 @@ var theWebUI =
 		if(document.title!=newTitle)
 			document.title = newTitle;
 	        $("#stup_speed").text(ul);
-	        $("#stup_limit").text((self.total.rateUL>0 && self.total.rateUL<100*1024*1024) ? theConverter.speed(self.total.rateUL) : theUILang.no);
+	        $("#stup_limit").text((self.total.rateUL>0 && self.total.rateUL<1000*1024*1024) ? theConverter.speed(self.total.rateUL) : theUILang.no);
 	        $("#stup_total").text(theConverter.bytes(self.total.UL));
 	        $("#stdown_speed").text(dl);
-	        $("#stdown_limit").text((self.total.rateDL>0 && self.total.rateDL<100*1024*1024) ? theConverter.speed(self.total.rateDL) : theUILang.no);
+	        $("#stdown_limit").text((self.total.rateDL>0 && self.total.rateDL<1000*1024*1024) ? theConverter.speed(self.total.rateDL) : theUILang.no);
 	        $("#stdown_total").text(theConverter.bytes(self.total.DL));
 	},
 

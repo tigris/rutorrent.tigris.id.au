@@ -300,7 +300,12 @@ function askYesNo( title, content, funcYesName )
 	$("#yesnoDlg-header").html(title);
 	$("#yesnoDlg-content").html(content);
 	$("#yesnoOK").off('click');
-	$("#yesnoOK").click( function() { eval(funcYesName); theDialogManager.hide("yesnoDlg"); return(false); });
+	$("#yesnoOK").click( function() 
+	{ 
+		typeof(funcYesName)==="function" ? funcYesName() : eval(funcYesName); 
+		theDialogManager.hide("yesnoDlg"); 
+		return(false); 
+	});
 	theDialogManager.show("yesnoDlg");
 }
 
@@ -1130,7 +1135,7 @@ var theBTClientVersion =
         	"HL" : "Halite", "LT" : "libtorrent (Rasterbar)", "lt" : "libTorrent (Rakshasa)",
 	        "MP" : "MooPolice", "TT" : "TuoTu", "qB" : "qBittorrent",
        		'MG' : "MediaGet",	// ? -MG1Cr0-
-       		"IL" : "iLivid" 
+       		"IL" : "iLivid", "TL" : "Tribler"
 	},
 	azLikeClients2x2:
 	{
@@ -1491,7 +1496,6 @@ RGBackground.prototype.getColor = function()
         if(g.length == 1) g = '0' + g;
         if(b.length == 1) b = '0' + b;
         return('#' + r + g + b);
-	return(this);
 }
 
 RGBackground.prototype.setGradient = function(beginColor,endColor,percent)

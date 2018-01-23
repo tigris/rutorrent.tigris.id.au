@@ -1,6 +1,7 @@
 <?php
 require_once( '../../php/util.php' );
 require_once( '../../php/settings.php' );
+eval(getPluginConf("_getdir"));
 
 $dh = false;
 $theSettings = rTorrentSettings::get();
@@ -33,7 +34,8 @@ if(isset($_REQUEST['dir']) && strlen($_REQUEST['dir']))
 
 	if( $dh &&
 		((strpos($dir,$topDirectory)!==0) ||
-		(($theSettings->uid>=0) &&
+		(($theSettings->uid>=0) && 
+		$checkUserPermissions &&
 		!isUserHavePermission($theSettings->uid,$theSettings->gid,$dir,0x0007))))
 	{
 		closedir($dh);
@@ -58,10 +60,10 @@ if($dh)
 			continue;
 		if(is_dir($path) &&
 			(strpos(addslash($path),$topDirectory)===0) &&
-			( $theSettings->uid<0 || isUserHavePermission($theSettings->uid,$theSettings->gid,$path,0x0007))
+			( $theSettings->uid<0 || (!$checkUserPermissions || isUserHavePermission($theSettings->uid,$theSettings->gid,$path,0x0007)) )
 			)
 		{
-			$files[$file." "] = addslash($path);
+			$files[$file.""] = addslash($path);
 		}
         }
         closedir($dh);
@@ -69,7 +71,7 @@ if($dh)
 }
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <style>
 body { background-color: window; color: windowtext; border: 0px; margin: 0px; padding: 0px; -moz-user-select:none; }
