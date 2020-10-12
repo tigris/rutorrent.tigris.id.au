@@ -189,7 +189,7 @@ plugin.check = function(data)
 		this.foreTimeout = setTimeout( function() 
 		{
 			theWebUI.requestWithoutTimeout("?action=taskcheck&hash="+self.foreground.no,[self.check,self]);
-		},1000);
+		}, theWebUI.settings["webui.update_interval"]);
 	}
 	else
 	{
@@ -482,7 +482,7 @@ theWebUI.resizeBottom = function( w, h )
 			w-=8;
 		if(h!==null)
        		{
-			h-=($("#tabbar").height());
+			h-=($("#tabbar").outerHeight());
 			h-=2;
         	}
 		var table = this.getTable("tasks");
@@ -547,17 +547,23 @@ plugin.onGetTasks = function(d)
 				if(plugin.background[id] && (plugin.background[id].status<0))
 					plugin.callNotification("Finished",item,true);
 		}
+		var deleted = false;
                	for( var id in plugin.background )
 		{
 			if(!$type(d[id]))
 			{
 				table.removeRow( "tasks_"+id );
 				updated = true;
+				deleted = true;
 			}
 		}
 		plugin.background = d;
 		if(updated)
 		{
+			if(deleted)
+			{
+				table.correctSelection();	
+			}
 			if(!plugin.isInBackground())
 				$('#tskBackground').prop( 'disabled', !plugin.canDetachTask() );
 			$('li#tab_tasks').show();

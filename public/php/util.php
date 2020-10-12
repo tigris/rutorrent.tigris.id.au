@@ -50,17 +50,20 @@ function stripSlashesFromArray(&$arr)
 
 function fix_magic_quotes_gpc() 
 {
-	if(function_exists('ini_set'))
+	if(version_compare(phpversion(), '5.4', '<'))
 	{
-		ini_set('magic_quotes_runtime', 0);
-		ini_set('magic_quotes_sybase', 0);
-	}
-	if(get_magic_quotes_gpc())
-	{
-		stripSlashesFromArray($_POST);
-		stripSlashesFromArray($_GET);
-		stripSlashesFromArray($_COOKIE);
-		stripSlashesFromArray($_REQUEST);
+		if(function_exists('ini_set'))
+		{
+			ini_set('magic_quotes_runtime', 0);
+			ini_set('magic_quotes_sybase', 0);
+		}
+		if(get_magic_quotes_gpc())
+		{
+			stripSlashesFromArray($_POST);
+			stripSlashesFromArray($_GET);
+			stripSlashesFromArray($_COOKIE);
+			stripSlashesFromArray($_REQUEST);
+		}
 	}
 }
 
@@ -240,6 +243,11 @@ function safe_json_encode($value)
 	return(!function_exists('json_last_error') || json_last_error()==JSON_ERROR_NONE ? $encoded : json_encode(utf8ize($value)));
 }
 
+function sortArrayTime( $a, $b )
+{
+	return( ($a["time"] > $b["time"]) ? 1 : (($a["time"] < $b["time"]) ? -1 : 0) );
+}
+
 function toLog( $str )
 {
 	global $log_file;
@@ -381,7 +389,8 @@ function getPluginConf($plugin)
 
 function getLogin()
 {
-	return( (isset($_SERVER['REMOTE_USER']) && !empty($_SERVER['REMOTE_USER'])) ? strtolower($_SERVER['REMOTE_USER']) : '' );
+	return( (isset($_SERVER['REMOTE_USER']) && !empty($_SERVER['REMOTE_USER'])) ? 
+		preg_replace( "/[^a-z0-9\-_]/", "_", strtolower($_SERVER['REMOTE_USER']) ) : '' );
 }
 
 function getUser()
@@ -446,6 +455,21 @@ function getUniqueUploadedFilename($fname)
 	return( $overwriteUploadedTorrents ? $fname : getUniqueFilename($fname));
 }
 
+function getTempFilename($purpose = '', $extension = null)
+{
+	do
+	{
+		$fname = uniqid(getTempDirectory().implode( '-', array_filter(array
+		(
+			"rutorrent",
+			$purpose,
+			getLogin(),
+			getmypid()
+		))),true).( is_null($extension) ? '' : ".$extension" );
+	} while(file_exists($fname));	// this is no guarantee, of course...
+	return($fname);
+}
+
 function getExternal($exe)
 {
 	global $pathToExternals;
@@ -505,7 +529,7 @@ function cachedEcho( $content, $type = null, $cacheable = false, $exit = true )
 			{
 				$gzip = getExternal('gzip');
 				header('Content-Encoding: '.$encoding); 
-				$randName = uniqid(getTempDirectory()."rutorrent-ans-");
+				$randName = getTempFilename('answer');
 				file_put_contents($randName,$content);
 				passthru( $gzip." -".PHP_GZIP_LEVEL." -c < ".$randName );
 				unlink($randName);
@@ -528,9 +552,9 @@ function makeDirectory( $dirs, $perms = null )
 	$oldMask = umask(0);
 	if(is_array($dirs))
 		foreach($dirs as $dir)
-			(file_exists($dir.'/.') && @chmod($dir,$perms)) || @mkdir($dir,$perms,true);
+			(file_exists(addslash($dir).'.') && @chmod($dir,$perms)) || @mkdir($dir,$perms,true);
 	else
-		(file_exists($dirs.'/.') && @chmod($dirs,$perms)) || @mkdir($dirs,$perms,true);
+		(file_exists(addslash($dirs).'.') && @chmod($dirs,$perms)) || @mkdir($dirs,$perms,true);
 	@umask($oldMask);
 } 
 

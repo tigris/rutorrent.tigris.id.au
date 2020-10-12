@@ -26,23 +26,20 @@ theWebUI.config = function(data)
 plugin.filterByLabel = theWebUI.filterByLabel;
 theWebUI.filterByLabel = function(hash)
 {
-	if(plugin.enabled && theWebUI.actLbl && $($$(theWebUI.actLbl)).hasClass('tracker'))
+	plugin.filterByLabel.call(theWebUI,hash);
+	if(plugin.enabled && theWebUI.actLbls["ptrackers_cont"] && $($$(theWebUI.actLbls["ptrackers_cont"])).hasClass('tracker'))
 		theWebUI.filterByTracker(hash);
-	else
-		plugin.filterByLabel.call(theWebUI,hash);
 }
 
 theWebUI.filterByTracker = function(hash)
 {
-        if(theWebUI.isTrackerInActualLabel(hash))
-		this.getTable("trt").unhideRow(hash);
-	else
+	if(!theWebUI.isTrackerInActualLabel(hash))
 		this.getTable("trt").hideRow(hash);
 }
 
 plugin.isActualLabel = function(lbl)
 {
-	return(theWebUI.actLbl && $($$(theWebUI.actLbl)).hasClass('tracker') && ('i'+lbl==theWebUI.actLbl));
+	return(theWebUI.actLbls["ptrackers_cont"] && $($$(theWebUI.actLbls["ptrackers_cont"])).hasClass('tracker') && ('i'+lbl==theWebUI.actLbls["ptrackers_cont"]));
 }
 
 theWebUI.isTrackerInActualLabel = function(hash)
@@ -126,7 +123,7 @@ theWebUI.trackersLabelContextMenu = function(e)
 	return(false);
 }
 
-plugin.updateLabalsImages = function()
+plugin.updateLabelsImages = function()
 {
 	$('#plabel_cont ul li').each( function()
 	{
@@ -144,7 +141,7 @@ theWebUI.updateLabels = function(wasRemoved)
 	{
 		if(wasRemoved)
 			theWebUI.rebuildTrackersLabels();
-		plugin.updateLabalsImages();
+		plugin.updateLabelsImages();
 	}
 }
 
@@ -156,6 +153,7 @@ theWebUI.rebuildTrackersLabels = function()
 	{
 		var table = this.getTable('trt');
 		var trackersLabels = new Object();
+		var trackersSizes = new Object();
 		var counted = new Object();
 		for(var hash in this.trackers)
 		{
@@ -182,6 +180,11 @@ theWebUI.rebuildTrackersLabels = function()
 									trackersLabels[tracker]++;
 								else
 									trackersLabels[tracker] = 1;
+
+								if(!$type(trackersSizes[tracker]))
+									trackersSizes[tracker] = 0;
+								trackersSizes[tracker] += parseInt(this.torrents[hash].size);
+
 								counted[hash].push(tracker);
 							}
 						}
@@ -206,15 +209,16 @@ theWebUI.rebuildTrackersLabels = function()
 		{
 			var lbl = keys[i];
 			var li = null;
+			var lblSize = this.settings["webui.show_labelsize"] ? ' ; '+theConverter.bytes(trackersSizes[lbl], 2) : "";
 			if(lbl in this.trackersLabels)
 			{
 				li = $($$('i'+lbl));
-	                	li.children("span").text(trackersLabels[lbl]);
+	                	li.children("span").text(trackersLabels[lbl]+lblSize);
 			}
 			else
 			{
 			        li = $('<li>').attr("id",'i'+lbl).
-			        	html(escapeHTML(lbl)+'&nbsp;(<span id="-'+lbl+'_c">'+trackersLabels[lbl]+'</span>)').
+			        	html(escapeHTML(lbl)+'&nbsp;(<span id="-'+lbl+'_c">'+trackersLabels[lbl]+lblSize+'</span>)').
 			        	mouseclick(theWebUI.trackersLabelContextMenu).addClass("cat tracker").attr("title",lbl+" ("+trackersLabels[lbl]+")").
 					prepend( $("<img>").attr("src","plugins/tracklabels/action.php?tracker="+lbl).addClass("tfavicon") ).css({ padding: "2px 4px" });
 				ul.append(li);
@@ -232,7 +236,7 @@ theWebUI.rebuildTrackersLabels = function()
 			}
 		this.trackersLabels = trackersLabels;
 		if(needSwitch)
-			theWebUI.switchLabel($$("-_-_-all-_-_-"));
+			theWebUI.resetLabels();
 	}
 }
 
@@ -240,13 +244,21 @@ theWebUI.initTrackersLabels = function()
 {
 	plugin.addPaneToCategory("ptrackers",theUILang.Trackers).
 		append($("<ul></ul>").attr("id","torrl"));
-        plugin.markLoaded();
+
+	var ul = $("#torrl");
+	var li = $('<li>').
+		addClass("-_-_-all-_-_- sel cat").
+		html(theUILang.All+' (<span class="-_-_-all-_-_-c">0</span>)</li>').
+		mouseclick(theWebUI.trackersLabelContextMenu);
+	ul.append(li);
+
+	plugin.markLoaded();
 };
 
 plugin.onRemove = function()
 {
 	plugin.removePaneFromCategory('ptrackers');
-	theWebUI.switchLabel($$("-_-_-all-_-_-"));
+	theWebUI.resetLabels();
 	if(plugin.canChangeColumns())
 	{
 		theWebUI.getTable("trt").removeColumnById("tracker");

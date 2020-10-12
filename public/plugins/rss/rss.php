@@ -78,6 +78,11 @@ class rRSS
 				$name = md5($href).".torrent";
 			$name = getUniqueUploadedFilename($name);
 			$f = @fopen($name,"w");
+			if($f===false)
+			{
+				$name = getUniqueUploadedFilename(md5($href).".torrent");
+				$f = @fopen($name,"w");
+			}
 			if($f!==false)
 			{
 				@fwrite($f,$cli->results,strlen($cli->results));
@@ -640,9 +645,13 @@ class rRSSFilterList
 	{
 		$this->lst[] = $filter;
 	}
+	protected static function sortByName( $a, $b )
+	{
+		return(strcmp($a->name, $b->name));
+	}
 	public function sort()
 	{
-		usort($this->lst, create_function( '$a,$b', 'return(strcmp($a->name, $b->name));'));
+		usort($this->lst, array(__CLASS__,"sortByName"));
 	}
 	public function getContents()
 	{
@@ -695,9 +704,13 @@ class rRSSGroupList
 	{
 		$this->lst[$grp->hash] = $grp;
 	}
+	protected static function sortByName( $a, $b )
+	{
+		return(strcmp($a->name, $b->name));
+	}
 	public function sort()
 	{
-		uasort($this->lst, create_function( '$a,$b', 'return(strcmp($a->name, $b->name));'));
+		uasort($this->lst, array(__CLASS__,"sortByName"));
 	}
 	public function getContents()
 	{
@@ -874,16 +887,13 @@ class rRSSManager
 	}
 	protected function changeFiltersHash($oldHash,$newHash)
 	{
-error_log("From ".$oldHash." to ".$newHash);
 		$flts = new rRSSFilterList();
                 $this->cache->get($flts);
 		$changed = false;
 		foreach($flts->lst as $filter)
 		{
-error_log($filter->rssHash);
 			if($filter->rssHash==$oldHash)
 			{
-error_log("!!!");
 				$filter->rssHash = $newHash;
 				$changed = true;
 			}
@@ -957,6 +967,8 @@ error_log("!!!");
 				if(     !$this->history->wasLoaded($href) &&
 					$filter->checkItem($href, $item) )
 				{
+					self::log("Filter [".$filter->name."] of channel [".$rss->url."] was applied for [$href]");
+
 				        $this->history->applyFilter( $filter->no );
 
 					rTorrentSettings::get()->pushEvent( "RSSAutoLoad", array( "rss"=>&$rss, "href"=>&$href, "item"=>&$item, "filter"=>&$filter ) );
@@ -1261,31 +1273,39 @@ error_log("!!!");
 	}
 	public function getTorrents( $rss, $url, $isStart, $isAddPath, $directory, $label, $throttle, $ratio, $needFlush = true )
 	{
-		$thash = 'Failed';
-		$ret = $rss->getTorrent( $url );
-		if($ret!==false)
+		if(!self::isDryRun())
 		{
-			$addition = array();
-			if(!empty($throttle))
-				$addition[] = getCmd("d.set_throttle_name=").$throttle;
-			if(!empty($ratio))
-				$addition[] = getCmd("view.set_visible=").$ratio;
-			global $saveUploadedTorrents;
-			$thash = ($ret==='magnet') ?
-				rTorrent::sendMagnet($url, $isStart, $isAddPath, $directory, $label, $addition) :
-				rTorrent::sendTorrent($ret, $isStart, $isAddPath, $directory, $label, $saveUploadedTorrents, false, true, $addition);
-			if($thash===false)
+			self::log("Load torrent [$url]");
+			$thash = 'Failed';
+			$ret = $rss->getTorrent( $url );
+			if($ret!==false)
 			{
-				$thash = 'Failed';
-				@unlink($ret);
-				$ret = false;
+				$addition = array();
+				if(!empty($throttle))
+					$addition[] = getCmd("d.set_throttle_name=").$throttle;
+				if(!empty($ratio))
+					$addition[] = getCmd("view.set_visible=").$ratio;
+				global $saveUploadedTorrents;
+				$thash = ($ret==='magnet') ?
+					rTorrent::sendMagnet($url, $isStart, $isAddPath, $directory, $label, $addition) :
+					rTorrent::sendTorrent($ret, $isStart, $isAddPath, $directory, $label, $saveUploadedTorrents, false, true, $addition);
+				if($thash===false)
+				{
+					$thash = 'Failed';
+					@unlink($ret);
+					$ret = false;
+				}
 			}
+			if($ret===false)
+				$this->rssList->addError( "theUILang.rssCantLoadTorrent", $url );
+			$this->history->add($url,$thash,$rss->getItemTimestamp( $url ));
+			if($needFlush)
+				$this->saveHistory();
 		}
-		if($ret===false)
-			$this->rssList->addError( "theUILang.rssCantLoadTorrent", $url );
-		$this->history->add($url,$thash,$rss->getItemTimestamp( $url ));
-		if($needFlush)
-			$this->saveHistory();
+		else
+		{
+			self::log("Load torrent [$url] (dry-run mode, no real action applied)");
+		}
 	}
 	public function saveHistory()
 	{
@@ -1341,5 +1361,20 @@ error_log("!!!");
 	{
 		$this->history->clearFilterTime( $filterNo );
 		$this->saveHistory();
+	}
+
+	protected static function log( $msg )
+	{
+		global $rss_debug_enabled;
+		if( $rss_debug_enabled ) 
+		{
+			toLog("RSS: $msg");
+		}
+	}
+
+	protected static function isDryRun()
+	{
+		global $rss_debug_enabled;
+		return( $rss_debug_enabled === 'dry-run' );
 	}
 }

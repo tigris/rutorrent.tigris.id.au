@@ -172,6 +172,10 @@ theSearchEngines.run = function()
 				theWebUI.requestWithoutTimeout("?action=extsearch&s="+theSearchEngines.current+"&v="+encodeURIComponent(s)+"&v="+encodeURIComponent($("#exscategory").val()),[theWebUI.setExtSearchTag, theWebUI]);
 			}
 		}
+		else
+		{
+			theWebUI.resetLabels();
+		}
 	}
 	else
 		plugin.sitesRun.call(theSearchEngines);
@@ -257,7 +261,7 @@ plugin.reloadData = function(id)
 
 plugin.enterTeg = function()
 {
-	plugin.reloadData(theWebUI.actLbl);
+	plugin.reloadData(theWebUI.actLbls["flabel_cont"]);
 	var lst = $("#List");
 	var table = theWebUI.getTable("teg");
 	if(lst.is(":visible"))	
@@ -279,6 +283,10 @@ plugin.leaveTeg = function()
 {
 	$("#TegList").hide();
 	$("#List").show();
+	if(theWebUI.actLbls["flabel_cont"] && $($$(theWebUI.actLbls["flabel_cont"])).hasClass("exteg")) 
+	{
+		plugin.switchLabel.call(theWebUI,$("#flabel_cont .-_-_-all-_-_-").get(0));
+	}
 }
 
 plugin.correctCounter = function(id,count)
@@ -301,17 +309,17 @@ plugin.correctCounter = function(id,count)
 plugin.switchLabel = theWebUI.switchLabel;
 theWebUI.switchLabel = function(obj)
 {
-	if(plugin.enabled && theWebUI.actLbl && $type(plugin.tegs[theWebUI.actLbl]))
+	if(plugin.enabled && theWebUI.actLbls["flabel_cont"] && $type(plugin.tegs[theWebUI.actLbls["flabel_cont"]]))
 		plugin.leaveTeg();
 	plugin.switchLabel.call(theWebUI,obj);
-	if(plugin.enabled && theWebUI.actLbl && $type(plugin.tegs[theWebUI.actLbl]))
+	if(plugin.enabled && theWebUI.actLbls["flabel_cont"] && $type(plugin.tegs[theWebUI.actLbls["flabel_cont"]]))
 		plugin.enterTeg();
 }
 
 plugin.filterByLabel = theWebUI.filterByLabel;
 theWebUI.filterByLabel = function(hash)
 {
-        if(!$($$(this.actLbl)).hasClass("exteg"))
+        if(!$($$(this.actLbls["flabel_cont"])).hasClass("exteg"))
 		plugin.filterByLabel.call(theWebUI,hash);
 }
 
@@ -350,10 +358,11 @@ theWebUI.tegItemRemove = function()
 	var table = theWebUI.getTable("teg");
 	for(var i = 0; i<plugin.tegArray.length; i++)
 	{
-		plugin.tegs[theWebUI.actLbl].data[plugin.tegArray[i].ndx].deleted = true;
-		table.removeRow( theWebUI.actLbl+"$"+plugin.tegArray[i].ndx );
+		plugin.tegs[theWebUI.actLbls["flabel_cont"]].data[plugin.tegArray[i].ndx].deleted = true;
+		table.removeRow( theWebUI.actLbls["flabel_cont"]+"$"+plugin.tegArray[i].ndx );
 	}
-	plugin.correctCounter(theWebUI.actLbl,null);
+	table.correctSelection();
+	plugin.correctCounter(theWebUI.actLbls["flabel_cont"],null);
 	table.refreshRows();
 }
 
@@ -362,15 +371,15 @@ theWebUI.showTegURLInfo = function()
 	var table = theWebUI.getTable("teg");
 	for(var i = 0; i<plugin.tegArray.length; i++)
 	{
-		log(theUILang.exsURLGUID+": "+plugin.tegs[theWebUI.actLbl].data[plugin.tegArray[i].ndx].desc);
-		log(theUILang.exsURLHref+": "+plugin.tegs[theWebUI.actLbl].data[plugin.tegArray[i].ndx].link);
+		log(theUILang.exsURLGUID+": "+plugin.tegs[theWebUI.actLbls["flabel_cont"]].data[plugin.tegArray[i].ndx].desc);
+		log(theUILang.exsURLHref+": "+plugin.tegs[theWebUI.actLbls["flabel_cont"]].data[plugin.tegArray[i].ndx].link);
 	}
 }
 
 theWebUI.extTegDelete = function()
 {
-	var lbl = theWebUI.actLbl;
-	theWebUI.switchLabel($$("-_-_-all-_-_-"));
+	var lbl = theWebUI.actLbls["flabel_cont"];
+	theWebUI.switchLabel($("#flabel_cont .-_-_-all-_-_-").get(0))
 	delete plugin.tegs[lbl];
 	$($$(lbl)).remove();
 }
@@ -498,14 +507,14 @@ theWebUI.loadTorrents = function(needSort)
 {
 	plugin.loadTorrents.call(this,needSort);
 	var table = this.getTable("teg");
-	if(plugin.enabled && this.actLbl && $type(plugin.tegs[this.actLbl]))
+	if(plugin.enabled && this.actLbls["flabel_cont"] && $type(plugin.tegs[this.actLbls["flabel_cont"]]))
 	{
 		var updated = false;
-		var tegItems = plugin.tegs[this.actLbl].data;
+		var tegItems = plugin.tegs[this.actLbls["flabel_cont"]].data;
 		for(var i=0; i<tegItems.length; i++)
 		{
 			var item = tegItems[i];
-			var ndx = this.actLbl+'$'+i;
+			var ndx = this.actLbls["flabel_cont"]+'$'+i;
 			if($type(table.rowdata[ndx]))
 			{
 				if((item.hash!="") && $type(this.torrents[item.hash]))
@@ -533,9 +542,9 @@ theWebUI.loadTorrents = function(needSort)
 
 theWebUI.tegRefresh = function()
 {
-	if($type(plugin.tegs[theWebUI.actLbl]))
+	if($type(plugin.tegs[theWebUI.actLbls["flabel_cont"]]))
 	{
-		var item = plugin.tegs[theWebUI.actLbl];
+		var item = plugin.tegs[theWebUI.actLbls["flabel_cont"]];
 		$("#query").val(item.what).prop("readonly",true);
 		theWebUI.requestWithoutTimeout("?action=extsearch&s="+item.eng+"&v="+encodeURIComponent(item.what)+"&v="+encodeURIComponent(item.cat),[theWebUI.setExtSearchTag, theWebUI]);
 	}
@@ -871,7 +880,7 @@ plugin.onRemove = function()
 	theSearchEngines.sites = plugin.sites;
 	theSearchEngines.current = -1;
 	theWebUI.save();
-	theWebUI.switchLabel($$("-_-_-all-_-_-"));
+	theWebUI.resetLabels();
 	for( var teg in plugin.tegs )
 		$("#"+teg).remove();
 	plugin.tegs = {};

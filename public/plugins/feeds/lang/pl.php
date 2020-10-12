@@ -1,24 +1,24 @@
 <?php
 
 $theUILang["all"]		= "Wszystkie torrenty";
-$theUILang["completed"] 	= "Zakończone torrenty";
+$theUILang["completed"]		= "Ukończone torrenty";
 $theUILang["downloading"]	= "Pobierane torrenty";
 $theUILang["active"]		= "Aktywne torrenty";
 $theUILang["inactive"]		= "Nieaktywne torrenty";
 $theUILang["error"]		= "Błędne torrenty";
 $theUILang["Transfer"]		= "Transfer";
 $theUILang["Size"]		= "Rozmiar";
-$theUILang["Remaining"] 	= "Pozostało";
+$theUILang["Remaining"]		= "Pozostało";
 $theUILang["Share_ratio"]	= "Ratio";
 $theUILang["Downloaded"]	= "Pobrano";
 $theUILang["Down_speed"]	= "Prędkość pobierania";
 $theUILang["Uploaded"]		= "Wysłano";
 $theUILang["Ul_speed"]		= "Prędkość wysyłania";
-$theUILang["Seeds"]		= "Seedów";
-$theUILang["Peers"]		= "Peerów";
+$theUILang["Seeds"]		= "Seedy";
+$theUILang["Peers"]		= "Peery";
 $theUILang["Track_status"]	= "Status trackera";
 $theUILang["Comment"]		= "Komentarz";
-$theUILang["s"] 		= "s";
+$theUILang["s"]			= "s";
 $theUILang["bytes"]		= "bajtów";
 $theUILang["KB"]		= "KiB";
 $theUILang["MB"]		= "MiB";

@@ -91,27 +91,31 @@ class commonEngine
 			{
 				case "tib":
 				case "tb":
-				case "��":
-				case "��":
-				case "��":
+				case "tio":
+				case "to":
+				case "òá":
+				case "ÒÁ":
 					$val*=1024;
 				case "gib":
 				case "gb":
-				case "��":
-				case "��":
-				case "��":
+				case "gio":
+				case "go":
+				case "ãá":
+				case "ÃÁ":
 					$val*=1024;
 				case "mib":
 				case "mb":
-				case "��":
-				case "��":
-				case "��":
+				case "mio":
+				case "mo":
+				case "ìá":
+				case "ÌÁ":
 					$val*=1024;
 				case "kib":
 				case "kb":
-				case "��":
-				case "��":
-				case "��":
+				case "kio":
+				case "ko":
+				case "êá":
+				case "ÊÁ":
 					$val*=1024;
 			}
 			return($val);
@@ -187,7 +191,7 @@ class rSearchHistory
 	}
 	public function pack()
 	{
-		uasort($this->lst, create_function( '$a,$b', 'return( ($a["time"] > $b["time"]) ? 1 : (($a["time"] < $b["time"]) ? -1 : 0) );'));
+		uasort($this->lst, "sortArrayTime");
 		$cnt = count($this->lst)/2;
 		$i=0;
 		foreach( $this->lst as $key=>$value )
@@ -366,6 +370,10 @@ class engineManager
 			$nfo["name"] = commonEngine::toUTF($nfo["name"],"ISO-8859-1");
 	}
 
+	static protected function sortBySeeds( $a, $b )
+	{
+		return( (intval($a["seeds"]) > intval($b["seeds"])) ? -1 : ((intval($a["seeds"]) < intval($b["seeds"])) ? 1 : 0) );
+	}
 
 	public function action( $eng, $what, $cat = "all" )
 	{
@@ -395,7 +403,7 @@ class engineManager
 				$object->action($what,$cat,$arr,$this->limit,false);
 			}
 		}
-		uasort($arr, create_function( '$a,$b', 'return( (intval($a["seeds"]) > intval($b["seeds"])) ? -1 : ((intval($a["seeds"]) < intval($b["seeds"])) ? 1 : 0) );'));
+		uasort($arr, array(__CLASS__,"sortBySeeds"));
 		$cnt = 0;		
 		$history = self::loadHistory(true);
 
@@ -431,7 +439,7 @@ class engineManager
 				$object = $this->getObject($engs[$i]);
         			$torrent = $object->getTorrent( $url, $object );
 				if($torrent!==false)
-				{	
+				{
 					global $saveUploadedTorrents;
 					if(($success = rTorrent::sendTorrent($torrent, $isStart, $isAddPath, $directory, $label, $saveUploadedTorrents, $fast))===false)
 						@unlink($torrent);

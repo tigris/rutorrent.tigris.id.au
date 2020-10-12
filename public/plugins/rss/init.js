@@ -42,7 +42,6 @@ theWebUI.switchLabel = function(el)
 		if(theWebUI.actRSSLbl)
 			$$(theWebUI.actRSSLbl).className = theWebUI.isActiveRSSEnabled() ? "RSS cat" : "disRSS cat";
 		theWebUI.actRSSLbl = null;
-		theWebUI.actLbl = "";
 		$("#List").show();
 		lst.hide();
 		theWebUI.switchLayout(false);
@@ -115,8 +114,6 @@ theWebUI.switchRSSLabel = function(el)
 	{
 		theWebUI.dID = "";
 		theWebUI.clearDetails();
-		if((this.actLbl != "") && ($$(this.actLbl) != null))
-			$($$(theWebUI.actLbl)).removeClass("sel");
 		plugin.correctCSS();
 		rss.css( { width: lst.width(), height: lst.height() } );
 		table.resize(lst.width(), lst.height());
@@ -807,6 +804,7 @@ theWebUI.addRSSItems = function(d)
 				theWebUI.rssItems[item.href] = item;
 			}
 		}
+		var deleted = false;
 		for(var href in this.rssItems)
 		{
 			if(!plugin.getFirstRSS(this.rssItems[href]))
@@ -814,10 +812,17 @@ theWebUI.addRSSItems = function(d)
 				updated = true;
 				delete this.rssItems[href];
 				table.removeRow(href);
+				deleted = true;
 			}
 		}
 		if(updated)
+		{
+			if(deleted)
+			{
+				table.correctSelection();
+			}
 			table.Sort();
+		}
 		this.updateRSSLabels(rssLabels,d.groups);
 		this.rssUpdateInProgress = false;
 	}
@@ -1037,7 +1042,7 @@ theWebUI.checkCurrentFilter = function()
 theWebUI.showFilterResults = function( d )
 {
 	this.showErrors(d);
-	if(d.rss.length)
+	if(d.rss && d.rss.length)
 		this.switchLabel($$(d.rss));
 	else
 		this.switchLabel($$('_rssAll_'));
@@ -1594,7 +1599,7 @@ plugin.onRemove = function()
         if(theWebUI.updateRSSTimer)
 	        window.clearTimeout(theWebUI.updateRSSTimer);
 	theWebUI.switchLayout(false);
-	theWebUI.switchLabel($$("-_-_-all-_-_-"));
+	theWebUI.resetLabels();
 	$("#RSSList").remove();
 	plugin.removePaneFromCategory("prss");
 	$("#rsslayout").remove();

@@ -14,11 +14,11 @@ if(plugin.canChangeTabs())
 	{
 		this.owner = aOwner;
 		this.owner.parent().css('overflow', 'hidden');
-		this.down = { label: theUILang.DL, bars: {"show": "true"}, data: [], color: "#1C8DFF" };
-		this.up = { label: theUILang.UL, bars: {"show": "true"}, data: [], color: "#009900" };
+		this.down = { label: theUILang.Downloaded, bars: {"show": "true"}, data: [], color: "#1C8DFF" };
+		this.up = { label: theUILang.Uploaded, bars: {"show": "true"}, data: [], color: "#009900" };
 
-		this.oldDown = { label: theUILang.DL, bars: {"show": "true"}, data: [], color: "#0849BB" };
-		this.oldUp = { label: theUILang.UL, bars: {"show": "true"}, data: [], color: "#005500" };
+		this.oldDown = { label: theUILang.Downloaded, bars: {"show": "true"}, data: [], color: "#0849BB" };
+		this.oldUp = { label: theUILang.Uploaded, bars: {"show": "true"}, data: [], color: "#005500" };
 
 		this.ticks = new Array();
 		this.previousPoint = null;
@@ -136,7 +136,7 @@ if(plugin.canChangeTabs())
 			this.owner.width(newWidth-8);
 		if(newHeight)
 		{
-			newHeight-=(iv($$(this.owner.attr("id")+'_ctrl').style.height)+$("#tabbar").height());
+			newHeight-=(iv($$(this.owner.attr("id")+'_ctrl').style.height)+$("#tabbar").outerHeight());
 			if(newHeight>0)
 				this.owner.height(newHeight);
 		}

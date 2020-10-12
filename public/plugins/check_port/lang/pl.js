@@ -6,9 +6,10 @@
  * Author: Dare (piczok@gmail.com)
  */
 
- theUILang.checkPort		= "Sprawdź przekierowanie Portu/Portów";
+ theUILang.checkWebsiteNotFound = "Check_port plugin: Plugin will not work. Invalid configuration";
+ theUILang.checkPort		= "Sprawdź stan portu";
  theUILang.portStatus		= [
- 				  "Port status nieznany",
+ 				  "Stan portu nieznany",
  				  "Port zamknięty",
  				  "Port otwarty"
  				  ];
